@@ -47,10 +47,7 @@ export interface Lesson {
   estimatedMinutes: number;
 }
 
-export interface QuestionOption {
-  id: ID;
-  text: string;
-}
+export interface QuestionOption { id: ID; text: string; }
 
 export interface Question {
   id: ID;
@@ -80,8 +77,8 @@ export interface MockTestResult {
   score: number;
   totalMarks: number;
   timestamp: number;
-  sectionScores?: Record<ID, number>;
-  answers?: Record<ID, ID[]>;
+  answers: Record<ID, ID[]>;
+  sectionScores: Record<ID, number>;
 }
 
 export interface ProgressState {
