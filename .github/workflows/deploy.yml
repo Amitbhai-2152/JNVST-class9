@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -20,16 +20,44 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
+
       - name: Install dependencies
         run: npm install
+
       - name: Build
         run: npm run build
+
+      # Some GitHub Pages projects are configured to publish the main branch
+      # instead of the Actions artifact. Keep the root of main synchronized
+      # with the verified Vite production build so both modes serve the same app.
+      - name: Publish production build to repository root
+        run: |
+          rm -rf pages-publish
+          mkdir pages-publish
+          cp -R dist/. pages-publish/
+          rm -rf assets
+          mkdir assets
+          cp -R pages-publish/assets/. assets/
+          cp pages-publish/index.html index.html
+          rm -f assets/test.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html assets
+          if git diff --cached --quiet; then
+            echo "Production files already synchronized."
+          else
+            git commit -m "chore: sync production build to Pages root [skip ci]"
+            git push
+          fi
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
