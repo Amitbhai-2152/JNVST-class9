@@ -3,13 +3,19 @@ import { englishLessonsData } from './english';
 import { hindiLessonsData } from './hindi';
 import { mathLessonsData } from './math';
 import { scienceLessonsData } from './science';
+import { expandLessons } from './expansion';
 
-export const allLessons: Lesson[] = [
+const baseLessons: Lesson[] = [
   ...englishLessonsData,
   ...hindiLessonsData,
   ...mathLessonsData,
   ...scienceLessonsData,
 ];
+
+// Every topic receives a deep, structured study sequence. This keeps the
+// existing verified lesson material and adds substantial concept, example,
+// mistake-analysis, exam-strategy and revision content for chapter-level depth.
+export const allLessons: Lesson[] = expandLessons(baseLessons);
 
 export const getLesson = (id: string) => allLessons.find((lesson) => lesson.id === id);
 export const getLessonsByTopic = (topicId: string) => allLessons.filter((lesson) => lesson.topicId === topicId);
