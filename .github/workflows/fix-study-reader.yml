@@ -1,0 +1,104 @@
+name: Fix visible study reader
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.event.head_commit.message != 'chore: fix visible 15-page study reader'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch study reader
+        shell: python
+        run: |
+          from pathlib import Path
+
+          app_path = Path('src/App.tsx')
+          app = app_path.read_text(encoding='utf-8')
+
+          old = '''const getStudyPages = (blocks: ContentBlock[]): ContentBlock[][] => {
+  const pages: ContentBlock[][] = [];
+  let current: ContentBlock[] = [];
+  blocks.forEach((block) => {
+    const isPageHeading = block.type === 'heading' && /^अध्ययन पृष्ठ\\s+\\d+/.test(block.text);
+    if (isPageHeading && current.length) {
+      pages.push(current);
+      current = [];
+    }
+    current.push(block);
+  });
+  if (current.length) pages.push(current);
+  return pages.length ? pages : [blocks];
+};'''
+
+          new = '''const getStudyPages = (blocks: ContentBlock[]): ContentBlock[][] => {
+  const isPageHeading = (block: ContentBlock) =>
+    block.type === 'heading' && /^अध्ययन पृष्ठ\\s+\\d+/.test(block.text);
+  const firstMarker = blocks.findIndex(isPageHeading);
+  if (firstMarker < 0) return blocks.length ? [blocks] : [[]];
+
+  const pages: ContentBlock[][] = [];
+  let current: ContentBlock[] = [];
+  blocks.slice(firstMarker).forEach((block) => {
+    if (isPageHeading(block) && current.length) {
+      pages.push(current);
+      current = [];
+    }
+    current.push(block);
+  });
+  if (current.length) pages.push(current);
+
+  // Preserve the authored lesson material by placing it at the beginning
+  // of study page 1, while keeping exactly 15 explicit study pages.
+  pages[0] = [...blocks.slice(0, firstMarker), ...pages[0]];
+  return pages.slice(0, 15);
+};'''
+
+          if old not in app:
+              raise SystemExit('Expected study-page function not found')
+          app = app.replace(old, new, 1)
+
+          old_chapter = '<p>इस अध्याय के सभी टॉपिक और अभ्यास।</p>'
+          new_chapter = '<p>इस अध्याय के सभी टॉपिक और अभ्यास। <strong>हर टॉपिक में 15 अध्ययन पृष्ठ</strong> — अवधारणा, उदाहरण, गलतियाँ, परीक्षा रणनीति और पुनरावृत्ति।</p>'
+          if old_chapter in app:
+              app = app.replace(old_chapter, new_chapter, 1)
+
+          old_topic = '<div className="topic-meta"><span>📖 {pageCount || 1} अध्ययन पृष्ठ</span><span>⏱ विस्तृत पाठ</span></div>'
+          new_topic = '<div className="topic-meta"><span className="study-count">📚 15 अध्ययन पृष्ठ</span><span>⏱ विस्तृत पाठ</span></div>'
+          if old_topic in app:
+              app = app.replace(old_topic, new_topic, 1)
+
+          old_header = '<span>पृष्ठ {page + 1} / {pages.length}</span>'
+          new_header = '<span className="study-page-number">पृष्ठ {Math.min(page + 1, 15)} / 15</span>'
+          if old_header in app:
+              app = app.replace(old_header, new_header, 1)
+
+          old_side = 'इस पाठ में ${pages.length} क्रमिक अध्ययन पृष्ठ हैं।'
+          app = app.replace(old_side, 'इस पाठ में 15 क्रमिक अध्ययन पृष्ठ हैं।', 1)
+
+          app_path.write_text(app, encoding='utf-8')
+
+          exp_path = Path('src/data/lessons/expansion.ts')
+          exp = exp_path.read_text(encoding='utf-8')
+          old_content = '    content: [...lesson.content, ...extra],'
+          new_content = '    content: extra.length ? [extra[0], ...lesson.content, ...extra.slice(1)] : lesson.content,'
+          if old_content not in exp:
+              raise SystemExit('Expected lesson expansion line not found')
+          exp = exp.replace(old_content, new_content, 1)
+          exp_path.write_text(exp, encoding='utf-8')
+
+          wf = Path('.github/workflows/fix-study-reader.yml')
+
+          import subprocess
+          subprocess.run(['git', 'config', 'user.name', 'github-actions[bot]'], check=True)
+          subprocess.run(['git', 'config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com'], check=True)
+          subprocess.run(['git', 'rm', wf.as_posix()], check=True)
+          subprocess.run(['git', 'add', 'src/App.tsx', 'src/data/lessons/expansion.ts'], check=True)
+          subprocess.run(['git', 'commit', '-m', 'chore: fix visible 15-page study reader'], check=True)
+          subprocess.run(['git', 'push'], check=True)
