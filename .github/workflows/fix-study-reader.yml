@@ -54,8 +54,6 @@ jobs:
   });
   if (current.length) pages.push(current);
 
-  // Preserve the authored lesson material by placing it at the beginning
-  // of study page 1, while keeping exactly 15 explicit study pages.
   pages[0] = [...blocks.slice(0, firstMarker), ...pages[0]];
   return pages.slice(0, 15);
 };'''
@@ -66,22 +64,17 @@ jobs:
 
           old_chapter = '<p>इस अध्याय के सभी टॉपिक और अभ्यास।</p>'
           new_chapter = '<p>इस अध्याय के सभी टॉपिक और अभ्यास। <strong>हर टॉपिक में 15 अध्ययन पृष्ठ</strong> — अवधारणा, उदाहरण, गलतियाँ, परीक्षा रणनीति और पुनरावृत्ति।</p>'
-          if old_chapter in app:
-              app = app.replace(old_chapter, new_chapter, 1)
+          app = app.replace(old_chapter, new_chapter, 1)
 
           old_topic = '<div className="topic-meta"><span>📖 {pageCount || 1} अध्ययन पृष्ठ</span><span>⏱ विस्तृत पाठ</span></div>'
           new_topic = '<div className="topic-meta"><span className="study-count">📚 15 अध्ययन पृष्ठ</span><span>⏱ विस्तृत पाठ</span></div>'
-          if old_topic in app:
-              app = app.replace(old_topic, new_topic, 1)
+          app = app.replace(old_topic, new_topic, 1)
 
           old_header = '<span>पृष्ठ {page + 1} / {pages.length}</span>'
           new_header = '<span className="study-page-number">पृष्ठ {Math.min(page + 1, 15)} / 15</span>'
-          if old_header in app:
-              app = app.replace(old_header, new_header, 1)
+          app = app.replace(old_header, new_header, 1)
 
-          old_side = 'इस पाठ में ${pages.length} क्रमिक अध्ययन पृष्ठ हैं।'
-          app = app.replace(old_side, 'इस पाठ में 15 क्रमिक अध्ययन पृष्ठ हैं।', 1)
-
+          app = app.replace('इस पाठ में ${pages.length} क्रमिक अध्ययन पृष्ठ हैं।', 'इस पाठ में 15 क्रमिक अध्ययन पृष्ठ हैं।', 1)
           app_path.write_text(app, encoding='utf-8')
 
           exp_path = Path('src/data/lessons/expansion.ts')
@@ -94,7 +87,6 @@ jobs:
           exp_path.write_text(exp, encoding='utf-8')
 
           wf = Path('.github/workflows/fix-study-reader.yml')
-
           import subprocess
           subprocess.run(['git', 'config', 'user.name', 'github-actions[bot]'], check=True)
           subprocess.run(['git', 'config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com'], check=True)
