@@ -1,2 +1,28 @@
-import { generatedQuestions } from './generated';
-export const scienceQuestions = generatedQuestions.filter(q => q.subjectId === 'sub_sci');
+import type { Question } from '../../types';
+import { scienceQuestionsPart01 } from './sciencePart01';
+import { scienceQuestionsPart02 } from './sciencePart02';
+import { scienceQuestionsPart03 } from './sciencePart03';
+import { scienceQuestionsPart04 } from './sciencePart04';
+import { scienceQuestionsPart05 } from './sciencePart05';
+import { scienceQuestionsPart06 } from './sciencePart06';
+import { scienceQuestionsPart07 } from './sciencePart07';
+import { scienceQuestionsPart08 } from './sciencePart08';
+import { scienceQuestionsPart09 } from './sciencePart09';
+import { scienceQuestionsPart10 } from './sciencePart10';
+import { scienceQuestionsPart11 } from './sciencePart11';
+import { scienceQuestionsPart12 } from './sciencePart12';
+
+export const scienceQuestions: Question[] = [
+  ...scienceQuestionsPart01,
+  ...scienceQuestionsPart02,
+  ...scienceQuestionsPart03,
+  ...scienceQuestionsPart04,
+  ...scienceQuestionsPart05,
+  ...scienceQuestionsPart06,
+  ...scienceQuestionsPart07,
+  ...scienceQuestionsPart08,
+  ...scienceQuestionsPart09,
+  ...scienceQuestionsPart10,
+  ...scienceQuestionsPart11,
+  ...scienceQuestionsPart12,
+];
