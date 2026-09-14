@@ -6,6 +6,8 @@ import './index.css';
 const root = document.getElementById('root');
 if (!root) throw new Error('Root element not found');
 
+const reactRoot = createRoot(root);
+
 const showBootError = (error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
   root.innerHTML = `
@@ -25,7 +27,7 @@ const showBootError = (error: unknown) => {
   console.error('JNVST app bootstrap failed:', error);
 };
 
-createRoot(root).render(
+reactRoot.render(
   <React.StrictMode>
     <ErrorBoundary>
       <div id="app-loading" style={{minHeight:'100vh',display:'grid',placeItems:'center',padding:24,background:'#f5f7fb',color:'#17304f',fontFamily:'system-ui,sans-serif'}}>
@@ -41,7 +43,7 @@ createRoot(root).render(
 
 import('./App')
   .then(({ default: App }) => {
-    createRoot(root).render(
+    reactRoot.render(
       <React.StrictMode>
         <ErrorBoundary>
           <App />
