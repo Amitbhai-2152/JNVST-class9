@@ -21,6 +21,84 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Ensure 15-page study reader source
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          app_path = Path('src/App.tsx')
+          app = app_path.read_text(encoding='utf-8')
+
+          old_reader = '''const getStudyPages = (blocks: ContentBlock[]): ContentBlock[][] => {
+  const pages: ContentBlock[][] = [];
+  let current: ContentBlock[] = [];
+  blocks.forEach((block) => {
+    const isPageHeading = block.type === 'heading' && /^अध्ययन पृष्ठ\\s+\\d+/.test(block.text);
+    if (isPageHeading && current.length) {
+      pages.push(current);
+      current = [];
+    }
+    current.push(block);
+  });
+  if (current.length) pages.push(current);
+  return pages.length ? pages : [blocks];
+};'''
+
+          new_reader = '''const getStudyPages = (blocks: ContentBlock[]): ContentBlock[][] => {
+  const isPageHeading = (block: ContentBlock) =>
+    block.type === 'heading' && /^अध्ययन पृष्ठ\\s+\\d+/.test(block.text);
+  const firstMarker = blocks.findIndex(isPageHeading);
+  if (firstMarker < 0) return blocks.length ? [blocks] : [[]];
+
+  const pages: ContentBlock[][] = [];
+  let current: ContentBlock[] = [];
+  blocks.slice(firstMarker).forEach((block) => {
+    if (isPageHeading(block) && current.length) {
+      pages.push(current);
+      current = [];
+    }
+    current.push(block);
+  });
+  if (current.length) pages.push(current);
+
+  pages[0] = [...blocks.slice(0, firstMarker), ...pages[0]];
+  return pages.slice(0, 15);
+};'''
+          if old_reader in app:
+              app = app.replace(old_reader, new_reader, 1)
+
+          app = app.replace(
+              '<p>इस अध्याय के सभी टॉपिक और अभ्यास।</p>',
+              '<p>इस अध्याय के सभी टॉपिक और अभ्यास। <strong>हर टॉपिक में 15 अध्ययन पृष्ठ</strong> — अवधारणा, उदाहरण, गलतियाँ, परीक्षा रणनीति और पुनरावृत्ति।</p>',
+              1,
+          )
+          app = app.replace(
+              '<div className="topic-meta"><span>📖 {pageCount || 1} अध्ययन पृष्ठ</span><span>⏱ विस्तृत पाठ</span></div>',
+              '<div className="topic-meta"><span className="study-count">📚 15 अध्ययन पृष्ठ</span><span>⏱ विस्तृत पाठ</span></div>',
+              1,
+          )
+          app = app.replace(
+              '<span>पृष्ठ {page + 1} / {pages.length}</span>',
+              '<span className="study-page-number">पृष्ठ {Math.min(page + 1, 15)} / 15</span>',
+              1,
+          )
+          app = app.replace(
+              'इस पाठ में ${pages.length} क्रमिक अध्ययन पृष्ठ हैं।',
+              'इस पाठ में 15 क्रमिक अध्ययन पृष्ठ हैं।',
+              1,
+          )
+          app_path.write_text(app, encoding='utf-8')
+
+          exp_path = Path('src/data/lessons/expansion.ts')
+          exp = exp_path.read_text(encoding='utf-8')
+          exp = exp.replace(
+              '    content: [...lesson.content, ...extra],',
+              '    content: extra.length ? [extra[0], ...lesson.content, ...extra.slice(1)] : lesson.content,',
+              1,
+          )
+          exp_path.write_text(exp, encoding='utf-8')
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
