@@ -94,3 +94,5 @@ jobs:
           subprocess.run(['git', 'add', 'src/App.tsx', 'src/data/lessons/expansion.ts'], check=True)
           subprocess.run(['git', 'commit', '-m', 'chore: fix visible 15-page study reader'], check=True)
           subprocess.run(['git', 'push'], check=True)
+
+# trigger: 2026-09-14T05:03Z
