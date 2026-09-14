@@ -36,6 +36,24 @@ const ContentRenderer = ({ blocks }: { blocks: ContentBlock[] }) => <div classNa
   }
 })}</div>;
 
+// Lessons are authored as a continuous block of ContentBlocks, but the deep
+// extension marks every study page explicitly as "अध्ययन पृष्ठ N". Split those
+// markers into genuine reader pages so students can move through the material.
+const getStudyPages = (blocks: ContentBlock[]): ContentBlock[][] => {
+  const pages: ContentBlock[][] = [];
+  let current: ContentBlock[] = [];
+  blocks.forEach((block) => {
+    const isPageHeading = block.type === 'heading' && /^अध्ययन पृष्ठ\s+\d+/.test(block.text);
+    if (isPageHeading && current.length) {
+      pages.push(current);
+      current = [];
+    }
+    current.push(block);
+  });
+  if (current.length) pages.push(current);
+  return pages.length ? pages : [blocks];
+};
+
 const Shell = ({ children }: { children: React.ReactNode }) => <div className="app-shell"><header className="topbar"><Link to="/" className="brand">JNVST कक्षा 9</Link><nav><Link to="/">डैशबोर्ड</Link><Link to="/subjects">विषय</Link><Link to="/bookmarks">बुकमार्क</Link><Link to="/mock-tests">मॉक टेस्ट</Link></nav></header><main className="shell">{children}</main></div>;
 const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => <div className={`card ${className}`}>{children}</div>;
 
@@ -53,7 +71,9 @@ const TopicCard = ({ topicId }: { topicId: ID }) => {
   const t = topics.find(x => x.id === topicId)!;
   const qCount = getQuestionsByTopic(t.id).length;
   const lessonId = t.lessonIds[0];
-  return <Card className="topic-card"><div className="topic-top"><h3>{t.title}</h3><span className="count">{qCount} प्रश्न</span></div><p>{t.lessonIds.length} पाठ उपलब्ध</p><div className="actions">{lessonId ? <Link className="btn" to={`/lessons/${lessonId}`}>पाठ पढ़ें</Link> : <span className="btn" aria-disabled="true">पाठ उपलब्ध नहीं</span>}<Link className="btn primary" to={`/practice/${t.id}`}>अभ्यास करें</Link></div></Card>;
+  const lesson = lessonId ? getLesson(lessonId) : undefined;
+  const pageCount = lesson ? getStudyPages(lesson.content).filter(page => page.some(b => b.type === 'heading' && /^अध्ययन पृष्ठ\s+\d+/.test(b.text))).length : 0;
+  return <Card className="topic-card"><div className="topic-top"><h3>{t.title}</h3><span className="count">{qCount} प्रश्न</span></div><div className="topic-meta"><span>📖 {pageCount || 1} अध्ययन पृष्ठ</span><span>⏱ विस्तृत पाठ</span></div><p>{t.lessonIds.length} पाठ उपलब्ध</p><div className="actions">{lessonId ? <Link className="btn" to={`/lessons/${lessonId}`}>पाठ पढ़ें</Link> : <span className="btn" aria-disabled="true">पाठ उपलब्ध नहीं</span>}<Link className="btn primary" to={`/practice/${t.id}`}>अभ्यास करें</Link></div></Card>;
 };
 
 const SubjectPage = () => {
@@ -72,10 +92,15 @@ const ChapterPage = () => {
 
 const LessonPage = () => {
   const { lessonId } = useParams(); const nav = useNavigate(); const l = getLesson(lessonId || ''); const p = useProgressStore();
+  const pages = useMemo(() => l ? getStudyPages(l.content) : [], [l]);
+  const [page, setPage] = useState(0);
+  useEffect(() => { setPage(0); }, [lessonId]);
   useEffect(() => { if (l) p.markInProgress(l.id, l.title); }, [l?.id]);
   if (!l) return <Shell><Card className="empty"><h1>पाठ नहीं मिला</h1><Link className="btn" to="/subjects">विषयों पर जाएँ</Link></Card></Shell>;
   const t = topics.find(x => x.id === l.topicId); const c = t ? chapters.find(x => x.id === t.chapterId) : undefined; const completed = p.lessonActivity[l.id]?.status === 'completed';
-  return <Shell><div className="page-head"><Link to={c ? `/chapters/${c.id}` : '/subjects'}>← अध्याय</Link><h1>{l.title}</h1><div className="lesson-meta"><span>⏱ {l.estimatedMinutes} मिनट</span><span>{completed ? '✅ पूरा हुआ' : '📖 सीख रहे हैं'}</span></div></div><div className="lesson-layout"><article><Card className="lesson-card"><div className="objectives"><h3>इस पाठ के बाद आप</h3><ul>{l.objectives.map(x => <li key={x}>{x}</li>)}</ul></div><ContentRenderer blocks={l.content}/><div className="lesson-footer"><button className="btn primary" onClick={() => { p.completeLesson(l.id, l.title); nav(`/practice/${l.topicId}`); }}>{completed ? 'पुनः अभ्यास करें' : 'पाठ पूरा करें और अभ्यास करें'}</button></div></Card></article><aside><Card><h3>अगला कदम</h3><p>{t?.title || 'टॉपिक'} के प्रश्न हल करें।</p><Link className="btn" to={`/practice/${l.topicId}`}>टॉपिक अभ्यास</Link></Card></aside></div></Shell>;
+  const hasExtendedPages = pages.some(pageBlocks => pageBlocks.some(b => b.type === 'heading' && /^अध्ययन पृष्ठ\s+\d+/.test(b.text)));
+  const displayPage = pages[page] || pages[0];
+  return <Shell><div className="page-head"><Link to={c ? `/chapters/${c.id}` : '/subjects'}>← अध्याय</Link><h1>{l.title}</h1><div className="lesson-meta"><span>⏱ {l.estimatedMinutes} मिनट</span><span>{completed ? '✅ पूरा हुआ' : '📖 सीख रहे हैं'}</span>{hasExtendedPages && <span className="study-pages-badge">📚 {pages.filter(pageBlocks => pageBlocks.some(b => b.type === 'heading' && /^अध्ययन पृष्ठ\s+\d+/.test(b.text))).length} अध्ययन पृष्ठ</span>}</div></div><div className="lesson-layout"><article><Card className="lesson-card">{hasExtendedPages && <div className="study-reader"><div className="study-reader-head"><div><b>अध्ययन-पाठ</b><span>पृष्ठ {page + 1} / {pages.length}</span></div><div className="study-progress"><span style={{width:`${((page+1)/pages.length)*100}%`}} /></div></div><div className="study-page-nav">{pages.map((_, idx) => <button key={idx} className={idx === page ? 'active' : ''} onClick={() => setPage(idx)} aria-label={`अध्ययन पृष्ठ ${idx + 1}`}>{idx + 1}</button>)}</div></div>}<div className="objectives"><h3>इस पाठ के बाद आप</h3><ul>{l.objectives.map(x => <li key={x}>{x}</li>)}</ul></div><ContentRenderer blocks={displayPage}/>{hasExtendedPages && <div className="study-reader-actions"><button className="btn" disabled={page === 0} onClick={() => setPage(x => Math.max(0, x - 1))}>← पिछला पृष्ठ</button>{page < pages.length - 1 ? <button className="btn primary" onClick={() => setPage(x => Math.min(pages.length - 1, x + 1))}>अगला पृष्ठ →</button> : <button className="btn primary" onClick={() => { p.completeLesson(l.id, l.title); nav(`/practice/${l.topicId}`); }}>पाठ पूरा करें और अभ्यास करें</button>}</div>}{!hasExtendedPages && <div className="lesson-footer"><button className="btn primary" onClick={() => { p.completeLesson(l.id, l.title); nav(`/practice/${l.topicId}`); }}>{completed ? 'पुनः अभ्यास करें' : 'पाठ पूरा करें और अभ्यास करें'}</button></div>}</Card></article><aside><Card><h3>अध्ययन मार्ग</h3><p>{hasExtendedPages ? `इस पाठ में ${pages.length} क्रमिक अध्ययन पृष्ठ हैं।` : 'इस पाठ का मुख्य अध्ययन सामग्री यहाँ है।'}</p>{hasExtendedPages && <div className="study-side-links">{pages.map((pageBlocks, idx) => { const heading = pageBlocks.find(b => b.type === 'heading' && /^अध्ययन पृष्ठ\s+\d+/.test(b.text)); return <button key={idx} onClick={() => setPage(idx)} className={idx === page ? 'current' : ''}>{idx + 1}. {heading && heading.type === 'heading' ? heading.text.replace(/^अध्ययन पृष्ठ\s+\d+\s*[—-]?\s*/, '') : `पृष्ठ ${idx + 1}`}</button>; })}</div>}<Link className="btn" to={`/practice/${l.topicId}`}>टॉपिक अभ्यास</Link></Card></aside></div></Shell>;
 };
 
 const PracticePage = () => {
