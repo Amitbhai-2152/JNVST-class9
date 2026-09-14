@@ -3,7 +3,7 @@ import { englishLessonsData } from './english';
 import { hindiLessonsData } from './hindi';
 import { mathLessonsData } from './math';
 import { scienceLessonsData } from './science';
-import { expandLessons } from './expansion';
+import { expandLessons } from './expansion-fixed';
 
 const baseLessons: Lesson[] = [
   ...englishLessonsData,
@@ -12,9 +12,8 @@ const baseLessons: Lesson[] = [
   ...scienceLessonsData,
 ];
 
-// Every topic receives a deep, structured study sequence. This keeps the
-// existing verified lesson material and adds substantial concept, example,
-// mistake-analysis, exam-strategy and revision content for chapter-level depth.
+// Every topic receives a deep, structured study sequence. Normalize the
+// sequence so the existing study reader sees exactly 15 numbered pages.
 export const allLessons: Lesson[] = expandLessons(baseLessons);
 
 export const getLesson = (id: string) => allLessons.find((lesson) => lesson.id === id);
