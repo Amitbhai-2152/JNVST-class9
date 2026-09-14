@@ -25,16 +25,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
 
       - name: Build
         run: npm run build
 
-      # Some GitHub Pages projects are configured to publish the main branch
-      # instead of the Actions artifact. Keep the root of main synchronized
-      # with the verified Vite production build so both modes serve the same app.
+      # GitHub Pages may publish from main instead of the Pages artifact.
+      # Keep the root production files synchronized with the exact build above.
       - name: Publish production build to repository root
         run: |
           rm -rf pages-publish
@@ -47,7 +50,7 @@ jobs:
           rm -f assets/test.txt
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html assets
+          git add -A index.html assets
           if git diff --cached --quiet; then
             echo "Production files already synchronized."
           else
