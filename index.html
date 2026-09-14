@@ -17,6 +17,27 @@
         </div>
       </div>
     </div>
+    <script>
+      (function () {
+        function showStartupError(message) {
+          var root = document.getElementById('root');
+          if (!root || root.dataset.appStarted === 'true') return;
+          root.innerHTML = '<main style="min-height:100vh;display:grid;place-items:center;padding:24px;background:#f5f7fb;color:#172033;font-family:system-ui,sans-serif"><section style="width:min(720px,100%);background:#fff;border:1px solid #e7eaf0;border-radius:20px;padding:28px;box-shadow:0 12px 40px rgba(16,24,40,.08)"><div style="font-size:38px;margin-bottom:10px">⚠️</div><h1 style="margin:0 0 10px">वेबसाइट शुरू नहीं हो सकी</h1><p style="color:#667085;line-height:1.6">Application JavaScript में समस्या मिली है। नीचे उसका तकनीकी विवरण है।</p><pre style="white-space:pre-wrap;overflow-wrap:anywhere;color:#667085;background:#f7f8fb;border-radius:12px;padding:14px">' + String(message).replace(/[&<>]/g, function (c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]); }) + '</pre><button onclick="location.reload()" style="border:0;border-radius:12px;padding:11px 16px;background:#3554d1;color:#fff;font-weight:700;cursor:pointer">पुनः लोड करें</button></section></main>';
+        }
+        window.addEventListener('error', function (event) {
+          showStartupError(event.error && event.error.stack ? event.error.stack : event.message || 'Unknown startup error');
+        });
+        window.addEventListener('unhandledrejection', function (event) {
+          showStartupError(event.reason && event.reason.stack ? event.reason.stack : String(event.reason || 'Unhandled promise rejection'));
+        });
+        window.setTimeout(function () {
+          var root = document.getElementById('root');
+          if (root && !root.dataset.appStarted && document.getElementById('app-loading')) {
+            showStartupError('Application ने निर्धारित समय में start नहीं किया।');
+          }
+        }, 10000);
+      })();
+    </script>
     <script type="module" src="./src/main.tsx"></script>
   </body>
 </html>
