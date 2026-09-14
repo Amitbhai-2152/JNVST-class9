@@ -1,5 +1,12 @@
-import { generatedQuestions } from './generated';
+import { Question } from '../../types';
+import { hindiQuestionsPart1 } from './hindiPart1';
+import { hindiQuestionsPart2 } from './hindiPart2';
+import { hindiQuestionsPart3 } from './hindiPart3';
+import { hindiQuestionsPart4 } from './hindiPart4';
 
-// Temporary stable fallback while the verified Hindi bank is assembled in full.
-// Keeps the application buildable and prevents startup failure.
-export const hindiQuestions = generatedQuestions.filter((q) => q.subjectId === 'sub_hin');
+export const hindiQuestions: Question[] = [
+  ...hindiQuestionsPart1,
+  ...hindiQuestionsPart2,
+  ...hindiQuestionsPart3,
+  ...hindiQuestionsPart4,
+];
