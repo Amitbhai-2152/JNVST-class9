@@ -30,47 +30,43 @@ export const useProgressStore = create<Store>()(
       ...initial,
       completeLesson: (id, title) => set((state) => ({
         lessonActivity: { ...state.lessonActivity, [id]: { status: 'completed', lastAccessed: Date.now() } },
-        recentlyStudied: recent(state.recentlyStudied, { id, title, type: 'lesson', timestamp: Date.now() }),
-        revisionHistory: [...state.revisionHistory, { entityType: 'lesson', entityId: id, timestamp: Date.now() }],
+        recentlyStudied: recent(state.recentlyStudied ?? [], { id, title, type: 'lesson', timestamp: Date.now() }),
+        revisionHistory: [...(state.revisionHistory ?? []), { entityType: 'lesson', entityId: id, timestamp: Date.now() }],
       })),
       markInProgress: (id, title) => set((state) => ({
         lessonActivity: {
-          ...state.lessonActivity,
+          ...(state.lessonActivity ?? {}),
           [id]: {
-            status: state.lessonActivity[id]?.status === 'completed' ? 'completed' : 'in-progress',
+            status: state.lessonActivity?.[id]?.status === 'completed' ? 'completed' : 'in-progress',
             lastAccessed: Date.now(),
           },
         },
-        recentlyStudied: recent(state.recentlyStudied, { id, title, type: 'lesson', timestamp: Date.now() }),
+        recentlyStudied: recent(state.recentlyStudied ?? [], { id, title, type: 'lesson', timestamp: Date.now() }),
       })),
-      toggleBookmarkQuestion: (id) => set((state) => ({
-        bookmarks: {
-          ...state.bookmarks,
-          questionIds: state.bookmarks.questionIds.includes(id)
-            ? state.bookmarks.questionIds.filter((x) => x !== id)
-            : [...state.bookmarks.questionIds, id],
-        },
-      })),
-      toggleBookmarkLesson: (id) => set((state) => ({
-        bookmarks: {
-          ...state.bookmarks,
-          lessonIds: state.bookmarks.lessonIds.includes(id)
-            ? state.bookmarks.lessonIds.filter((x) => x !== id)
-            : [...state.bookmarks.lessonIds, id],
-        },
-      })),
+      toggleBookmarkQuestion: (id) => set((state) => {
+        const bookmarks = state.bookmarks ?? { questionIds: [], lessonIds: [] };
+        return { bookmarks: { ...bookmarks, questionIds: bookmarks.questionIds.includes(id) ? bookmarks.questionIds.filter((x) => x !== id) : [...bookmarks.questionIds, id] } };
+      }),
+      toggleBookmarkLesson: (id) => set((state) => {
+        const bookmarks = state.bookmarks ?? { questionIds: [], lessonIds: [] };
+        return { bookmarks: { ...bookmarks, lessonIds: bookmarks.lessonIds.includes(id) ? bookmarks.lessonIds.filter((x) => x !== id) : [...bookmarks.lessonIds, id] } };
+      }),
       recordAttempt: (id, attempt) => set((state) => ({
-        questionAttempts: { ...state.questionAttempts, [id]: [...(state.questionAttempts[id] ?? []), attempt] },
-        revisionHistory: [...state.revisionHistory, { entityType: 'question', entityId: id, timestamp: attempt.timestamp }],
+        questionAttempts: { ...(state.questionAttempts ?? {}), [id]: [...(state.questionAttempts?.[id] ?? []), attempt] },
+        revisionHistory: [...(state.revisionHistory ?? []), { entityType: 'question', entityId: id, timestamp: attempt.timestamp }],
       })),
       recordStudy: (id, title, type) => set((state) => ({
-        recentlyStudied: recent(state.recentlyStudied, { id, title, type, timestamp: Date.now() }),
+        recentlyStudied: recent(state.recentlyStudied ?? [], { id, title, type, timestamp: Date.now() }),
       })),
       saveMockResult: (result) => set((state) => ({
-        mockTestResults: [result, ...state.mockTestResults.filter((x) => x.id !== result.id)].slice(0, 20),
-        revisionHistory: [...state.revisionHistory, { entityType: 'mock-test', entityId: result.id, timestamp: result.timestamp }],
+        mockTestResults: [result, ...(state.mockTestResults ?? []).filter((x) => x.id !== result.id)].slice(0, 20),
+        revisionHistory: [...(state.revisionHistory ?? []), { entityType: 'mock-test', entityId: result.id, timestamp: result.timestamp }],
       })),
     }),
-    { name: 'jnvst-class9-progress' },
+    {
+      name: 'jnvst-class9-progress-v2',
+      version: 2,
+      migrate: () => initial,
+    },
   ),
 );
