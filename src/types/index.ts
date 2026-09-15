@@ -61,6 +61,7 @@ export interface Question {
   options: QuestionOption[];
   correctOptionIds: ID[];
   explanation: ContentBlock[];
+  explanationPlain?: string;
   difficulty: Difficulty;
   tags: string[];
   metadata?: { source?: string; year?: number };
