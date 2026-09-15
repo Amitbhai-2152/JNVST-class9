@@ -4,7 +4,15 @@ import path from 'node:path';
 const root = process.cwd();
 const questionDir = path.join(root, 'src', 'data', 'questions');
 
-const files = fs.readdirSync(questionDir).filter((file) => file.endsWith('.ts'));
+// Only scan canonical question-bank sources. Aggregators (index.ts, hindi.ts,
+// math.ts, science.ts) and legacy generated.ts must not be counted again.
+const files = fs.readdirSync(questionDir).filter((file) =>
+  file === 'english.ts' ||
+  /^hindiPart\d+\.ts$/.test(file) ||
+  /^mathPart\d+\.ts$/.test(file) ||
+  /^sciencePart\d+\.ts$/.test(file)
+);
+
 const subjectPatterns = {
   eng: /^q_eng_/,
   hin: /^q_hin_/,
