@@ -57,6 +57,7 @@ export interface Question {
   topicId: ID;
   passageId?: ID;
   text: ContentBlock[];
+  textPlain?: string;
   options: QuestionOption[];
   correctOptionIds: ID[];
   explanation: ContentBlock[];
