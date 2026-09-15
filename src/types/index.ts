@@ -56,11 +56,11 @@ export interface Question {
   chapterId: ID;
   topicId: ID;
   passageId?: ID;
-  text: ContentBlock[];
+  text?: ContentBlock[];
   textPlain?: string;
   options: QuestionOption[];
   correctOptionIds: ID[];
-  explanation: ContentBlock[];
+  explanation?: ContentBlock[];
   explanationPlain?: string;
   difficulty: Difficulty;
   tags: string[];
