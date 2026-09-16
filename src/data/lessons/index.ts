@@ -24,28 +24,11 @@ const splitText = (text: string, maxWords = 28): string[] => {
 
 const atomize = (block: ContentBlock): ContentBlock[] => {
   switch (block.type) {
-    case 'paragraph':
-      return splitText(block.text).map((text) => ({ type: 'paragraph', text }));
-    case 'callout':
-      return splitText(block.text).map((text, i) => ({
-        type: 'callout',
-        style: block.style,
-        title: i === 0 ? block.title : undefined,
-        text,
-      }));
-    case 'list':
-      return block.items.flatMap((item) => splitText(item).map((text) => ({
-        type: 'list',
-        style: block.style,
-        items: [text],
-      })));
-    case 'step-by-step':
-      return block.steps.flatMap((step) => splitText(step).map((text) => ({
-        type: 'step-by-step',
-        steps: [text],
-      })));
-    default:
-      return [block];
+    case 'paragraph': return splitText(block.text).map((text) => ({ type: 'paragraph', text }));
+    case 'callout': return splitText(block.text).map((text, i) => ({ type: 'callout', style: block.style, title: i === 0 ? block.title : undefined, text }));
+    case 'list': return block.items.flatMap((item) => splitText(item).map((text) => ({ type: 'list', style: block.style, items: [text] })));
+    case 'step-by-step': return block.steps.flatMap((step) => splitText(step).map((text) => ({ type: 'step-by-step', steps: [text] })));
+    default: return [block];
   }
 };
 
@@ -54,14 +37,14 @@ const questionUnits = (lesson: Lesson): ContentBlock[] => {
   return questions.flatMap((question, index) => {
     const correct = question.correctOptionIds
       .map((id) => question.options.find((option) => option.id === id)?.text)
-      .filter(Boolean)
+      .filter((text): text is string => Boolean(text))
       .join(' | ');
     return [
-      { type: 'heading', level: 3, text: `अभ्यास से समझें — प्रश्न ${index + 1}` },
-      { type: 'paragraph', text: question.textPlain },
-      { type: 'list', style: 'bullet', items: question.options.map((option) => `${option.id}: ${option.text}`) },
-      { type: 'callout', style: 'success', title: 'सही उत्तर', text: correct || 'उत्तर उपलब्ध' },
-      { type: 'callout', style: 'info', title: 'समाधान और कारण', text: question.explanationPlain },
+      { type: 'heading', level: 3, text: `अभ्यास से समझें — प्रश्न ${index + 1}` } satisfies ContentBlock,
+      { type: 'paragraph', text: question.textPlain ?? (question.options.map((option) => option.text).join(' | ') || 'प्रश्न पाठ उपलब्ध नहीं है।') } satisfies ContentBlock,
+      { type: 'list', style: 'bullet', items: question.options.map((option) => `${option.id}: ${option.text}`) } satisfies ContentBlock,
+      { type: 'callout', style: 'example', title: 'सही उत्तर', text: correct || 'उत्तर उपलब्ध' } satisfies ContentBlock,
+      { type: 'callout', style: 'info', title: 'समाधान और कारण', text: question.explanationPlain ?? 'इस प्रश्न में जाँची गई अवधारणा को lesson content से दोबारा पढ़ें।' } satisfies ContentBlock,
     ];
   });
 };
@@ -77,9 +60,9 @@ const paginateLesson = (lesson: Lesson): Lesson => {
   const source = [...lessonAtoms, ...questionAtoms];
 
   if (!source.length) {
-    const fallback = lesson.objectives.length
-      ? lesson.objectives.map((objective) => ({ type: 'callout', style: 'info' as const, title: 'अध्ययन लक्ष्य', text: objective }))
-      : [{ type: 'paragraph' as const, text: lesson.title }];
+    const fallback: ContentBlock[] = lesson.objectives.length
+      ? lesson.objectives.map((objective) => ({ type: 'callout', style: 'info', title: 'अध्ययन लक्ष्य', text: objective }))
+      : [{ type: 'paragraph', text: lesson.title }];
     source.push(...fallback);
   }
 
@@ -89,17 +72,9 @@ const paginateLesson = (lesson: Lesson): Lesson => {
   for (let pageIndex = 0; pageIndex < PAGE_COUNT; pageIndex += 1) {
     const start = pageIndex * pageSize;
     const slice = source.slice(start, start + pageSize);
-
-    // Topic/question data gives all normal lessons enough unique units for 12 pages.
-    // Keep a final deterministic revision page only when a source is genuinely too short.
-    const content = slice.length
+    const content: ContentBlock[] = slice.length
       ? slice
-      : [{
-          type: 'callout' as const,
-          style: 'info' as const,
-          title: 'अध्याय पुनरावृत्ति',
-          text: `इस lesson के मुख्य learning objectives: ${lesson.objectives.join(' · ') || lesson.title}`,
-        }];
+      : [{ type: 'callout', style: 'info', title: 'अध्याय पुनरावृत्ति', text: `इस lesson के मुख्य learning objectives: ${lesson.objectives.join(' · ') || lesson.title}` }];
 
     pages.push({
       type: 'heading',
@@ -111,7 +86,7 @@ const paginateLesson = (lesson: Lesson): Lesson => {
         type: 'callout',
         style: 'info',
         title: `पृष्ठ ${pageIndex + 1} का लक्ष्य`,
-        text: lesson.objectives[pageIndex % lesson.objectives.length],
+        text: lesson.objectives[pageIndex % lesson.objectives.length] ?? lesson.title,
       });
     }
     pages.push(...content);
