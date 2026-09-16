@@ -2,25 +2,17 @@ import { Link, useParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { chapters, allLessons, getSubject, topics } from '../data';
 import { getChapterStudyPages } from '../data/lessons/chapterStudy';
-import MathText from '../components/MathText';
+import { MathAwareText } from '../components/MathText';
 import type { ContentBlock, ID } from '../types';
 
-const InlineText = ({ text }: { text: string }) => {
-  const parts = text.split(/(\$\$.*?\$\$|\$.*?\$|\*\*.*?\*\*)/g);
-  return <>{parts.map((p, i) => {
-    if (p.startsWith('$$') && p.endsWith('$$')) return <MathText key={i} value={p.slice(2, -2)} display />;
-    if (p.startsWith('$') && p.endsWith('$')) return <MathText key={i} value={p.slice(1, -1)} />;
-    if (p.startsWith('**') && p.endsWith('**')) return <strong key={i}>{p.slice(2, -2)}</strong>;
-    return <span key={i}>{p}</span>;
-  })}</>;
-};
+const InlineText = ({ text }: { text: string }) => <MathAwareText text={text} />;
 
 const Content = ({ blocks }: { blocks: ContentBlock[] }) => <div className="lesson-content">{blocks.map((b, i) => {
   switch (b.type) {
     case 'heading': { const Tag = b.level === 2 ? 'h2' : b.level === 3 ? 'h3' : 'h4'; return <Tag key={i}><InlineText text={b.text} /></Tag>; }
     case 'paragraph': return <p key={i}><InlineText text={b.text} /></p>;
     case 'list': return b.style === 'number' ? <ol key={i}>{b.items.map((x, j) => <li key={j}><InlineText text={x} /></li>)}</ol> : <ul key={i}>{b.items.map((x, j) => <li key={j}><InlineText text={x} /></li>)}</ul>;
-    case 'formula': return <div className="formula-block" key={i}><MathText value={b.expression} display /></div>;
+    case 'formula': return <div className="formula-block" key={i}><MathAwareText text={b.expression} /></div>;
     case 'table': return <div className="table-wrap" key={i}><table><thead><tr>{b.headers.map((x, j) => <th key={j}><InlineText text={x} /></th>)}</tr></thead><tbody>{b.rows.map((r, j) => <tr key={j}>{r.map((x, k) => <td key={k}><InlineText text={x} /></td>)}</tr>)}</tbody></table></div>;
     case 'image': return <figure className="lesson-figure" key={i}><img src={b.src} alt={b.alt} onError={(e) => { e.currentTarget.style.display = 'none'; }} />{b.caption && <figcaption>{b.caption}</figcaption>}</figure>;
     case 'step-by-step': return <div className="steps" key={i}>{b.steps.map((x, j) => <div className="step" key={j}><span>{j + 1}</span><p><InlineText text={x} /></p></div>)}</div>;
