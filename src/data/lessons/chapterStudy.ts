@@ -1,4 +1,4 @@
-import type { Chapter, ContentBlock, Lesson, Topic } from '../../types';
+import type { Chapter, ContentBlock, Lesson } from '../../types';
 
 const splitText = (text: string): string[] => {
   const normalized = text.replace(/\r/g, '').trim();
@@ -49,65 +49,62 @@ const atomize = (block: ContentBlock): ContentBlock[] => {
   }
 };
 
-const pageTitle = (chapter: Chapter, pageNumber: number, source?: Lesson) => ({
-  type: 'heading' as const,
-  level: 2 as const,
+const pageTitle = (chapter: Chapter, pageNumber: number, source?: Lesson): ContentBlock => ({
+  type: 'heading',
+  level: 2,
   text: `अध्ययन पृष्ठ ${pageNumber} — ${chapter.title}${source ? ` · ${source.title}` : ''}`,
 });
 
 export const getChapterStudyPages = (
   chapter: Chapter,
-  topicList: Topic[],
   lessons: Lesson[],
   minimumPages = 12,
 ): ContentBlock[][] => {
   const chapterTopicIds = new Set(chapter.topicIds);
   const chapterLessons = lessons.filter((lesson) => chapterTopicIds.has(lesson.topicId));
-  const atoms = chapterLessons.flatMap((lesson) => atomize({
-    type: 'heading', level: 3, text: lesson.title,
-  } as ContentBlock).concat(lesson.content.flatMap(atomize)).map((block) => ({
-    lessonId: lesson.id,
-    block,
-  })));
+  const atoms = chapterLessons.flatMap((lesson) => [
+    { lessonId: lesson.id, block: { type: 'heading', level: 3 as const, text: lesson.title } as ContentBlock },
+    ...lesson.content.flatMap(atomize).map((block) => ({ lessonId: lesson.id, block })),
+  ]);
 
   if (!atoms.length) return Array.from({ length: minimumPages }, (_, i) => [pageTitle(chapter, i + 1)]);
 
-  const targetPages = Math.max(minimumPages, Math.min(atoms.length, Math.ceil(atoms.length / 2)));
+  const targetPages = Math.min(minimumPages, atoms.length);
+  const baseSize = Math.floor(atoms.length / targetPages);
+  const remainder = atoms.length % targetPages;
   const pages: ContentBlock[][] = [];
-  const perPage = Math.ceil(atoms.length / targetPages);
-  for (let i = 0; i < atoms.length && pages.length < targetPages; i += perPage) {
-    const slice = atoms.slice(i, i + perPage);
-    const first = chapterLessons.find((lesson) => lesson.id === slice[0]?.lessonId);
-    pages.push([pageTitle(chapter, pages.length + 1, first), ...slice.map((x) => x.block)]);
+  let cursor = 0;
+
+  for (let pageIndex = 0; pageIndex < targetPages; pageIndex += 1) {
+    const size = baseSize + (pageIndex < remainder ? 1 : 0);
+    const slice = atoms.slice(cursor, cursor + size);
+    cursor += size;
+    const source = chapterLessons.find((lesson) => lesson.id === slice[0]?.lessonId);
+    pages.push([pageTitle(chapter, pageIndex + 1, source), ...slice.map((x) => x.block)]);
   }
 
-  while (pages.length < minimumPages) {
-    const source = chapterLessons[pages.length % Math.max(1, chapterLessons.length)];
-    const existing = atoms[(pages.length - 1) % atoms.length];
-    pages.push([
-      pageTitle(chapter, pages.length + 1, source),
-      existing.block,
-    ]);
-  }
-
-  // Keep the navigation count stable and never expose an empty page.
-  return pages.map((page, i) => [
-    page[0]?.type === 'heading' && /^अध्ययन पृष्ठ\s+\d+/.test(page[0].text)
-      ? { ...page[0], text: `अध्ययन पृष्ठ ${i + 1} — ${chapter.title}${page[0].text.includes(' · ') ? page[0].text.slice(page[0].text.indexOf(' · ')) : ''}` }
-      : pageTitle(chapter, i + 1),
-    ...page.slice(1),
-  ]);
+  return pages;
 };
 
-export const getChapterStudyWordCount = (
-  chapter: Chapter,
-  topicList: Topic[],
-  lessons: Lesson[],
-) => getChapterStudyPages(chapter, topicList, lessons, 1)
-  .flat()
-  .filter((block): block is Extract<ContentBlock, { type: 'paragraph' | 'callout' | 'list' | 'step-by-step' }> => ['paragraph', 'callout', 'list', 'step-by-step'].includes(block.type))
-  .reduce((total, block) => {
-    if (block.type === 'paragraph' || block.type === 'callout') return total + block.text.split(/\s+/).filter(Boolean).length;
-    if (block.type === 'list') return total + block.items.join(' ').split(/\s+/).filter(Boolean).length;
-    return total + block.steps.join(' ').split(/\s+/).filter(Boolean).length;
+export const getChapterStudyWordCount = (chapter: Chapter, lessons: Lesson[]) => {
+  const pages = getChapterStudyPages(chapter, lessons, 1);
+  return pages.flat().reduce((total, block) => {
+    switch (block.type) {
+      case 'paragraph':
+      case 'callout':
+        return total + block.text.split(/\s+/).filter(Boolean).length;
+      case 'list':
+        return total + block.items.join(' ').split(/\s+/).filter(Boolean).length;
+      case 'step-by-step':
+        return total + block.steps.join(' ').split(/\s+/).filter(Boolean).length;
+      case 'heading':
+        return total + block.text.split(/\s+/).filter(Boolean).length;
+      case 'formula':
+        return total + block.expression.split(/\s+/).filter(Boolean).length;
+      case 'table':
+        return total + block.rows.flat().join(' ').split(/\s+/).filter(Boolean).length;
+      default:
+        return total;
+    }
   }, 0);
+};
