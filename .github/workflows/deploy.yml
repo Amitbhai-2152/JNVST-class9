@@ -38,28 +38,6 @@ jobs:
       - name: Build
         run: npm run build
 
-      # GitHub Pages may publish from main instead of the Pages artifact.
-      # Keep the root production files synchronized with the exact build above.
-      - name: Publish production build to repository root
-        run: |
-          rm -rf pages-publish
-          mkdir pages-publish
-          cp -R dist/. pages-publish/
-          rm -rf assets
-          mkdir assets
-          cp -R pages-publish/assets/. assets/
-          cp pages-publish/index.html index.html
-          rm -f assets/test.txt
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A index.html assets
-          if git diff --cached --quiet; then
-            echo "Production files already synchronized."
-          else
-            git commit -m "chore: sync production build to Pages root [skip ci]"
-            git push
-          fi
-
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
