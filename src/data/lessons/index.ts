@@ -49,13 +49,14 @@ const questionUnits = (lesson: Lesson): ContentBlock[] => {
   });
 };
 
-const paginateLesson = (lesson: Lesson): Lesson => {
-  const alreadyPaged = lesson.content.some(
-    (block) => block.type === 'heading' && /^अध्ययन पृष्ठ\s+\d+/.test(block.text),
-  );
-  if (alreadyPaged) return lesson;
+const isStudyMarker = (block: ContentBlock): boolean =>
+  block.type === 'heading' && /^अध्ययन पृष्ठ\s+\d+/.test(block.text);
 
-  const lessonAtoms = lesson.content.flatMap(atomize);
+const paginateLesson = (lesson: Lesson): Lesson => {
+  // Source lessons are the authoritative content. Any legacy page markers are
+  // removed only as structural markers so they cannot create a false page count.
+  const lessonSource = lesson.content.filter((block) => !isStudyMarker(block));
+  const lessonAtoms = lessonSource.flatMap(atomize);
   const questionAtoms = questionUnits(lesson);
   const source = [...lessonAtoms, ...questionAtoms];
 
@@ -101,6 +102,13 @@ export const allLessons: Lesson[] = [
   ...mathLessonsData,
   ...scienceLessonsData,
 ].map(paginateLesson);
+
+const underPageLessons = allLessons.filter(
+  (lesson) => lesson.content.filter(isStudyMarker).length < PAGE_COUNT,
+);
+if (underPageLessons.length) {
+  throw new Error(`Lesson study coverage error: ${underPageLessons.map((lesson) => lesson.id).join(', ')} have fewer than ${PAGE_COUNT} pages.`);
+}
 
 export const chapterStudyPages = Object.fromEntries(
   chapters.map((chapter) => [chapter.id, getChapterStudyPages(chapter, allLessons, 12)]),
