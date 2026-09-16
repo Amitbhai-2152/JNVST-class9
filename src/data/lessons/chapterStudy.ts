@@ -100,22 +100,24 @@ const getSubjectGuideSet = (chapter: Chapter, topics: Topic[]) => {
 export const getChapterStudyPages = (
   chapter: Chapter,
   lessons: Lesson[],
-  topics: Topic[] = [],
-  minimumPages = 12,
+  topicsOrMinimumPages: Topic[] | number = [],
+  requestedMinimumPages = 12,
 ): ContentBlock[][] => {
+  const topics = Array.isArray(topicsOrMinimumPages) ? topicsOrMinimumPages : [];
+  const minimumPages = typeof topicsOrMinimumPages === 'number' ? topicsOrMinimumPages : requestedMinimumPages;
   const chapterTopicIds = new Set(chapter.topicIds);
   const chapterLessons = lessons.filter((lesson) => chapterTopicIds.has(lesson.topicId));
   const { guides, topicNames } = getSubjectGuideSet(chapter, topics);
 
-  const atoms = chapterLessons.flatMap((lesson) => [
-    ...lesson.content.flatMap(atomize).map((block) => ({ lessonId: lesson.id, block })),
-  ]);
+  const atoms = chapterLessons.flatMap((lesson) =>
+    lesson.content.flatMap(atomize).map((block) => ({ lessonId: lesson.id, block })),
+  );
 
   const requiredPages = Math.max(minimumPages, guides.length);
   if (!chapterLessons.length || !atoms.length) {
     return Array.from({ length: requiredPages }, (_, index) => [
       pageTitle(chapter, index + 1, topicNames[index % Math.max(1, topicNames.length)] ?? chapter.title),
-      { type: 'paragraph', text: guides[index % guides.length] },
+      { type: 'callout', style: 'info', title: 'इस पृष्ठ का अध्ययन फोकस', text: guides[index % guides.length] },
     ]);
   }
 
@@ -130,6 +132,7 @@ export const getChapterStudyPages = (
     const firstSource = chapterLessons.find((lesson) => lesson.id === sourceAtoms[0].lessonId);
     const topic = topics.find((item) => item.id === firstSource?.topicId)?.title
       ?? topicNames[pageIndex % Math.max(1, topicNames.length)]
+      ?? firstSource?.title
       ?? chapter.title;
 
     pages.push([
