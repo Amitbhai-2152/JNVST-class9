@@ -17,8 +17,18 @@ const isMathToken = (token: string) => {
     (token.includes('/') && /^[A-Za-z0-9().{}\[\]+\-*/]+$/.test(token));
 };
 
+const stripMathDelimiters = (value: string) => {
+  let source = value.trim();
+  if (source.startsWith('$$') && source.endsWith('$$')) {
+    source = source.slice(2, -2).trim();
+  } else if (source.startsWith('$') && source.endsWith('$')) {
+    source = source.slice(1, -1).trim();
+  }
+  return source;
+};
+
 const renderKatex = (value: string, display = false): ReactNode => {
-  const source = value.trim();
+  const source = stripMathDelimiters(value);
   const html = katex.renderToString(source, {
     displayMode: display,
     throwOnError: false,
