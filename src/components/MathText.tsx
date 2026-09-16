@@ -8,7 +8,6 @@ type MathTextProps = {
 };
 
 const MATH_COMMAND = /\\(?:times|cdot|div|pm|mp|neq|ne|leq|le|geq|ge|approx|sim|propto|in|notin|subset|subseteq|supset|supseteq|forall|exists|angle|triangle|parallel|perp|pi|theta|alpha|beta|gamma|delta|Delta|lambda|mu|sigma|Sigma|phi|omega|Omega|infinity|infty|degree|circ|sqrt|frac|dfrac|tfrac|mathbb|Bbb|mathrm|mathbf|text|textbf|mathcal|left|right)/;
-const MATH_OPERATOR = /^(?:[=+\-−×÷*/^_≤≥≠±]|\\(?:times|cdot|div|pm|mp|neq|ne|leq|le|geq|ge|approx|sim|propto|in|notin))$/;
 
 const isMathToken = (token: string) => {
   if (!token) return false;
@@ -17,8 +16,6 @@ const isMathToken = (token: string) => {
     /^[-+*/().{},\[\]]+$/.test(token) ||
     (token.includes('/') && /^[A-Za-z0-9().{}\[\]+\-*/]+$/.test(token));
 };
-
-const isBareNumber = (token: string) => /^[-+]?\d+(?:\.\d+)?$/.test(token);
 
 const renderKatex = (value: string, display = false): ReactNode => {
   const source = value.trim();
@@ -41,7 +38,8 @@ function renderMixedSegment(text: string): ReactNode[] {
 
   const flush = () => {
     if (!buffer.length) return;
-    nodes.push(buffer.join(''));
+    const raw = buffer.join('');
+    nodes.push(raw);
     buffer = [];
   };
 
@@ -58,33 +56,12 @@ function renderMixedSegment(text: string): ReactNode[] {
     if (!singleMath) {
       const next = tokens[i + 1] ?? '';
       const nextNext = tokens[i + 2] ?? '';
-
-      // Capture raw expressions that begin with a single variable, such as
-      // "x = 2", "a + b", and "a × 10^n".
-      if (/^[A-Za-z]$/.test(token) && /^\s+$/.test(next) && (isMathToken(nextNext) || MATH_OPERATOR.test(nextNext))) {
-        let end = i + 3;
-        while (end < tokens.length) {
-          const t = tokens[end];
-          if (/^\s+$/.test(t)) {
-            const following = tokens[end + 1] ?? '';
-            if (end + 1 < tokens.length && (isMathToken(following) || MATH_COMMAND.test(following) || isBareNumber(following) || /^[A-Za-z]$/.test(following) || MATH_OPERATOR.test(following))) {
-              end += 1;
-              continue;
-            }
-            break;
-          }
-          if (isMathToken(t) || MATH_COMMAND.test(t) || isBareNumber(t) || /^[A-Za-z]$/.test(t) || MATH_OPERATOR.test(t)) {
-            end += 1;
-            continue;
-          }
-          break;
-        }
+      if (/^[A-Za-z]$/.test(token) && (isMathToken(nextNext) || MATH_COMMAND.test(nextNext))) {
         flush();
-        nodes.push(renderKatex(tokens.slice(i, end).join('')));
-        i = end;
+        nodes.push(renderKatex(token + next + nextNext));
+        i += 3;
         continue;
       }
-
       buffer.push(token);
       i += 1;
       continue;
@@ -95,7 +72,7 @@ function renderMixedSegment(text: string): ReactNode[] {
       const t = tokens[end];
       if (/^\s+$/.test(t)) {
         const following = tokens[end + 1] ?? '';
-        if (end + 1 < tokens.length && (isMathToken(following) || MATH_COMMAND.test(following) || isBareNumber(following) || /^[A-Za-z]$/.test(following))) {
+        if (end + 1 < tokens.length && (isMathToken(following) || MATH_COMMAND.test(following))) {
           end += 1;
           continue;
         }
@@ -123,9 +100,15 @@ function renderMixedSegment(text: string): ReactNode[] {
 export const MathAwareText = ({ text }: { text: string }) => {
   const parts = text.split(/(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$|\*\*[\s\S]*?\*\*)/g);
   return <>{parts.map((part, index) => {
-    if (part.startsWith('$$') && part.endsWith('$$')) return <React.Fragment key={index}>{renderKatex(part.slice(2, -2), true)}</React.Fragment>;
-    if (part.startsWith('$') && part.endsWith('$')) return <React.Fragment key={index}>{renderKatex(part.slice(1, -1))}</React.Fragment>;
-    if (part.startsWith('**') && part.endsWith('**')) return <strong key={index}>{part.slice(2, -2)}</strong>;
+    if (part.startsWith('$$') && part.endsWith('$$')) {
+      return <React.Fragment key={index}>{renderKatex(part.slice(2, -2), true)}</React.Fragment>;
+    }
+    if (part.startsWith('$') && part.endsWith('$')) {
+      return <React.Fragment key={index}>{renderKatex(part.slice(1, -1))}</React.Fragment>;
+    }
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={index}>{part.slice(2, -2)}</strong>;
+    }
     return <React.Fragment key={index}>{renderMixedSegment(part)}</React.Fragment>;
   })}</>;
 };
