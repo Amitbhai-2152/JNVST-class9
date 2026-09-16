@@ -98,10 +98,17 @@ const questionBlock = (question: (typeof allQuestions)[number], index: number): 
 };
 
 const splitInto = <T,>(items: T[], count: number): T[][] => {
-  if (!items.length) return [];
-  const buckets = Math.min(Math.max(1, count), items.length);
+  if (!items.length) return Array.from({ length: count }, () => []);
+  const buckets = Math.max(1, count);
   const result: T[][] = Array.from({ length: buckets }, () => []);
-  items.forEach((item, index) => result[index % buckets].push(item));
+  const baseSize = Math.floor(items.length / buckets);
+  const remainder = items.length % buckets;
+  let cursor = 0;
+  for (let i = 0; i < buckets; i += 1) {
+    const size = baseSize + (i < remainder ? 1 : 0);
+    result[i] = items.slice(cursor, cursor + size);
+    cursor += size;
+  }
   return result;
 };
 
@@ -128,23 +135,19 @@ export const getChapterStudyPages = (
   const topicNames = topics.filter((topic) => chapter.topicIds.includes(topic.id)).map((topic) => topic.title);
 
   const lessonBlocks = chapterLessons.flatMap((lesson) => lesson.content);
-  const lessonGroups = splitInto(lessonBlocks, Math.max(1, Math.min(9, requiredPages - 3)));
-  const questionGroups = splitInto(chapterQuestions, Math.max(1, requiredPages));
-
+  const lessonGroups = splitInto(lessonBlocks, requiredPages);
+  const questionGroups = splitInto(chapterQuestions, requiredPages);
   const objectives = Array.from(new Set(chapterLessons.flatMap((lesson) => lesson.objectives))).slice(0, 8);
-  const keyHeadings = Array.from(new Set(lessonBlocks.filter((block): block is Extract<ContentBlock, { type: 'heading' }> => block.type === 'heading').map((block) => block.text))).slice(0, 12);
-  const pages: ContentBlock[][] = [];
+  const keyHeadings = Array.from(new Set(lessonBlocks
+    .filter((block): block is Extract<ContentBlock, { type: 'heading' }> => block.type === 'heading')
+    .map((block) => block.text))).slice(0, 12);
 
-  for (let pageIndex = 0; pageIndex < requiredPages; pageIndex += 1) {
-    const lessonGroup = lessonGroups[pageIndex % Math.max(1, lessonGroups.length)] ?? [];
+  return Array.from({ length: requiredPages }, (_, pageIndex) => {
+    const lessonGroup = lessonGroups[pageIndex] ?? [];
     const qGroup = questionGroups[pageIndex] ?? [];
-    const topic = topics.find((item) => item.id === chapter.topicIds.find((id) => {
-      const lesson = chapterLessons.find((candidate) => candidate.content.some((block) => lessonBlocks.includes(block)));
-      return lesson?.topicId === id;
-    }))?.title ?? topicNames[pageIndex % Math.max(1, topicNames.length)] ?? chapter.title;
-
+    const topicTitle = topicNames[pageIndex % Math.max(1, topicNames.length)] ?? chapter.title;
     const page: ContentBlock[] = [
-      pageTitle(chapter, pageIndex + 1, topic),
+      pageTitle(chapter, pageIndex + 1, topicTitle),
       { type: 'callout', style: 'info', title: 'इस पृष्ठ का अध्ययन फोकस', text: guides[pageIndex % guides.length] },
     ];
 
@@ -155,13 +158,13 @@ export const getChapterStudyPages = (
     }
 
     if (lessonGroup.length) {
-      page.push({ type: 'callout', style: 'important', title: 'मूल पाठ-सामग्री', text: `नीचे source lesson की वास्तविक सामग्री को व्यवस्थित क्रम में दिया गया है। इस हिस्से को ध्यान से पढ़ें और definitions, examples तथा rules को चिन्हित करें।` });
+      page.push({ type: 'callout', style: 'important', title: 'मूल पाठ-सामग्री', text: 'नीचे source lesson की वास्तविक सामग्री दी गई है। definitions, examples, rules और explanations को क्रम से पढ़ें।' });
       page.push(...lessonGroup);
     }
 
     if (qGroup.length) {
-      page.push({ type: 'callout', style: 'example', title: 'अभ्यास से अवधारणा मजबूत करें', text: `${qGroup.length} source-based practice question${qGroup.length === 1 ? '' : 's'} के साथ concept को जाँचें। हर उत्तर की explanation भी पढ़ें।` });
-      qGroup.forEach((question, index) => page.push(...questionBlock(question, pageIndex + index)));
+      page.push({ type: 'callout', style: 'example', title: 'अभ्यास से अवधारणा मजबूत करें', text: `${qGroup.length} source-based practice question${qGroup.length === 1 ? '' : 's'} यहाँ दिए गए हैं। हर उत्तर की explanation भी पढ़ें।` });
+      qGroup.forEach((question, questionIndex) => page.push(...questionBlock(question, pageIndex * qGroup.length + questionIndex)));
     }
 
     if (pageIndex === requiredPages - 3) {
@@ -174,7 +177,7 @@ export const getChapterStudyPages = (
         'परिभाषा या मुख्य नियम को बिना देखे दोहराएँ।',
         'कम-से-कम एक worked example का method खुद समझाएँ।',
         'common mistake या misconception को पहचानें।',
-        'practice questions की explanations पढ़कर reasoning जाँचें.',
+        'practice questions की explanations पढ़कर reasoning जाँचें।',
       ] });
     }
     if (pageIndex === requiredPages - 1) {
@@ -182,10 +185,8 @@ export const getChapterStudyPages = (
       page.push({ type: 'callout', style: 'important', title: '30 सेकंड का recall', text: `${chapter.title} से तीन मुख्य concepts, दो examples और एक common mistake बिना notes देखे बोलकर या लिखकर याद करें।` });
     }
 
-    pages.push(page);
-  }
-
-  return pages;
+    return page;
+  });
 };
 
 export const getChapterStudyWordCount = (
