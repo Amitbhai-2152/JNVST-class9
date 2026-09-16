@@ -1,0 +1,364 @@
+/*
+ * Chapter / study UI layer.
+ * Kept separate from the existing global stylesheet so the current app styles
+ * remain intact while chapter screens get a consistent, responsive layout.
+ */
+
+:root {
+  --chapter-ink: #14253d;
+  --chapter-muted: #64748b;
+  --chapter-line: #dfe7f1;
+  --chapter-surface: #ffffff;
+  --chapter-soft: #f5f8fc;
+  --chapter-blue: #2457c5;
+  --chapter-blue-soft: #edf3ff;
+  --chapter-shadow: 0 12px 34px rgba(20, 37, 61, 0.07);
+}
+
+/* Shared page rhythm */
+.shell { width: min(1240px, 100%); }
+.page-head {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 24px;
+}
+.page-head > a {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: #4b617d;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+.page-head > a:hover {
+  color: var(--chapter-ink);
+  background: #eef4fb;
+  border-color: #dbe5f0;
+}
+.page-head h1 {
+  max-width: 900px;
+  font-weight: 800;
+  line-height: 1.12;
+}
+
+/* Subject -> chapter listing */
+.chapter-section {
+  position: relative;
+  overflow: hidden;
+  padding: 24px;
+  margin: 0 0 18px;
+  background: rgba(255,255,255,.98);
+  border: 1px solid var(--chapter-line);
+  border-radius: 20px;
+  box-shadow: 0 8px 28px rgba(20, 37, 61, .045);
+}
+.chapter-section::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, #2457c5, #6d8fe0);
+}
+.chapter-link {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 16px;
+  padding: 4px 0;
+}
+.chapter-link h2 {
+  min-width: 0;
+  line-height: 1.25;
+  font-size: clamp(21px, 2.5vw, 27px);
+}
+.chapter-link h2::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  margin: 0 4px 0 10px;
+  background: #edf1f6;
+}
+.chapter-link h2 span { display: inline-flex; }
+
+/* Topic cards */
+.grid > .topic-card { height: 100%; }
+.topic-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+  height: 100%;
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid #e1e8f1;
+  background: linear-gradient(180deg, #fff 0%, #fbfdff 100%);
+  box-shadow: none;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.topic-card:hover {
+  transform: translateY(-2px);
+  border-color: #c9d7e9;
+  box-shadow: 0 12px 28px rgba(20, 37, 61, .08);
+}
+.topic-card .topic-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+.topic-card h3 {
+  color: var(--chapter-ink);
+  letter-spacing: -.01em;
+}
+.count {
+  flex-shrink: 0;
+  align-self: flex-start;
+  background: var(--chapter-blue-soft);
+  color: #2c59b7;
+  border: 1px solid #d7e3fb;
+}
+.topic-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 14px;
+  color: #62738a;
+  font-size: 13px;
+}
+.topic-meta span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 5px 9px;
+  border: 1px solid #e3e9f1;
+  border-radius: 999px;
+  background: #f7f9fc;
+}
+.topic-card .actions {
+  margin-top: auto;
+  padding-top: 4px;
+}
+.topic-card .actions .btn { min-height: 40px; }
+
+/* Chapter study reader */
+.lesson-card {
+  overflow: hidden;
+  padding: 0;
+  border-radius: 22px;
+  border: 1px solid #dce5f0;
+  box-shadow: var(--chapter-shadow);
+}
+.study-reader {
+  position: sticky;
+  top: 70px;
+  z-index: 8;
+  padding: 16px 20px 14px;
+  background: rgba(255,255,255,.97);
+  border-bottom: 1px solid #e6ecf3;
+  backdrop-filter: blur(12px);
+}
+.study-reader-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(120px, 330px);
+  align-items: center;
+  gap: 16px;
+}
+.study-reader-head > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.study-reader-head b {
+  color: var(--chapter-ink);
+  font-size: 14px;
+}
+.study-reader-head span {
+  color: #6b7c91;
+  font-size: 13px;
+  font-weight: 700;
+}
+.study-progress {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e9eef5;
+}
+.study-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2457c5, #5d80d9);
+  transition: width .2s ease;
+}
+.study-page-nav {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+  padding-bottom: 2px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.study-page-nav button {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #d6dfeb;
+  border-radius: 9px;
+  background: #fff;
+  color: #52657d;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background .16s ease, color .16s ease, border-color .16s ease, transform .16s ease;
+}
+.study-page-nav button:hover { transform: translateY(-1px); border-color: #b6c7df; }
+.study-page-nav button.active {
+  color: #fff;
+  background: var(--chapter-blue);
+  border-color: var(--chapter-blue);
+  box-shadow: 0 5px 12px rgba(36, 87, 197, .22);
+}
+
+.chapter-study-topics {
+  margin: 0;
+  padding: 14px 28px;
+  border-bottom: 1px solid #edf1f6;
+  background: #f8fafd;
+  color: #66768b;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.chapter-study-topics strong { color: #334b69; margin-right: 5px; }
+
+/* Reading column: comfortable line length and clear hierarchy */
+.lesson-card > .lesson-content {
+  width: min(820px, calc(100% - 56px));
+  margin: 0 auto;
+  padding: 8px 0 16px;
+}
+.lesson-content h2,
+.lesson-content h3,
+.lesson-content h4 {
+  scroll-margin-top: 150px;
+}
+.lesson-content h2 {
+  position: relative;
+  margin-top: 34px;
+  padding-top: 4px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e7edf4;
+  font-size: clamp(24px, 3vw, 29px);
+}
+.lesson-content h3 {
+  margin-top: 26px;
+  font-size: 21px;
+}
+.lesson-content p,
+.lesson-content li {
+  color: #3b4d63;
+  font-size: 16.5px;
+  line-height: 1.82;
+}
+.lesson-content p { margin: 0 0 14px; }
+.lesson-content ul,
+.lesson-content ol { margin: 10px 0 18px; }
+.lesson-content li { margin: 8px 0; }
+.formula-block {
+  margin: 20px 0;
+  padding: 15px 17px;
+  border: 1px solid #dce5f2;
+  border-left: 4px solid #3e63bf;
+  border-radius: 12px;
+  background: #f6f9fe;
+}
+.callout {
+  margin: 20px 0;
+  padding: 16px 18px;
+  border-radius: 14px;
+  box-shadow: 0 5px 16px rgba(20, 37, 61, .035);
+}
+.steps { gap: 11px; }
+.step {
+  padding: 12px 14px;
+  border: 1px solid #e2e9f1;
+  border-radius: 13px;
+  background: #fbfcfe;
+}
+.step > span { box-shadow: 0 4px 10px rgba(36, 87, 197, .14); }
+.table-wrap { box-shadow: 0 4px 14px rgba(20, 37, 61, .035); }
+
+/* Reader footer actions */
+.study-reader-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  width: min(820px, calc(100% - 56px));
+  margin: 6px auto 0;
+  padding: 20px 0 26px;
+  border-top: 1px solid #e8edf3;
+}
+.study-reader-actions .btn {
+  min-height: 44px;
+  padding-inline: 17px;
+}
+.lesson-card > .actions:last-child {
+  width: min(820px, calc(100% - 56px));
+  margin: 0 auto;
+  padding: 0 0 28px;
+}
+
+/* Topic lesson pages use the same reading language */
+.lesson-meta span { background: #f7f9fc; }
+.objectives {
+  width: min(820px, calc(100% - 56px));
+  margin: 22px auto 4px;
+}
+
+/* Keyboard focus */
+.btn:focus-visible,
+.study-page-nav button:focus-visible,
+.chapter-link:focus-visible,
+.page-head > a:focus-visible {
+  outline: 3px solid rgba(36, 87, 197, .28);
+  outline-offset: 2px;
+}
+
+/* Responsive */
+@media (max-width: 820px) {
+  .chapter-section { padding: 18px; border-radius: 17px; }
+  .topic-card { padding: 17px; }
+  .study-reader { top: 96px; padding: 13px 14px 12px; }
+  .study-reader-head { grid-template-columns: 1fr; gap: 9px; }
+  .chapter-study-topics { padding: 12px 16px; }
+  .lesson-card > .lesson-content,
+  .study-reader-actions,
+  .lesson-card > .actions:last-child,
+  .objectives { width: calc(100% - 32px); }
+  .lesson-content p,
+  .lesson-content li { font-size: 16px; line-height: 1.75; }
+}
+
+@media (max-width: 520px) {
+  .chapter-section { padding: 15px; margin-bottom: 14px; }
+  .chapter-link { margin-bottom: 12px; }
+  .chapter-link h2::after { display: none; }
+  .topic-card .topic-top { flex-direction: column; gap: 8px; }
+  .count { width: fit-content; }
+  .topic-card .actions { display: grid; grid-template-columns: 1fr; }
+  .topic-card .actions .btn { width: 100%; }
+  .study-reader { top: 94px; }
+  .study-reader-head > div:first-child { justify-content: space-between; }
+  .study-page-nav { margin-inline: -2px; }
+  .lesson-card > .lesson-content,
+  .study-reader-actions,
+  .lesson-card > .actions:last-child,
+  .objectives { width: calc(100% - 24px); }
+  .study-reader-actions { flex-direction: column; align-items: stretch; }
+  .study-reader-actions .btn { width: 100%; }
+  .objectives { margin-top: 16px; }
+}
