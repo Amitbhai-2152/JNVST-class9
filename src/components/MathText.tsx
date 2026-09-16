@@ -17,18 +17,22 @@ const isMathToken = (token: string) => {
     (token.includes('/') && /^[A-Za-z0-9().{}\[\]+\-*/]+$/.test(token));
 };
 
-const stripMathDelimiters = (value: string) => {
+const normalizeMathSource = (value: string) => {
   let source = value.trim();
   if (source.startsWith('$$') && source.endsWith('$$')) {
     source = source.slice(2, -2).trim();
   } else if (source.startsWith('$') && source.endsWith('$')) {
     source = source.slice(1, -1).trim();
   }
+
+  // Some lesson data contains escaped LaTeX commands (for example
+  // "\\\\mathbb"). KaTeX expects the actual command "\\mathbb".
+  source = source.replace(/\\\\+/g, '\\');
   return source;
 };
 
 const renderKatex = (value: string, display = false): ReactNode => {
-  const source = stripMathDelimiters(value);
+  const source = normalizeMathSource(value);
   const html = katex.renderToString(source, {
     displayMode: display,
     throwOnError: false,
