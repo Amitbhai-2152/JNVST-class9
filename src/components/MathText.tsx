@@ -7,7 +7,7 @@ type MathTextProps = {
   display?: boolean;
 };
 
-const MATH_COMMAND = /\\(?:times|cdot|div|pm|mp|neq|ne|leq|le|geq|ge|approx|sim|propto|in|notin|subset|subseteq|supset|supseteq|forall|exists|angle|triangle|parallel|perp|pi|theta|alpha|beta|gamma|delta|Delta|lambda|mu|sigma|Sigma|phi|omega|Omega|infinity|infty|degree|circ|sqrt|frac|dfrac|tfrac|mathbb|Bbb|mathrm|mathbf|text|textbf|mathcal|left|right)/;
+const MATH_COMMAND = /\\(?:times|cdot|div|pm|mp|neq|ne|leq|le|geq|ge|approx|sim|propto|in|notin|subset|subseteq|supset|supseteq|forall|exists|angle|triangle|parallel|perp|pi|theta|alpha|beta|gamma|delta|Delta|lambda|mu|sigma|Sigma|phi|omega|Omega|infinity|infty|degree|circ|sqrt|frac|dfrac|tfrac|mathbb|Bbb|mathrm|mathbf|text|textbf|mathcal|left|right|mid)/;
 
 const isMathToken = (token: string) => {
   if (!token) return false;
@@ -25,22 +25,105 @@ const normalizeMathSource = (value: string) => {
     source = source.slice(1, -1).trim();
   }
 
-  // Some lesson data contains escaped LaTeX commands (for example
-  // "\\\\mathbb"). KaTeX expects the actual command "\\mathbb".
+  // Gemini-exported lesson strings can contain multiple literal backslashes.
+  // Normalize them so KaTeX receives standard LaTeX commands.
   source = source.replace(/\\\\+/g, '\\');
   return source;
 };
 
+const escapeHtml = (value: string) => value
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
+const superscript = (value: string) => {
+  const map: Record<string, string> = {
+    '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
+    '+': '⁺', '-': '⁻', '=': '⁼', '(': '⁽', ')': '⁾', 'n': 'ⁿ', 'i': 'ⁱ',
+  };
+  return [...value].map((ch) => map[ch] ?? ch).join('');
+};
+
+const fallbackMathHtml = (value: string) => {
+  let source = normalizeMathSource(value);
+  const blackboard: Record<string, string> = {
+    Q: 'ℚ', Z: 'ℤ', N: 'ℕ', R: 'ℝ', C: 'ℂ', I: '𝕀',
+  };
+
+  source = source
+    .replace(/\\mathbb\{([A-Za-z])\}/g, (_, ch: string) => blackboard[ch] ?? ch)
+    .replace(/\\(?:mathrm|mathbf|mathcal|textbf)\{([^{}]*)\}/g, '$1')
+    .replace(/\\(?:frac|dfrac|tfrac)\{([^{}]*)\}\{([^{}]*)\}/g, '($1/$2)')
+    .replace(/\\sqrt\{([^{}]*)\}/g, '√($1)')
+    .replace(/\\left/g, '')
+    .replace(/\\right/g, '')
+    .replace(/\\times|\\cdot/g, '×')
+    .replace(/\\div/g, '÷')
+    .replace(/\\pm/g, '±')
+    .replace(/\\mp/g, '∓')
+    .replace(/\\neq|\\ne/g, '≠')
+    .replace(/\\leq|\\le/g, '≤')
+    .replace(/\\geq|\\ge/g, '≥')
+    .replace(/\\approx/g, '≈')
+    .replace(/\\sim/g, '∼')
+    .replace(/\\propto/g, '∝')
+    .replace(/\\in/g, '∈')
+    .replace(/\\notin/g, '∉')
+    .replace(/\\subseteq/g, '⊆')
+    .replace(/\\subset/g, '⊂')
+    .replace(/\\supseteq/g, '⊇')
+    .replace(/\\supset/g, '⊃')
+    .replace(/\\forall/g, '∀')
+    .replace(/\\exists/g, '∃')
+    .replace(/\\angle/g, '∠')
+    .replace(/\\triangle/g, '△')
+    .replace(/\\parallel/g, '∥')
+    .replace(/\\perp/g, '⊥')
+    .replace(/\\pi/g, 'π')
+    .replace(/\\infty|\\infinity/g, '∞')
+    .replace(/\\degree|\\circ/g, '°')
+    .replace(/\\mid/g, '∣')
+    .replace(/\\lambda/g, 'λ')
+    .replace(/\\mu/g, 'μ')
+    .replace(/\\sigma/g, 'σ')
+    .replace(/\\Delta/g, 'Δ')
+    .replace(/\\theta/g, 'θ')
+    .replace(/\\alpha/g, 'α')
+    .replace(/\\beta/g, 'β')
+    .replace(/\\gamma/g, 'γ')
+    .replace(/\\delta/g, 'δ')
+    .replace(/\\phi/g, 'φ')
+    .replace(/\\omega/g, 'ω')
+    .replace(/\\Omega/g, 'Ω')
+    .replace(/\^\{([^{}]*)\}/g, (_, exp: string) => superscript(exp))
+    .replace(/\^([A-Za-z0-9+\-])/g, (_, exp: string) => superscript(exp));
+
+  source = source.replace(/[{}]/g, '');
+  source = source.replace(/\\([A-Za-z]+)/g, '$1');
+  return escapeHtml(source);
+};
+
 const renderKatex = (value: string, display = false): ReactNode => {
   const source = normalizeMathSource(value);
-  const html = katex.renderToString(source, {
-    displayMode: display,
-    throwOnError: false,
-    strict: false,
-    trust: false,
-    output: 'htmlAndMathml',
-  });
-  return <span className={display ? 'math-display' : 'math-inline'} dangerouslySetInnerHTML={{ __html: html }} />;
+  try {
+    const html = katex.renderToString(source, {
+      displayMode: display,
+      throwOnError: true,
+      strict: false,
+      trust: false,
+      output: 'htmlAndMathml',
+    });
+    return <span className={display ? 'math-display' : 'math-inline'} dangerouslySetInnerHTML={{ __html: html }} />;
+  } catch (error) {
+    console.warn('KaTeX render fallback:', error, source);
+    return <span
+      className={display ? 'math-display math-fallback' : 'math-inline math-fallback'}
+      dangerouslySetInnerHTML={{ __html: fallbackMathHtml(source) }}
+      aria-label={source}
+    />;
+  }
 };
 
 export const MathText = ({ value, display = false }: MathTextProps) => renderKatex(value, display);
@@ -52,8 +135,7 @@ function renderMixedSegment(text: string): ReactNode[] {
 
   const flush = () => {
     if (!buffer.length) return;
-    const raw = buffer.join('');
-    nodes.push(raw);
+    nodes.push(buffer.join(''));
     buffer = [];
   };
 
