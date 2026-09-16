@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { chapters, allLessons, getSubject, topics } from '../data';
+import { getChapterStudyPages } from '../data/lessons/chapterStudy';
 import { MathAwareText, MathText } from '../components/MathText';
 import type { ContentBlock, ID } from '../types';
 
