@@ -1,5 +1,6 @@
 import type { ContentBlock, Lesson } from '../../types';
 import { chapters } from '../curriculum';
+import { allQuestions } from '../questions';
 import { getChapterStudyPages } from './chapterStudy';
 import { englishLessonsData } from './english';
 import { hindiLessonsData } from './hindi';
@@ -48,34 +49,69 @@ const atomize = (block: ContentBlock): ContentBlock[] => {
   }
 };
 
+const questionUnits = (lesson: Lesson): ContentBlock[] => {
+  const questions = allQuestions.filter((question) => question.topicId === lesson.topicId);
+  return questions.flatMap((question, index) => {
+    const correct = question.correctOptionIds
+      .map((id) => question.options.find((option) => option.id === id)?.text)
+      .filter(Boolean)
+      .join(' | ');
+    return [
+      { type: 'heading', level: 3, text: `अभ्यास से समझें — प्रश्न ${index + 1}` },
+      { type: 'paragraph', text: question.textPlain },
+      { type: 'list', style: 'bullet', items: question.options.map((option) => `${option.id}: ${option.text}`) },
+      { type: 'callout', style: 'success', title: 'सही उत्तर', text: correct || 'उत्तर उपलब्ध' },
+      { type: 'callout', style: 'info', title: 'समाधान और कारण', text: question.explanationPlain },
+    ];
+  });
+};
+
 const paginateLesson = (lesson: Lesson): Lesson => {
   const alreadyPaged = lesson.content.some(
     (block) => block.type === 'heading' && /^अध्ययन पृष्ठ\s+\d+/.test(block.text),
   );
   if (alreadyPaged) return lesson;
 
-  const atoms = lesson.content.flatMap(atomize);
-  const source = atoms.length ? atoms : [{ type: 'paragraph', text: lesson.title } satisfies ContentBlock];
-  const perPage = Math.max(1, Math.ceil(source.length / PAGE_COUNT));
+  const lessonAtoms = lesson.content.flatMap(atomize);
+  const questionAtoms = questionUnits(lesson);
+  const source = [...lessonAtoms, ...questionAtoms];
+
+  if (!source.length) {
+    const fallback = lesson.objectives.length
+      ? lesson.objectives.map((objective) => ({ type: 'callout', style: 'info' as const, title: 'अध्ययन लक्ष्य', text: objective }))
+      : [{ type: 'paragraph' as const, text: lesson.title }];
+    source.push(...fallback);
+  }
+
+  const pageSize = Math.max(1, Math.ceil(source.length / PAGE_COUNT));
   const pages: ContentBlock[] = [];
 
   for (let pageIndex = 0; pageIndex < PAGE_COUNT; pageIndex += 1) {
-    const start = pageIndex * perPage;
-    const slice = source.slice(start, start + perPage);
-    const content = slice.length ? slice : [source[pageIndex % source.length]];
-    const objective = lesson.objectives[pageIndex % Math.max(1, lesson.objectives.length)];
+    const start = pageIndex * pageSize;
+    const slice = source.slice(start, start + pageSize);
+
+    // Topic/question data gives all normal lessons enough unique units for 12 pages.
+    // Keep a final deterministic revision page only when a source is genuinely too short.
+    const content = slice.length
+      ? slice
+      : [{
+          type: 'callout' as const,
+          style: 'info' as const,
+          title: 'अध्याय पुनरावृत्ति',
+          text: `इस lesson के मुख्य learning objectives: ${lesson.objectives.join(' · ') || lesson.title}`,
+        }];
 
     pages.push({
       type: 'heading',
       level: 2,
       text: `अध्ययन पृष्ठ ${pageIndex + 1} — ${lesson.title}`,
     });
-    if (objective) {
+    if (lesson.objectives.length) {
       pages.push({
         type: 'callout',
         style: 'info',
-        title: 'इस पृष्ठ का लक्ष्य',
-        text: objective,
+        title: `पृष्ठ ${pageIndex + 1} का लक्ष्य`,
+        text: lesson.objectives[pageIndex % lesson.objectives.length],
       });
     }
     pages.push(...content);
