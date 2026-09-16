@@ -1,5 +1,6 @@
 import type { Chapter, ContentBlock, Lesson, Topic } from '../../types';
 import { allQuestions } from '../questions';
+import { richChapterContent } from './richChapterContent';
 
 const subjectGuides: Record<'अंग्रेज़ी' | 'हिंदी' | 'गणित' | 'विज्ञान', string[]> = {
   अंग्रेज़ी: [
@@ -99,12 +100,11 @@ const questionBlock = (question: (typeof allQuestions)[number], index: number): 
 
 const splitInto = <T,>(items: T[], count: number): T[][] => {
   if (!items.length) return Array.from({ length: count }, () => []);
-  const buckets = Math.max(1, count);
-  const result: T[][] = Array.from({ length: buckets }, () => []);
-  const baseSize = Math.floor(items.length / buckets);
-  const remainder = items.length % buckets;
+  const result: T[][] = Array.from({ length: count }, () => []);
+  const baseSize = Math.floor(items.length / count);
+  const remainder = items.length % count;
   let cursor = 0;
-  for (let i = 0; i < buckets; i += 1) {
+  for (let i = 0; i < count; i += 1) {
     const size = baseSize + (i < remainder ? 1 : 0);
     result[i] = items.slice(cursor, cursor + size);
     cursor += size;
@@ -137,6 +137,7 @@ export const getChapterStudyPages = (
   const lessonBlocks = chapterLessons.flatMap((lesson) => lesson.content);
   const lessonGroups = splitInto(lessonBlocks, requiredPages);
   const questionGroups = splitInto(chapterQuestions, requiredPages);
+  const richGroups = splitInto(richChapterContent[chapter.id] ?? [], requiredPages);
   const objectives = Array.from(new Set(chapterLessons.flatMap((lesson) => lesson.objectives))).slice(0, 8);
   const keyHeadings = Array.from(new Set(lessonBlocks
     .filter((block): block is Extract<ContentBlock, { type: 'heading' }> => block.type === 'heading')
@@ -145,14 +146,20 @@ export const getChapterStudyPages = (
   return Array.from({ length: requiredPages }, (_, pageIndex) => {
     const lessonGroup = lessonGroups[pageIndex] ?? [];
     const qGroup = questionGroups[pageIndex] ?? [];
+    const richGroup = richGroups[pageIndex] ?? [];
     const topicTitle = topicNames[pageIndex % Math.max(1, topicNames.length)] ?? chapter.title;
     const page: ContentBlock[] = [
       pageTitle(chapter, pageIndex + 1, topicTitle),
       { type: 'callout', style: 'info', title: 'इस पृष्ठ का अध्ययन फोकस', text: guides[pageIndex % guides.length] },
     ];
 
+    if (richGroup.length) {
+      page.push({ type: 'callout', style: 'important', title: 'गहराई से समझें', text: 'इस भाग में chapter के core idea को सरल भाषा, exam logic और application के साथ स्पष्ट किया गया है।' });
+      page.push(...richGroup);
+    }
+
     if (pageIndex === 0) {
-      page.push({ type: 'paragraph', text: `${chapter.title} को source lessons, learning objectives और practice questions के आधार पर एक क्रमबद्ध अध्ययन पाठ में व्यवस्थित किया गया है।` });
+      page.push({ type: 'paragraph', text: `${chapter.title} को मौजूदा lesson source, objectives और practice bank के आधार पर क्रमबद्ध अध्ययन पाठ में व्यवस्थित किया गया है।` });
       if (objectives.length) page.push({ type: 'list', style: 'bullet', items: objectives.map((item) => `सीखें: ${item}`) });
       if (keyHeadings.length) page.push({ type: 'callout', style: 'important', title: 'अध्याय में शामिल मुख्य अवधारणाएँ', text: keyHeadings.join(' · ') });
     }
@@ -163,7 +170,7 @@ export const getChapterStudyPages = (
     }
 
     if (qGroup.length) {
-      page.push({ type: 'callout', style: 'example', title: 'अभ्यास से अवधारणा मजबूत करें', text: `${qGroup.length} source-based practice question${qGroup.length === 1 ? '' : 's'} यहाँ दिए गए हैं। हर उत्तर की explanation भी पढ़ें।` });
+      page.push({ type: 'callout', style: 'example', title: 'अभ्यास से अवधारणा मजबूत करें', text: `${qGroup.length} source-based practice questions यहाँ दिए गए हैं। हर उत्तर की explanation भी पढ़ें।` });
       qGroup.forEach((question, questionIndex) => page.push(...questionBlock(question, pageIndex * qGroup.length + questionIndex)));
     }
 
