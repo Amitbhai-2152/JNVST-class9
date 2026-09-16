@@ -1,6 +1,6 @@
 import type { Chapter, ContentBlock, Lesson } from '../../types';
 
-const splitText = (text: string): string[] => {
+const splitText = (text: string, maxWords = 18): string[] => {
   const normalized = text.replace(/\r/g, '').trim();
   if (!normalized) return [];
   const lines = normalized.split(/\n+/).map((x) => x.trim()).filter(Boolean);
@@ -10,9 +10,9 @@ const splitText = (text: string): string[] => {
   });
   return sentences.flatMap((sentence) => {
     const words = sentence.split(/\s+/);
-    if (words.length <= 42) return [sentence];
+    if (words.length <= maxWords) return [sentence];
     const chunks: string[] = [];
-    for (let i = 0; i < words.length; i += 34) chunks.push(words.slice(i, i + 34).join(' '));
+    for (let i = 0; i < words.length; i += maxWords) chunks.push(words.slice(i, i + maxWords).join(' '));
     return chunks;
   });
 };
@@ -20,27 +20,30 @@ const splitText = (text: string): string[] => {
 const atomize = (block: ContentBlock): ContentBlock[] => {
   switch (block.type) {
     case 'heading':
+      return [block];
     case 'formula':
+      return [block];
     case 'image':
+      return [block];
     case 'table':
       return [block];
     case 'paragraph':
-      return splitText(block.text).map((text) => ({ type: 'paragraph', text }));
+      return splitText(block.text, 18).map((text) => ({ type: 'paragraph', text }));
     case 'callout':
-      return splitText(block.text).map((text, i) => ({
+      return splitText(block.text, 16).map((text, i) => ({
         type: 'callout',
         style: block.style,
         title: i === 0 ? block.title : undefined,
         text,
       }));
     case 'list':
-      return block.items.flatMap((item) => splitText(item).map((text) => ({
+      return block.items.flatMap((item) => splitText(item, 16).map((text) => ({
         type: 'list',
         style: block.style,
         items: [text],
       })));
     case 'step-by-step':
-      return block.steps.flatMap((step) => splitText(step).map((text) => ({
+      return block.steps.flatMap((step) => splitText(step, 16).map((text) => ({
         type: 'step-by-step',
         steps: [text],
       })));
@@ -67,20 +70,26 @@ export const getChapterStudyPages = (
     ...lesson.content.flatMap(atomize).map((block) => ({ lessonId: lesson.id, block })),
   ]);
 
-  if (!atoms.length) return Array.from({ length: minimumPages }, (_, i) => [pageTitle(chapter, i + 1)]);
+  if (!atoms.length) return [];
 
-  const targetPages = Math.min(minimumPages, atoms.length);
-  const baseSize = Math.floor(atoms.length / targetPages);
-  const remainder = atoms.length % targetPages;
+  // Always expose at least 12 real pages. The source is atomized finely enough
+  // that short chapters are still partitioned from their actual lesson material.
+  const targetPages = Math.max(minimumPages, Math.min(atoms.length, Math.ceil(atoms.length / 2)));
+  const pageCount = Math.max(minimumPages, targetPages);
+  const baseSize = Math.floor(atoms.length / pageCount);
+  const remainder = atoms.length % pageCount;
   const pages: ContentBlock[][] = [];
   let cursor = 0;
 
-  for (let pageIndex = 0; pageIndex < targetPages; pageIndex += 1) {
+  for (let pageIndex = 0; pageIndex < pageCount; pageIndex += 1) {
     const size = baseSize + (pageIndex < remainder ? 1 : 0);
     const slice = atoms.slice(cursor, cursor + size);
     cursor += size;
-    const source = chapterLessons.find((lesson) => lesson.id === slice[0]?.lessonId);
-    pages.push([pageTitle(chapter, pageIndex + 1, source), ...slice.map((x) => x.block)]);
+    const fallbackIndex = Math.min(atoms.length - 1, Math.max(0, cursor - 1));
+    const sourceAtom = slice[0] ?? atoms[fallbackIndex];
+    const source = chapterLessons.find((lesson) => lesson.id === sourceAtom?.lessonId);
+    const content = slice.length ? slice.map((x) => x.block) : [atoms[fallbackIndex].block];
+    pages.push([pageTitle(chapter, pageIndex + 1, source), ...content]);
   }
 
   return pages;
