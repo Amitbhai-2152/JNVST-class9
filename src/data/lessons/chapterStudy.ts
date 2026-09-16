@@ -16,28 +16,11 @@ const splitText = (text: string, maxWords = 28): string[] => {
 
 const atomize = (block: ContentBlock): ContentBlock[] => {
   switch (block.type) {
-    case 'paragraph':
-      return splitText(block.text).map((text) => ({ type: 'paragraph', text }));
-    case 'callout':
-      return splitText(block.text).map((text, i) => ({
-        type: 'callout',
-        style: block.style,
-        title: i === 0 ? block.title : undefined,
-        text,
-      }));
-    case 'list':
-      return block.items.flatMap((item) => splitText(item).map((text) => ({
-        type: 'list',
-        style: block.style,
-        items: [text],
-      })));
-    case 'step-by-step':
-      return block.steps.flatMap((step) => splitText(step).map((text) => ({
-        type: 'step-by-step',
-        steps: [text],
-      })));
-    default:
-      return [block];
+    case 'paragraph': return splitText(block.text).map((text) => ({ type: 'paragraph', text }));
+    case 'callout': return splitText(block.text).map((text, i) => ({ type: 'callout', style: block.style, title: i === 0 ? block.title : undefined, text }));
+    case 'list': return block.items.flatMap((item) => splitText(item).map((text) => ({ type: 'list', style: block.style, items: [text] })));
+    case 'step-by-step': return block.steps.flatMap((step) => splitText(step).map((text) => ({ type: 'step-by-step', steps: [text] })));
+    default: return [block];
   }
 };
 
@@ -54,7 +37,7 @@ const subjectGuides: Record<'अंग्रेज़ी' | 'हिंदी' | 
     'पैसेज या sentence से उत्तर का प्रमाण खोजें; केवल अनुमान पर निर्भर न रहें।',
     'इस पृष्ठ के example को खुद हल करके मूल explanation से मिलाएँ।',
     'बिना notes देखे इस topic के तीन key points recall करें।',
-    'Concept, example और common error को एक साथ दोहराकर revision पूरा करें.',
+    'Concept, example और common error को एक साथ दोहराकर revision पूरा करें।',
   ],
   हिंदी: [
     'मुख्य भाषा या व्याकरणिक अवधारणा को सरल शब्दों में समझें।',
@@ -111,14 +94,14 @@ const questionBlock = (question: (typeof allQuestions)[number], index: number): 
   const optionText = question.options.map((option) => option.text).join(' | ');
   const correct = question.correctOptionIds
     .map((id) => question.options.find((option) => option.id === id)?.text)
-    .filter(Boolean)
+    .filter((text): text is string => Boolean(text))
     .join(' | ');
   return [
     { type: 'heading', level: 3, text: `स्वयं जाँच ${index + 1}` },
-    { type: 'paragraph', text: question.textPlain },
+    { type: 'paragraph', text: question.textPlain ?? optionText },
     { type: 'list', style: 'bullet', items: question.options.map((option) => `${option.id}: ${option.text}`) },
-    { type: 'callout', style: 'success', title: 'सही उत्तर', text: correct || optionText },
-    { type: 'callout', style: 'info', title: 'समझें', text: question.explanationPlain },
+    { type: 'callout', style: 'example', title: 'सही उत्तर', text: correct || optionText },
+    { type: 'callout', style: 'info', title: 'समझें', text: question.explanationPlain ?? 'इस प्रश्न की व्याख्या प्रश्न में जाँची गई अवधारणा पर आधारित है।' },
   ];
 };
 
@@ -141,24 +124,13 @@ export const getChapterStudyPages = (
   const chapterQuestions = allQuestions.filter((question) => chapterTopicIds.has(question.topicId));
   const subject = subjectFor(chapter);
   const guides = subjectGuides[subject];
-  const topicNames = topics
-    .filter((topic) => chapter.topicIds.includes(topic.id))
-    .map((topic) => topic.title);
+  const topicNames = topics.filter((topic) => chapter.topicIds.includes(topic.id)).map((topic) => topic.title);
 
   const lessonUnits = chapterLessons.flatMap((lesson) =>
-    lesson.content.flatMap(atomize).map((block) => ({
-      topicId: lesson.topicId,
-      kind: 'lesson' as const,
-      block,
-    })),
+    lesson.content.flatMap(atomize).map((block) => ({ topicId: lesson.topicId, kind: 'lesson' as const, block })),
   );
-
   const questionUnits = chapterQuestions.flatMap((question, index) =>
-    questionBlock(question, index).map((block) => ({
-      topicId: question.topicId,
-      kind: 'question' as const,
-      block,
-    })),
+    questionBlock(question, index).map((block) => ({ topicId: question.topicId, kind: 'question' as const, block })),
   );
 
   const units = [...lessonUnits, ...questionUnits];
@@ -171,8 +143,6 @@ export const getChapterStudyPages = (
     ]);
   }
 
-  // Every page is backed by unique source units. We never reuse a lesson/question
-  // unit merely to inflate the page count.
   const pageSize = Math.max(1, Math.ceil(units.length / requiredPages));
   const pages: ContentBlock[][] = [];
 
@@ -189,7 +159,7 @@ export const getChapterStudyPages = (
     pages.push([
       pageTitle(chapter, pageIndex + 1, topic),
       { type: 'callout', style: 'info', title: 'इस पृष्ठ का अध्ययन फोकस', text: guides[pageIndex % guides.length] },
-      { type: 'callout', style: 'success', title: 'स्रोत सामग्री', text: sourceType === 'lesson-and-practice' ? 'नीचे अध्याय की lesson सामग्री के साथ उसी अध्याय के practice questions और उनके explanations से revision कराया गया है।' : 'नीचे chapter की वास्तविक lesson सामग्री को छोटे अध्ययन भागों में व्यवस्थित किया गया है।' },
+      { type: 'callout', style: 'info', title: 'स्रोत सामग्री', text: sourceType === 'lesson-and-practice' ? 'नीचे अध्याय की lesson सामग्री के साथ उसी अध्याय के practice questions और उनके explanations से revision कराया गया है।' : 'नीचे chapter की वास्तविक lesson सामग्री को छोटे अध्ययन भागों में व्यवस्थित किया गया है।' },
       ...slice.map((item) => item.block),
     ]);
   }
@@ -202,9 +172,7 @@ export const getChapterStudyWordCount = (
   lessons: Lesson[],
   topics: Topic[] = [],
 ) => getChapterStudyPages(chapter, lessons, topics, 12).flat().reduce((total, block) => {
-  if (block.type === 'paragraph' || block.type === 'callout' || block.type === 'heading') {
-    return total + block.text.split(/\s+/).filter(Boolean).length;
-  }
+  if (block.type === 'paragraph' || block.type === 'callout' || block.type === 'heading') return total + block.text.split(/\s+/).filter(Boolean).length;
   if (block.type === 'list') return total + block.items.join(' ').split(/\s+/).filter(Boolean).length;
   if (block.type === 'step-by-step') return total + block.steps.join(' ').split(/\s+/).filter(Boolean).length;
   if (block.type === 'formula') return total + block.expression.split(/\s+/).filter(Boolean).length;
