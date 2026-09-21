@@ -9,8 +9,8 @@ import type { ContentBlock, ID, MockTestResult, Question } from './types';
 import { buildJnvstMockPaper, getPerformanceSummary, getRevisionTopics, getSmartPracticeQuestions, getSmartRecommendations, getWeakTopics } from './utils/jnvstIntelligence';
 
 const examSections = [
-  { id: 'sub_eng', title: 'अंग्रेज़ी', questions: 15 },
   { id: 'sub_hin', title: 'हिंदी', questions: 15 },
+  { id: 'sub_eng', title: 'अंग्रेज़ी', questions: 15 },
   { id: 'sub_math', title: 'गणित', questions: 35 },
   { id: 'sub_sci', title: 'विज्ञान', questions: 35 },
 ] as const;
