@@ -5,6 +5,7 @@ import { mathQuestions } from "./math";
 import { scienceQuestions } from "./science";
 import { topics } from "../curriculum";
 import { jnvstClass9Audit } from "../syllabus/jnvst-class9-audit";
+import { phase5Enhancements } from "../lessons/phase5Content";
 
 export const rawQuestions: Question[] = [
   ...englishQuestions,
@@ -103,6 +104,7 @@ const smartEnrich = (question: Question): Question => ({
     concept: question.metadata?.concept ?? topicTitleById.get(question.topicId) ?? question.topicId,
     cognitiveLevel: question.metadata?.cognitiveLevel ?? cognitiveLevelFor(question),
     estimatedSeconds: question.metadata?.estimatedSeconds ?? estimatedSecondsFor(question),
+    commonTrap: question.metadata?.commonTrap ?? phase5Enhancements[question.topicId]?.trap,
     jnvstCompatible: question.type === 'mcq' && question.options.length === 4 && question.correctOptionIds.length === 1,
   },
 });
