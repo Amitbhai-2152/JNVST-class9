@@ -123,6 +123,14 @@ if (counts.sub_eng !== 100 || counts.sub_hin !== 110 || counts.sub_math !== 110 
   console.error("Question bank integrity check failed", { counts, total: allQuestions.length });
 }
 
+export const jnvstExamQuestions: Question[] = allQuestions.filter((question) => question.metadata?.jnvstCompatible);
+
+export const getJnvstQuestionsBySubject = (subjectId: string) =>
+  jnvstExamQuestions.filter((question) => question.subjectId === subjectId);
+
+export const getJnvstQuestionsByTopic = (topicId: string) =>
+  jnvstExamQuestions.filter((question) => question.topicId === topicId);
+
 export const getQuestion = (id: string) => allQuestions.find((q) => q.id === id);
 export const getQuestionsByTopic = (topicId: string) => allQuestions.filter((q) => q.topicId === topicId);
 export const getQuestionsBySubject = (subjectId: string) => allQuestions.filter((q) => q.subjectId === subjectId);
