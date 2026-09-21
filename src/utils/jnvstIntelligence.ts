@@ -30,6 +30,7 @@ const subjectById = new Map(subjects.map((subject) => [subject.id, subject]));
 export const getTopicPerformances = (progress: ProgressState): TopicPerformance[] =>
   topics.map((topic) => {
     const questions = jnvstExamQuestions.filter((question) => question.topicId === topic.id);
+    if (!questions.length) return null;
     const attempts = questions.flatMap((question) => progress.questionAttempts?.[question.id] ?? []);
     const correct = attempts.filter((attempt) => attempt.isCorrect).length;
     const accuracy = attempts.length ? Math.round((correct / attempts.length) * 100) : 0;
@@ -51,7 +52,7 @@ export const getTopicPerformances = (progress: ProgressState): TopicPerformance[
       unseenQuestions,
       priority,
     };
-  });
+  }).filter((topic): topic is TopicPerformance => Boolean(topic));
 
 export const getWeakTopics = (progress: ProgressState, limit = 4): TopicPerformance[] =>
   getTopicPerformances(progress)
@@ -93,7 +94,7 @@ export const getSmartRecommendations = (progress: ProgressState, limit = 4): Sma
           topicId: topic.topicId,
           topicTitle: topic.topicTitle,
           subjectTitle: subject?.title ?? topic.subjectTitle,
-          reason: 'इस topic पर अभी आपका कोई प्रयास दर्ज नहीं है। पहले concept पढ़कर अभ्यास करें।',
+          reason: 'इस विषयांश पर अभी आपका कोई प्रयास दर्ज नहीं है। पहले अवधारणा पढ़कर अभ्यास करें।',
           action: 'सीखना' as const,
           score: 60 + Math.min(20, topic.unseenQuestions),
         };
@@ -104,7 +105,7 @@ export const getSmartRecommendations = (progress: ProgressState, limit = 4): Sma
           topicId: topic.topicId,
           topicTitle: topic.topicTitle,
           subjectTitle: topic.subjectTitle,
-          reason: 'सटीकता ' + topic.accuracy + '% है। पहले इसी topic पर targeted practice करें।',
+          reason: 'सटीकता ' + topic.accuracy + '% है। पहले इसी topic पर लक्षित अभ्यास करें।',
           action: 'अभ्यास' as const,
           score: 100 - topic.accuracy,
         };
@@ -115,7 +116,7 @@ export const getSmartRecommendations = (progress: ProgressState, limit = 4): Sma
           topicId: topic.topicId,
           topicTitle: topic.topicTitle,
           subjectTitle: topic.subjectTitle,
-          reason: 'सटीकता ' + topic.accuracy + '% है। इसे 80%+ तक मजबूत करने के लिए अभ्यास करें।',
+          reason: 'सटीकता ' + topic.accuracy + '% है। इसे 80% या उससे अधिक तक मजबूत करने के लिए अभ्यास करें।',
           action: 'अभ्यास' as const,
           score: 80 - topic.accuracy + 25,
         };
@@ -125,7 +126,7 @@ export const getSmartRecommendations = (progress: ProgressState, limit = 4): Sma
         topicId: topic.topicId,
         topicTitle: topic.topicTitle,
         subjectTitle: topic.subjectTitle,
-        reason: 'आपकी पकड़ अच्छी है। अब पुनरावृत्ति से आपकी पकड़ बनाए रखें।',
+        reason: 'आपकी पकड़ अच्छी है। अब पुनरावृत्ति से इसे बनाए रखें।',
         action: 'पुनरावृत्ति' as const,
         score: 20,
       };
