@@ -64,7 +64,17 @@ export interface Question {
   explanationPlain?: string;
   difficulty: Difficulty;
   tags: string[];
-  metadata?: { source?: string; year?: number };
+  metadata?: {
+    source?: string;
+    year?: number;
+    examRelevance?: 'मुख्य' | 'सहायक';
+    skill?: string;
+    concept?: string;
+    cognitiveLevel?: 'स्मरण' | 'समझ' | 'अनुप्रयोग' | 'तर्क';
+    estimatedSeconds?: number;
+    commonTrap?: string;
+    jnvstCompatible?: boolean;
+  };
 }
 
 export interface QuestionAttempt {
