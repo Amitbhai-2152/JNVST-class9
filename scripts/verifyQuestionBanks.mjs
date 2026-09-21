@@ -19,7 +19,7 @@ const subjectPatterns = {
   math: /^q_math_/,
   sci: /^q_sci_/,
 };
-const expected = { eng: 100, hin: 110, math: 110, sci: 170 };
+const expected = { eng: 100, hin: 110, math: 110, sci: 180 };
 const ids = new Set();
 const counts = { eng: 0, hin: 0, math: 0, sci: 0 };
 
@@ -42,6 +42,9 @@ for (const [subject, expectedCount] of Object.entries(expected)) {
 }
 
 const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
-if (total !== 490) throw new Error(`Total question count mismatch: expected 490, found ${total}`);
+if (total !== 500) throw new Error(`Total question count mismatch: expected 500, found ${total}`);
 
+const requiredPrefixes = ['q_eng_', 'q_hin_', 'q_math_', 'q_sci_'];
+if (ids.size !== total) throw new Error(`Question ID integrity mismatch: expected ${total}, indexed ${ids.size}`);
 console.log(`Question banks verified: ENG ${counts.eng}, HIN ${counts.hin}, MATH ${counts.math}, SCI ${counts.sci}, TOTAL ${total}`);
+console.log(`Question ID prefixes verified: ${requiredPrefixes.join(', ')}`);
