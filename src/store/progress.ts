@@ -8,6 +8,7 @@ type Store = ProgressState & {
   toggleBookmarkQuestion: (id: ID) => void;
   toggleBookmarkLesson: (id: ID) => void;
   recordAttempt: (id: ID, attempt: QuestionAttempt) => void;
+  recordAttempts: (attempts: Array<{ id: ID; attempt: QuestionAttempt }>) => void;
   recordStudy: (id: ID, title: string, type: 'lesson' | 'topic') => void;
   saveMockResult: (result: MockTestResult) => void;
 };
@@ -55,6 +56,17 @@ export const useProgressStore = create<Store>()(
         questionAttempts: { ...(state.questionAttempts ?? {}), [id]: [...(state.questionAttempts?.[id] ?? []), attempt] },
         revisionHistory: [...(state.revisionHistory ?? []), { entityType: 'question', entityId: id, timestamp: attempt.timestamp }],
       })),
+      recordAttempts: (items) => set((state) => {
+        const questionAttempts = { ...(state.questionAttempts ?? {}) };
+        const history = [...(state.revisionHistory ?? [])];
+
+        items.forEach(({ id, attempt }) => {
+          questionAttempts[id] = [...(questionAttempts[id] ?? []), attempt];
+          history.push({ entityType: 'question', entityId: id, timestamp: attempt.timestamp });
+        });
+
+        return { questionAttempts, revisionHistory: history };
+      }),
       recordStudy: (id, title, type) => set((state) => ({
         recentlyStudied: recent(state.recentlyStudied ?? [], { id, title, type, timestamp: Date.now() }),
       })),
