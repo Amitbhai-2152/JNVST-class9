@@ -11,6 +11,7 @@ import { scienceQuestionsPart09 } from './sciencePart09';
 import { scienceQuestionsPart10 } from './sciencePart10';
 import { scienceQuestionsPart11 } from './sciencePart11';
 import { scienceQuestionsPart12 } from './sciencePart12';
+import { scienceQuestionsPart13 } from './sciencePart13';
 
 export const scienceQuestions: Question[] = [
   ...scienceQuestionsPart01,
@@ -25,4 +26,5 @@ export const scienceQuestions: Question[] = [
   ...scienceQuestionsPart10,
   ...scienceQuestionsPart11,
   ...scienceQuestionsPart12,
+  ...scienceQuestionsPart13,
 ];
