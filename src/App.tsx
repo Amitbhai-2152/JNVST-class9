@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { HashRouter, Link, Route, Routes, useParams } from 'react-router-dom';
-import { allQuestions, allLessons, chapters, getLesson, getQuestionsBySubject, getQuestionsByTopic, getSubject, subjects, topics } from './data';
+import { allQuestions, allLessons, chapters, getLesson, getQuestionsBySubject, getQuestionsByTopic, getSubject, subjects, topics, jnvstExamQuestions } from './data';
 import { getChapterStudyPages } from './data/lessons/chapterStudy';
 import ChapterStudyPage from './pages/ChapterStudyPage';
 import { MathAwareText, MathText } from './components/MathText';
 import { useProgressStore } from './store/progress';
-import type { ContentBlock, ID, Question } from './types';
+import type { ContentBlock, ID, MockTestResult, Question } from './types';
+import { buildJnvstMockPaper, getPerformanceSummary, getRevisionTopics, getSmartPracticeQuestions, getSmartRecommendations, getWeakTopics } from './utils/jnvstIntelligence';
 
 const examSections = [
   { id: 'sub_eng', title: 'अंग्रेज़ी', questions: 15 },
@@ -50,7 +51,76 @@ const getStudyPages = (blocks: ContentBlock[]): ContentBlock[][] => {
 const Shell = ({ children }: { children: React.ReactNode }) => <div className="app-shell"><header className="topbar"><Link to="/" className="brand">JNVST कक्षा 9</Link><nav><Link to="/">डैशबोर्ड</Link><Link to="/subjects">विषय</Link><Link to="/bookmarks">बुकमार्क</Link><Link to="/mock-tests">मॉक टेस्ट</Link></nav></header><main className="shell">{children}</main></div>;
 const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => <div className={`card ${className}`}>{children}</div>;
 
-const Dashboard = () => { const p = useProgressStore(); const attempts = Object.values(p.questionAttempts).flat(); const accuracy = attempts.length ? Math.round(attempts.filter(x => x.isCorrect).length / attempts.length * 100) : 0; return <Shell><section className="hero"><div><span className="eyebrow">JAWAHAR NAVODAYA VIDYALAYA</span><h1>JNVST कक्षा 9 Learning Hub</h1><p>पढ़ें, अभ्यास करें, प्रगति देखें और मॉक टेस्ट दें।</p><div className="actions"><Link className="btn primary" to="/subjects">पढ़ाई शुरू करें</Link><Link className="btn" to="/mock-tests">मॉक टेस्ट</Link></div></div><div className="hero-stat"><b>{allQuestions.length}</b><span>अभ्यास प्रश्न</span></div></section><section className="stats"><Card><b>{Object.values(p.lessonActivity).filter(x => x.status === 'completed').length}</b><span>पूर्ण पाठ</span></Card><Card><b>{attempts.length}</b><span>प्रश्न प्रयास</span></Card><Card><b>{accuracy}%</b><span>सटीकता</span></Card><Card><b>{allLessons.length}</b><span>कुल पाठ</span></Card></section><h2>विषय</h2><div className="grid">{subjects.map(s => <Link key={s.id} to={`/subjects/${s.id}`}><Card className="subject-card"><div className="icon">{s.iconRef}</div><h3>{s.title}</h3><p>{s.description}</p><span className="linkish">अध्याय देखें →</span></Card></Link>)}</div></Shell>; };
+const Dashboard = () => {
+  const p = useProgressStore();
+  const summary = getPerformanceSummary(p);
+  const recommendations = getSmartRecommendations(p, 3);
+  const weakTopics = getWeakTopics(p, 3);
+  const revisionTopics = getRevisionTopics(p, 3);
+
+  return <Shell>
+    <section className="hero">
+      <div>
+        <span className="eyebrow">JAWAHAR NAVODAYA VIDYALAYA</span>
+        <h1>JNVST कक्षा 9 Learning Hub</h1>
+        <p>पढ़ें, अभ्यास करें, अपनी कमजोरियाँ पहचानें और JNVST पैटर्न पर तैयारी करें।</p>
+        <div className="actions">
+          <Link className="btn primary" to="/subjects">पढ़ाई शुरू करें</Link>
+          <Link className="btn" to="/smart-practice">स्मार्ट अभ्यास</Link>
+          <Link className="btn" to="/mock-tests">मॉक टेस्ट</Link>
+        </div>
+      </div>
+      <div className="hero-stat"><b>{allQuestions.length}</b><span>अभ्यास प्रश्न</span><small>{jnvstExamQuestions.length} परीक्षा-योग्य MCQ</small></div>
+    </section>
+
+    <section className="stats">
+      <Card><b>{Object.values(p.lessonActivity).filter(x => x.status === 'completed').length}</b><span>पूर्ण पाठ</span></Card>
+      <Card><b>{summary.totalAttempts}</b><span>प्रश्न प्रयास</span></Card>
+      <Card><b>{summary.overallAccuracy}%</b><span>सटीकता</span></Card>
+      <Card><b>{allLessons.length}</b><span>कुल पाठ</span></Card>
+    </section>
+
+    {summary.totalAttempts > 0 && <section>
+      <div className="page-head">
+        <h2>आपकी तैयारी का विश्लेषण</h2>
+        <p>{summary.attemptedTopics} / {summary.totalTopics} topics पर आपने अभ्यास किया है।</p>
+      </div>
+      <div className="grid">
+        {recommendations.map((item) => <Card key={item.topicId}>
+          <div className="topic-top"><h3>{item.topicTitle}</h3><span className="count">{item.action}</span></div>
+          <p><b>{item.subjectTitle}</b></p>
+          <p>{item.reason}</p>
+          <div className="actions"><Link className="btn primary" to={'/practice/' + item.topicId}>{item.action === 'सीखना' ? 'पढ़कर अभ्यास करें' : item.action}</Link></div>
+        </Card>)}
+      </div>
+    </section>}
+
+    {weakTopics.length > 0 && <section>
+      <div className="page-head"><h2>कमजोर क्षेत्र</h2><p>जहाँ आपकी सटीकता 80% से कम है, वहाँ targeted practice पहले करें।</p></div>
+      <div className="grid">
+        {weakTopics.map((topic) => <Card key={topic.topicId}>
+          <div className="topic-top"><h3>{topic.topicTitle}</h3><span className="count">{topic.accuracy}%</span></div>
+          <p>{topic.subjectTitle} · {topic.attempts} प्रयास · {topic.correct} सही</p>
+          <div className="actions"><Link className="btn primary" to={'/practice/' + topic.topicId}>अभ्यास करें</Link></div>
+        </Card>)}
+      </div>
+    </section>}
+
+    {revisionTopics.length > 0 && <section>
+      <div className="page-head"><h2>पुनरावृत्ति सूची</h2><p>जिन topics पर पिछले 7 दिनों से अभ्यास नहीं हुआ, उन्हें दोहराएँ।</p></div>
+      <div className="grid">
+        {revisionTopics.map((topic) => <Card key={topic.topicId}>
+          <div className="topic-top"><h3>{topic.topicTitle}</h3><span className="count">{topic.accuracy}%</span></div>
+          <p>{topic.subjectTitle}</p>
+          <div className="actions"><Link className="btn" to={'/practice/' + topic.topicId}>पुनरावृत्ति करें</Link></div>
+        </Card>)}
+      </div>
+    </section>}
+
+    <h2>विषय</h2>
+    <div className="grid">{subjects.map(s => <Link key={s.id} to={'/subjects/' + s.id}><Card className="subject-card"><div className="icon">{s.iconRef}</div><h3>{s.title}</h3><p>{s.description}</p><span className="linkish">अध्याय देखें →</span></Card></Link>)}</div>
+  </Shell>;
+};
 
 const SubjectsPage = () => <Shell><div className="page-head"><h1>विषय</h1><p>विषय चुनें और अभ्यास शुरू करें।</p></div><div className="grid">{subjects.map(s => <Link key={s.id} to={`/subjects/${s.id}`}><Card className="subject-card"><div className="icon">{s.iconRef}</div><h2>{s.title}</h2><p>{s.description}</p></Card></Link>)}</div></Shell>;
 
@@ -66,6 +136,90 @@ const PracticePage = () => { const { topicId } = useParams(); const qs = useMemo
 
 const BookmarksPage = () => { const p = useProgressStore(); const bookmarked = allLessons.filter(l => p.bookmarks.lessonIds.includes(l.id)); return <Shell><div className="page-head"><h1>बुकमार्क</h1><p>सहेजे गए पाठ</p></div>{bookmarked.length ? <div className="grid">{bookmarked.map(l => <Card key={l.id}><h3>{l.title}</h3><Link className="btn" to={`/lessons/${l.id}`}>पाठ खोलें</Link></Card>)}</div> : <Card className="empty"><h2>अभी कोई बुकमार्क नहीं है</h2><p>पाठ पढ़ते समय बुकमार्क जोड़ें।</p></Card>}</Shell>; };
 
-const MockTestsPage = () => { const [started,setStarted] = useState(false); const [index,setIndex] = useState(0); const [answers,setAnswers] = useState<Record<string,ID[]>>({}); const qs = allQuestions.slice(0, 100); const q = qs[index]; const submit = () => setIndex(x => Math.min(qs.length - 1, x + 1)); const selected = answers[q.id] || []; return <Shell><div className="page-head"><h1>मॉक टेस्ट</h1><p>100 प्रश्न · मिश्रित विषय</p><div className="actions">{!started && <button className="btn primary" onClick={() => setStarted(true)}>टेस्ट शुरू करें</button>}</div></div>{started && q && <Card className="question-card"><div className="question-body"><div className="question-text">{questionTextBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div><div className="options">{q.options.map(o => <button key={o.id} className={`option ${selected.includes(o.id) ? 'selected' : ''}`} onClick={() => setAnswers(a => ({ ...a, [q.id]: q.type === 'multiple-select' ? (selected.includes(o.id) ? selected.filter(x => x !== o.id) : [...selected, o.id]) : [o.id] }))}><InlineText text={o.text} /></button>)}</div><div className="study-reader-actions"><button className="btn primary" onClick={submit}>{index === qs.length - 1 ? 'समाप्त' : 'अगला प्रश्न →'}</button></div></div></Card>}</Shell>; };
+const SmartPracticePage = () => {
+  const p = useProgressStore();
+  const [qs] = useState(() => getSmartPracticeQuestions(useProgressStore.getState(), 10));
+  const [i, setI] = useState(0);
+  const [selected, setSelected] = useState<ID[]>([]);
+  const [checked, setChecked] = useState(false);
 
-export default function App() { return <HashRouter><Routes><Route path="/" element={<Dashboard />} /><Route path="/subjects" element={<SubjectsPage />} /><Route path="/subjects/:subjectId" element={<SubjectPage />} /><Route path="/chapters/:chapterId" element={<ChapterPage />} /><Route path="/chapters/:chapterId/study" element={<ChapterStudyPage />} /><Route path="/lessons/:lessonId" element={<LessonPage />} /><Route path="/practice/:topicId" element={<PracticePage />} /><Route path="/bookmarks" element={<BookmarksPage />} /><Route path="/mock-tests" element={<MockTestsPage />} /><Route path="*" element={<Dashboard />} /></Routes></HashRouter>; }
+  if (!qs.length) return <Shell><Card className="empty"><h1>अभी स्मार्ट अभ्यास के लिए प्रश्न नहीं हैं</h1><p>पहले किसी विषय या topic का अभ्यास शुरू करें।</p></Card></Shell>;
+
+  const q = qs[i];
+  const correct = sameAnswer(selected, q.correctOptionIds);
+  const choose = (id: ID) => {
+    if (checked) return;
+    setSelected(q.type === 'multiple-select' ? (selected.includes(id) ? selected.filter(x => x !== id) : [...selected, id]) : [id]);
+  };
+  const check = () => {
+    if (!selected.length) return;
+    setChecked(true);
+    p.recordAttempt(q.id, { selectedOptionIds: selected, isCorrect: correct, timestamp: Date.now(), mode: 'practice' });
+  };
+
+  return <Shell>
+    <div className="page-head"><Link to="/">← डैशबोर्ड</Link><p>आपके पिछले प्रदर्शन के आधार पर चुने गए 10 परीक्षा-योग्य प्रश्न</p><h1>स्मार्ट अभ्यास</h1><div className="progressline"><span>प्रश्न {i + 1} / {qs.length}</span></div></div>
+    <Card className="question-card"><div className="question-body">
+      <div className="question-text">{questionTextBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div>
+      <div className="options">{q.options.map(o => <button key={o.id} className={'option ' + (selected.includes(o.id) ? 'selected' : '') + ' ' + (checked && q.correctOptionIds.includes(o.id) ? 'correct' : '')} onClick={() => choose(o.id)}><InlineText text={o.text} /></button>)}</div>
+      {checked && <div className={'answer ' + (correct ? 'correct' : 'wrong')}><b>{correct ? 'सही उत्तर ✅' : 'उत्तर की जाँच करें'}</b><div>{questionExplanationBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div></div>}
+      <div className="study-reader-actions">{!checked ? <button className="btn primary" onClick={check}>उत्तर जाँचें</button> : <button className="btn primary" onClick={() => { setI((x) => (x + 1) % qs.length); setSelected([]); setChecked(false); }}>{i === qs.length - 1 ? 'फिर से शुरू करें →' : 'अगला प्रश्न →'}</button>}</div>
+    </div></Card>
+  </Shell>;
+};
+
+const MockTestsPage = () => {
+  const p = useProgressStore();
+  const qs = useMemo(() => buildJnvstMockPaper(), []);
+  const [started, setStarted] = useState(false);
+  const [index, setIndex] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, ID[]>>({});
+  const [finished, setFinished] = useState(false);
+  const q = qs[index];
+
+  const selected = q ? (answers[q.id] || []) : [];
+  const choose = (id: ID) => setAnswers((current) => ({
+    ...current,
+    [q.id]: [id],
+  }));
+
+  const finish = () => {
+    const score = qs.reduce((sum, question) => sum + (sameAnswer(answers[question.id] || [], question.correctOptionIds) ? 1 : 0), 0);
+    const sectionScores = qs.reduce<Record<string, number>>((scores, question) => {
+      scores[question.subjectId] = (scores[question.subjectId] ?? 0) + (sameAnswer(answers[question.id] || [], question.correctOptionIds) ? 1 : 0);
+      return scores;
+    }, {});
+    const result: MockTestResult = {
+      id: 'mock-' + Date.now(),
+      score,
+      totalMarks: qs.length,
+      timestamp: Date.now(),
+      answers,
+      sectionScores,
+    };
+    p.saveMockResult(result);
+    setFinished(true);
+  };
+
+  if (finished) {
+    const latest = p.mockTestResults[0];
+    return <Shell><div className="page-head"><h1>मॉक टेस्ट परिणाम</h1><p>इस परीक्षा का परिणाम आपकी progress में सुरक्षित कर दिया गया है।</p></div>
+      <Card><h2>{latest?.score ?? 0} / {latest?.totalMarks ?? qs.length}</h2><p>सटीकता: {latest?.totalMarks ? Math.round((latest.score / latest.totalMarks) * 100) : 0}%</p>
+        <div className="grid">{examSections.map(section => <Card key={section.id}><h3>{section.title}</h3><p>{latest?.sectionScores?.[section.id] ?? 0} / {section.questions}</p></Card>)}</div>
+        <div className="actions"><button className="btn primary" onClick={() => { setStarted(false); setFinished(false); setIndex(0); setAnswers({}); }}>नया मॉक टेस्ट</button><Link className="btn" to="/smart-practice">गलतियों पर अभ्यास</Link></div>
+      </Card>
+    </Shell>;
+  }
+
+  return <Shell>
+    <div className="page-head"><h1>JNVST मॉक टेस्ट</h1><p>100 प्रश्न · 150 मिनट · हिंदी 15 · अंग्रेज़ी 15 · गणित 35 · विज्ञान 35</p><div className="actions">{!started && <button className="btn primary" onClick={() => setStarted(true)}>टेस्ट शुरू करें</button>}</div></div>
+    {!started ? <Card><h2>परीक्षा-पूर्व निर्देश</h2><ul><li>केवल चार-विकल्प, एक-सही-उत्तर वाले MCQ इस परीक्षा में लिए गए हैं।</li><li>प्रश्नों का subject-wise वितरण JNVST pattern के अनुसार रखा गया है।</li><li>हर उत्तर चुनकर अगले प्रश्न पर जाएँ; अंत में आपका score और section-wise परिणाम सुरक्षित होगा।</li></ul></Card> : q && <Card className="question-card"><div className="question-body">
+      <div className="progressline"><span>प्रश्न {index + 1} / {qs.length}</span><span>{q.metadata?.subjectTitle ?? ''}</span></div>
+      <div className="question-text">{questionTextBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div>
+      <div className="options">{q.options.map(o => <button key={o.id} className={'option ' + (selected.includes(o.id) ? 'selected' : '')} onClick={() => choose(o.id)}><InlineText text={o.text} /></button>)}</div>
+      <div className="study-reader-actions"><button className="btn primary" onClick={() => index === qs.length - 1 ? finish() : setIndex(x => x + 1)}>{index === qs.length - 1 ? 'टेस्ट जमा करें' : 'अगला प्रश्न →'}</button></div>
+    </div></Card>}
+  </Shell>;
+};
+
+export default function App() { return <HashRouter><Routes><Route path="/" element={<Dashboard />} /><Route path="/subjects" element={<SubjectsPage />} /><Route path="/subjects/:subjectId" element={<SubjectPage />} /><Route path="/chapters/:chapterId" element={<ChapterPage />} /><Route path="/chapters/:chapterId/study" element={<ChapterStudyPage />} /><Route path="/lessons/:lessonId" element={<LessonPage />} /><Route path="/practice/:topicId" element={<PracticePage />} /><Route path="/smart-practice" element={<SmartPracticePage />} /><Route path="/bookmarks" element={<BookmarksPage />} /><Route path="/mock-tests" element={<MockTestsPage />} /><Route path="*" element={<Dashboard />} /></Routes></HashRouter>; }
