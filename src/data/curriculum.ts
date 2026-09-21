@@ -25,7 +25,7 @@ export const chapters: Chapter[] = [
   { id: 'chap_math_05', subjectId: 'sub_math', title: 'आँकड़े', order: 5, topicIds: ["top_math_05_01"] },
   { id: 'chap_sci_01', subjectId: 'sub_sci', title: 'भौतिक विज्ञान', order: 1, topicIds: ["top_sci_01_01", "top_sci_01_02", "top_sci_01_03", "top_sci_01_04", "top_sci_01_05", "top_sci_01_06", "top_sci_01_07"] },
   { id: 'chap_sci_02', subjectId: 'sub_sci', title: 'रसायन विज्ञान', order: 2, topicIds: ["top_sci_02_01", "top_sci_02_02", "top_sci_02_03", "top_sci_02_04", "top_sci_02_05"] },
-  { id: 'chap_sci_03', subjectId: 'sub_sci', title: 'जीव विज्ञान', order: 3, topicIds: ["top_sci_03_01", "top_sci_03_02", "top_sci_03_03", "top_sci_03_04", "top_sci_03_05"] },
+  { id: 'chap_sci_03', subjectId: 'sub_sci', title: 'जीव विज्ञान', order: 3, topicIds: ["top_sci_03_01", "top_sci_03_02", "top_sci_03_03", "top_sci_03_04", "top_sci_03_05", "top_sci_03_06"] },
 ];
 
 export const topics: Topic[] = [
@@ -78,4 +78,5 @@ export const topics: Topic[] = [
   { id: 'top_sci_03_03', chapterId: 'chap_sci_03', title: "कोशिका - संरचना एवं प्रकार्य", order: 3, lessonIds: ["les_sci_03_03_01"], practiceQuestionIds: ["q_sci_b1_15_001", "q_sci_b1_15_002", "q_sci_b1_15_003", "q_sci_b1_15_004", "q_sci_b1_15_005", "q_sci_b2_15_001", "q_sci_b2_15_002", "q_sci_b2_15_003", "q_sci_b2_15_004", "q_sci_b2_15_005"] },
   { id: 'top_sci_03_04', chapterId: 'chap_sci_03', title: "जंतुओं में जनन", order: 4, lessonIds: ["les_sci_03_04_01"], practiceQuestionIds: ["q_sci_b1_16_001", "q_sci_b1_16_002", "q_sci_b1_16_003", "q_sci_b1_16_004", "q_sci_b1_16_005", "q_sci_b2_16_001", "q_sci_b2_16_002", "q_sci_b2_16_003", "q_sci_b2_16_004", "q_sci_b2_16_005"] },
   { id: 'top_sci_03_05', chapterId: 'chap_sci_03', title: "किशोरावस्था की ओर", order: 5, lessonIds: ["les_sci_03_05_01"], practiceQuestionIds: ["q_sci_b1_17_001", "q_sci_b1_17_002", "q_sci_b1_17_003", "q_sci_b1_17_004", "q_sci_b1_17_005", "q_sci_b2_17_001", "q_sci_b2_17_002", "q_sci_b2_17_003", "q_sci_b2_17_004", "q_sci_b2_17_005"] },
+  { id: 'top_sci_03_06', chapterId: 'chap_sci_03', title: "पौधों और जंतुओं का संरक्षण", order: 6, lessonIds: ["les_sci_03_06_01"], practiceQuestionIds: [] },
 ];
