@@ -197,6 +197,15 @@ const MockTestsPage = () => {
       answers,
       sectionScores,
     };
+    p.recordAttempts(qs.map((question) => ({
+      id: question.id,
+      attempt: {
+        selectedOptionIds: answers[question.id] || [],
+        isCorrect: sameAnswer(answers[question.id] || [], question.correctOptionIds),
+        timestamp: Date.now(),
+        mode: 'mock-test',
+      },
+    })));
     p.saveMockResult(result);
     setFinished(true);
   };
