@@ -26,7 +26,8 @@ for (const question of allQuestions) {
   }
   if (!question.textPlain?.trim()) issues.push({ questionId: question.id, issue: 'प्रश्न-पाठ अनुपलब्ध है' });
   if (!question.explanationPlain?.trim()) issues.push({ questionId: question.id, issue: 'समाधान/व्याख्या अनुपलब्ध है' });
-  if (question.options.length !== 4) issues.push({ questionId: question.id, issue: 'चार विकल्प नहीं हैं' });
+  const requiresFourOptions = question.type === 'mcq' || question.type === 'multiple-select' || question.type === 'passage';
+  if (requiresFourOptions && question.options.length !== 4) issues.push({ questionId: question.id, issue: 'चार विकल्प नहीं हैं' });
 
   const optionIds = new Set(question.options.map((option) => option.id));
   if (!question.correctOptionIds.length || question.correctOptionIds.some((id) => !optionIds.has(id))) {
