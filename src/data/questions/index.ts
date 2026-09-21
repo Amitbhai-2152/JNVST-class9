@@ -70,7 +70,7 @@ const firstMatchingSkill = (question: Question): string => {
   return question.type === 'mcq' ? 'अवधारणा आधारित बहुविकल्पीय अभ्यास' : 'अवधारणा जाँच';
 };
 
-const cognitiveLevelFor = (question: Question): Question['metadata']['cognitiveLevel'] => {
+const cognitiveLevelFor = (question: Question): NonNullable<Question['metadata']>['cognitiveLevel'] => {
   if (question.tags.some((tag) => ['numerical', 'word-problem', 'application', 'reasoning', 'inference', 'algebraic-application', 'percentage-integration'].includes(tag))) {
     return 'अनुप्रयोग';
   }
