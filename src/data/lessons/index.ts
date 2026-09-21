@@ -6,6 +6,7 @@ import { englishLessonsData } from './english';
 import { hindiLessonsData } from './hindi';
 import { mathLessonsData } from './math';
 import { scienceLessonsData } from './science';
+import { getPhase5Enhancement } from './phase5Content';
 
 const PAGE_COUNT = 12;
 
@@ -53,12 +54,15 @@ const isStudyMarker = (block: ContentBlock): boolean =>
   block.type === 'heading' && /^अध्ययन पृष्ठ\s+\d+/.test(block.text);
 
 const paginateLesson = (lesson: Lesson): Lesson => {
-  // Source lessons are the authoritative content. Any legacy page markers are
-  // removed only as structural markers so they cannot create a false page count.
+  // Source lessons remain authoritative. Phase 5 adds an upgrade layer before
+  // question-based practice content so every curriculum topic gets the same
+  // concept/example/trap/exam-recall treatment without deleting existing material.
   const lessonSource = lesson.content.filter((block) => !isStudyMarker(block));
+  const phase5Source = getPhase5Enhancement(lesson.topicId);
   const lessonAtoms = lessonSource.flatMap(atomize);
+  const phase5Atoms = phase5Source.flatMap(atomize);
   const questionAtoms = questionUnits(lesson);
-  const source = [...lessonAtoms, ...questionAtoms];
+  const source = [...lessonAtoms, ...phase5Atoms, ...questionAtoms];
 
   if (!source.length) {
     const fallback: ContentBlock[] = lesson.objectives.length
