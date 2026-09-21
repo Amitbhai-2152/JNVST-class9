@@ -1,8 +1,10 @@
 import { allQuestions, getQuestion, getQuestionsByTopic, getQuestionsBySubject } from './questions';
 import { allLessons, getLesson, getLessonsByTopic } from './lessons';
 import { subjects, chapters, topics } from './curriculum';
+import { jnvstClass9Syllabus } from './syllabus/jnvst-class9';
+import { jnvstClass9Audit, jnvstClass9AuditSummary, jnvstClass9ExtraCurrentTopics } from './syllabus/jnvst-class9-audit';
 
-export { subjects, chapters, topics, allQuestions, allLessons, getQuestion, getLesson, getLessonsByTopic, getQuestionsByTopic, getQuestionsBySubject };
+export { subjects, chapters, topics, allQuestions, allLessons, getQuestion, getLesson, getLessonsByTopic, getQuestionsByTopic, getQuestionsBySubject, jnvstClass9Syllabus, jnvstClass9Audit, jnvstClass9AuditSummary, jnvstClass9ExtraCurrentTopics };
 
 export const getSubject = (id: string) => subjects.find((subject) => subject.id === id);
 export const getChapters = (subjectId: string) => chapters.filter((chapter) => chapter.subjectId === subjectId).sort((a, b) => a.order - b.order);
