@@ -41,6 +41,15 @@ for (const [subject, expectedCount] of Object.entries(expected)) {
   }
 }
 
+const curriculumPath = path.join(root, 'src', 'data', 'curriculum.ts');
+const curriculumSource = fs.readFileSync(curriculumPath, 'utf8');
+const curriculumQuestionIds = [...curriculumSource.matchAll(/practiceQuestionIds:\s*\[([^\]]*)\]/g)]
+  .flatMap((match) => [...match[1].matchAll(/["'](q_[^"']+)["']/g)].map((item) => item[1]));
+const missingCurriculumQuestionIds = [...new Set(curriculumQuestionIds)].filter((id) => !ids.has(id));
+if (missingCurriculumQuestionIds.length) {
+  throw new Error(`Curriculum references missing question IDs: ${missingCurriculumQuestionIds.join(', ')}`);
+}
+
 const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
 if (total !== 500) throw new Error(`Total question count mismatch: expected 500, found ${total}`);
 
