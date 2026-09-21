@@ -97,7 +97,7 @@ const paginateLesson = (lesson: Lesson): Lesson => {
     pages.push(...content);
   }
 
-  return { ...lesson, content: pages };
+  return {\n    ...lesson,\n    estimatedMinutes: lesson.estimatedMinutes + (phase5Source.length ? 10 : 0),\n    content: pages,\n  };
 };
 
 export const allLessons: Lesson[] = [
