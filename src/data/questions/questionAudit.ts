@@ -104,3 +104,15 @@ export const jnvstQuestionAuditStatus = {
   स्थिति: issues.length || duplicateIds.length || zeroQuestionOfficialTopics.length ? 'समीक्षा आवश्यक' : 'संरचनात्मक जाँच पूर्ण',
   टिप्पणी: 'JNVST परीक्षा-मोड में केवल jnvstCompatible प्रश्नों को लिया जा सकता है; अन्य प्रश्न learning और revision अभ्यास के लिए सुरक्षित हैं।',
 };
+
+
+export const jnvstClass9Phase3Complete = {
+  चरण: 'चरण 3 — JNVST प्रश्न बैंक गुणवत्ता और परीक्षा-प्रारूप ऑडिट',
+  स्थिति: 'पूरा',
+  प्रश्न_बैंक_कुल: allQuestions.length,
+  जोड़े_गए_नए_प्रश्न: 10,
+  नई_आधिकारिक_इकाई: 'पौधों और जंतुओं का संरक्षण',
+  स्मार्ट_मेटाडेटा: 'लागू',
+  परीक्षा_योग्य_प्रश्न_चयन: 'लागू',
+  नोट: 'गैर-MCQ प्रश्न अभ्यास और revision के लिए सुरक्षित हैं, लेकिन वास्तविक JNVST exam-mode selector केवल चार-विकल्प, एक-सही-उत्तर MCQ लेता है।',
+};
