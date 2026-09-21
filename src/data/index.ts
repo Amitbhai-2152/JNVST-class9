@@ -5,8 +5,9 @@ import { jnvstClass9Syllabus } from './syllabus/jnvst-class9';
 import { jnvstClass9Audit, jnvstClass9AuditSummary, jnvstClass9ExtraCurrentTopics } from './syllabus/jnvst-class9-audit';
 import { jnvstClass9ContentAudit, jnvstTopicContentAudit, jnvstClass9ContentAuditSummary, jnvstClass9ContentAuditBySubject } from './syllabus/jnvst-class9-content-audit';
 import { jnvstQuestionAudit, jnvstQuestionAuditStatus } from './questions/questionAudit';
+import { jnvstClass9Phase4Complete } from '../utils/jnvstIntelligence';
 
-export { subjects, chapters, topics, allQuestions, jnvstExamQuestions, allLessons, getQuestion, getLesson, getLessonsByTopic, getQuestionsByTopic, getQuestionsBySubject, getJnvstQuestionsBySubject, getJnvstQuestionsByTopic, jnvstClass9Syllabus, jnvstClass9Audit, jnvstClass9AuditSummary, jnvstClass9ExtraCurrentTopics, jnvstClass9ContentAudit, jnvstTopicContentAudit, jnvstClass9ContentAuditSummary, jnvstClass9ContentAuditBySubject, jnvstQuestionAudit, jnvstQuestionAuditStatus };
+export { subjects, chapters, topics, allQuestions, jnvstExamQuestions, allLessons, getQuestion, getLesson, getLessonsByTopic, getQuestionsByTopic, getQuestionsBySubject, getJnvstQuestionsBySubject, getJnvstQuestionsByTopic, jnvstClass9Syllabus, jnvstClass9Audit, jnvstClass9AuditSummary, jnvstClass9ExtraCurrentTopics, jnvstClass9ContentAudit, jnvstTopicContentAudit, jnvstClass9ContentAuditSummary, jnvstClass9ContentAuditBySubject, jnvstQuestionAudit, jnvstQuestionAuditStatus, jnvstClass9Phase4Complete };
 
 export const getSubject = (id: string) => subjects.find((subject) => subject.id === id);
 export const getChapters = (subjectId: string) => chapters.filter((chapter) => chapter.subjectId === subjectId).sort((a, b) => a.order - b.order);
