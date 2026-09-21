@@ -91,10 +91,6 @@ export const jnvstClass9Audit: SyllabusAuditRow[] = jnvstClass9Syllabus.subjects
   }),
 );
 
-const officialTopicIds = new Set(
-  jnvstClass9Syllabus.subjects.flatMap((subject) => subject.topics.map((topic) => topic.id)),
-);
-
 const auditBySubject = (subjectId: string) => {
   const subject = jnvstClass9Syllabus.subjects.find((item) => jnvstSyllabusSubjectIds[item.id] === subjectId);
   return subject ? jnvstClass9Audit.filter((row) => row.subject === subject.title) : [];
