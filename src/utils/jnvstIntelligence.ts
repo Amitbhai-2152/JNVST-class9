@@ -1,10 +1,10 @@
 import type { ID, ProgressState, Question } from '../types';
-import { chapters, subjects, विषयांशs } from '../data/curriculum';
+import { chapters, subjects, topics } from '../data/curriculum';
 import { jnvstExamQuestions } from '../data/questions';
 
-export interface विषयांशPerformance {
-  विषयांशId: ID;
-  विषयांशTitle: string;
+export interface TopicPerformance {
+  topicId: ID;
+  topicTitle: string;
   subjectId: ID;
   subjectTitle: string;
   attempts: number;
@@ -15,117 +15,120 @@ export interface विषयांशPerformance {
 }
 
 export interface SmartRecommendation {
-  विषयांशId: ID;
-  विषयांशTitle: string;
+  topicId: ID;
+  topicTitle: string;
   subjectTitle: string;
   reason: string;
   action: 'अभ्यास' | 'पुनरावृत्ति' | 'सीखना';
   score: number;
 }
 
-const विषयांशById = new Map(विषयांशs.map((विषयांश) => [विषयांश.id, विषयांश]));
+const topicById = new Map(topics.map((topic) => [topic.id, topic]));
 const chapterById = new Map(chapters.map((chapter) => [chapter.id, chapter]));
 const subjectById = new Map(subjects.map((subject) => [subject.id, subject]));
 
-export const getविषयांशPerformances = (progress: ProgressState): विषयांशPerformance[] =>
-  विषयांशs.map((विषयांश) => {
-    const questions = jnvstExamQuestions.filter((question) => question.विषयांशId === विषयांश.id);
-    if (!questions.length) return null;
-    const attempts = questions.flatMap((question) => progress.questionAttempts?.[question.id] ?? []);
-    const correct = attempts.filter((attempt) => attempt.isCorrect).length;
-    const accuracy = attempts.length ? Math.round((correct / attempts.length) * 100) : 0;
-    const unseenQuestions = questions.filter((question) => !(progress.questionAttempts?.[question.id]?.length)).length;
-    const priority: विषयांशPerformance['priority'] =
-      !attempts.length ? 'सामान्य' : accuracy < 60 ? 'उच्च' : accuracy < 80 ? 'मध्यम' : 'सामान्य';
+export const getTopicPerformances = (progress: ProgressState): TopicPerformance[] =>
+  topics
+    .map((topic) => {
+      const questions = jnvstExamQuestions.filter((question) => question.topicId === topic.id);
+      if (!questions.length) return null;
 
-    const chapter = chapterById.get(विषयांश.chapterId);
-    const subject = chapter ? subjectById.get(chapter.subjectId) : undefined;
+      const attempts = questions.flatMap((question) => progress.questionAttempts?.[question.id] ?? []);
+      const correct = attempts.filter((attempt) => attempt.isCorrect).length;
+      const accuracy = attempts.length ? Math.round((correct / attempts.length) * 100) : 0;
+      const unseenQuestions = questions.filter((question) => !(progress.questionAttempts?.[question.id]?.length)).length;
+      const priority: TopicPerformance['priority'] =
+        !attempts.length ? 'सामान्य' : accuracy < 60 ? 'उच्च' : accuracy < 80 ? 'मध्यम' : 'सामान्य';
 
-    return {
-      विषयांशId: विषयांश.id,
-      विषयांशTitle: विषयांश.title,
-      subjectId: chapter?.subjectId ?? '',
-      subjectTitle: subject?.title ?? 'विषय',
-      attempts: attempts.length,
-      correct,
-      accuracy,
-      unseenQuestions,
-      priority,
-    };
-  }).filter((विषयांश): विषयांश is विषयांशPerformance => Boolean(विषयांश));
+      const chapter = chapterById.get(topic.chapterId);
+      const subject = chapter ? subjectById.get(chapter.subjectId) : undefined;
 
-export const getWeakविषयांशs = (progress: ProgressState, limit = 4): विषयांशPerformance[] =>
-  getविषयांशPerformances(progress)
-    .filter((विषयांश) => विषयांश.attempts > 0 && विषयांश.accuracy < 80)
+      return {
+        topicId: topic.id,
+        topicTitle: topic.title,
+        subjectId: chapter?.subjectId ?? '',
+        subjectTitle: subject?.title ?? 'विषय',
+        attempts: attempts.length,
+        correct,
+        accuracy,
+        unseenQuestions,
+        priority,
+      };
+    })
+    .filter((topic): topic is TopicPerformance => Boolean(topic));
+
+export const getWeakTopics = (progress: ProgressState, limit = 4): TopicPerformance[] =>
+  getTopicPerformances(progress)
+    .filter((topic) => topic.attempts > 0 && topic.accuracy < 80)
     .sort((a, b) => {
       const priorityWeight = { उच्च: 3, मध्यम: 2, सामान्य: 1 };
       return priorityWeight[b.priority] - priorityWeight[a.priority] || a.accuracy - b.accuracy || b.attempts - a.attempts;
     })
     .slice(0, limit);
 
-export const getRevisionविषयांशs = (progress: ProgressState, limit = 4, now = Date.now()): विषयांशPerformance[] => {
+export const getRevisionTopics = (progress: ProgressState, limit = 4, now = Date.now()): TopicPerformance[] => {
   const week = 7 * 24 * 60 * 60 * 1000;
 
-  return getविषयांशPerformances(progress)
-    .map((विषयांश) => {
+  return getTopicPerformances(progress)
+    .map((topic) => {
       const questionIds = jnvstExamQuestions
-        .filter((question) => question.विषयांशId === विषयांश.विषयांशId)
+        .filter((question) => question.topicId === topic.topicId)
         .map((question) => question.id);
       const lastAttempt = Math.max(
         0,
         ...questionIds.flatMap((id) => (progress.questionAttempts?.[id] ?? []).map((attempt) => attempt.timestamp)),
       );
-      return { विषयांश, lastAttempt };
+      return { topic, lastAttempt };
     })
-    .filter(({ विषयांश, lastAttempt }) => विषयांश.attempts > 0 && lastAttempt > 0 && now - lastAttempt >= week)
-    .sort((a, b) => a.lastAttempt - b.lastAttempt || a.विषयांश.accuracy - b.विषयांश.accuracy)
+    .filter(({ topic, lastAttempt }) => topic.attempts > 0 && lastAttempt > 0 && now - lastAttempt >= week)
+    .sort((a, b) => a.lastAttempt - b.lastAttempt || a.topic.accuracy - b.topic.accuracy)
     .slice(0, limit)
-    .map(({ विषयांश }) => विषयांश);
+    .map(({ topic }) => topic);
 };
 
 export const getSmartRecommendations = (progress: ProgressState, limit = 4): SmartRecommendation[] =>
-  getविषयांशPerformances(progress)
-    .map((विषयांश) => {
-      const chapter = विषयांशById.get(विषयांश.विषयांशId)?.chapterId;
+  getTopicPerformances(progress)
+    .map((topic) => {
+      const chapter = topicById.get(topic.topicId)?.chapterId;
       const subject = chapter ? subjectById.get(chapterById.get(chapter)?.subjectId ?? '') : undefined;
 
-      if (विषयांश.attempts === 0) {
+      if (topic.attempts === 0) {
         return {
-          विषयांशId: विषयांश.विषयांशId,
-          विषयांशTitle: विषयांश.विषयांशTitle,
-          subjectTitle: subject?.title ?? विषयांश.subjectTitle,
+          topicId: topic.topicId,
+          topicTitle: topic.topicTitle,
+          subjectTitle: subject?.title ?? topic.subjectTitle,
           reason: 'इस विषयांश पर अभी आपका कोई प्रयास दर्ज नहीं है। पहले अवधारणा पढ़कर अभ्यास करें।',
           action: 'सीखना' as const,
-          score: 60 + Math.min(20, विषयांश.unseenQuestions),
+          score: 60 + Math.min(20, topic.unseenQuestions),
         };
       }
 
-      if (विषयांश.accuracy < 60) {
+      if (topic.accuracy < 60) {
         return {
-          विषयांशId: विषयांश.विषयांशId,
-          विषयांशTitle: विषयांश.विषयांशTitle,
-          subjectTitle: विषयांश.subjectTitle,
-          reason: 'सटीकता ' + विषयांश.accuracy + '% है। पहले इसी विषयांश पर लक्षित अभ्यास करें।',
+          topicId: topic.topicId,
+          topicTitle: topic.topicTitle,
+          subjectTitle: topic.subjectTitle,
+          reason: 'सटीकता ' + topic.accuracy + '% है। पहले इसी विषयांश पर लक्षित अभ्यास करें।',
           action: 'अभ्यास' as const,
-          score: 100 - विषयांश.accuracy,
+          score: 100 - topic.accuracy,
         };
       }
 
-      if (विषयांश.accuracy < 80) {
+      if (topic.accuracy < 80) {
         return {
-          विषयांशId: विषयांश.विषयांशId,
-          विषयांशTitle: विषयांश.विषयांशTitle,
-          subjectTitle: विषयांश.subjectTitle,
-          reason: 'सटीकता ' + विषयांश.accuracy + '% है। इसे 80% या उससे अधिक तक मजबूत करने के लिए अभ्यास करें।',
+          topicId: topic.topicId,
+          topicTitle: topic.topicTitle,
+          subjectTitle: topic.subjectTitle,
+          reason: 'सटीकता ' + topic.accuracy + '% है। इसे 80% या उससे अधिक तक मजबूत करने के लिए अभ्यास करें।',
           action: 'अभ्यास' as const,
-          score: 80 - विषयांश.accuracy + 25,
+          score: 80 - topic.accuracy + 25,
         };
       }
 
       return {
-        विषयांशId: विषयांश.विषयांशId,
-        विषयांशTitle: विषयांश.विषयांशTitle,
-        subjectTitle: विषयांश.subjectTitle,
+        topicId: topic.topicId,
+        topicTitle: topic.topicTitle,
+        subjectTitle: topic.subjectTitle,
         reason: 'आपकी पकड़ अच्छी है। अब पुनरावृत्ति से इसे बनाए रखें।',
         action: 'पुनरावृत्ति' as const,
         score: 20,
@@ -135,7 +138,7 @@ export const getSmartRecommendations = (progress: ProgressState, limit = 4): Sma
     .slice(0, limit);
 
 export const getSmartPracticeQuestions = (progress: ProgressState, limit = 10): Question[] => {
-  const weakविषयांशIds = new Set(getWeakविषयांशs(progress, 4).map((विषयांश) => विषयांश.विषयांशId));
+  const weakTopicIds = new Set(getWeakTopics(progress, 4).map((topic) => topic.topicId));
 
   return jnvstExamQuestions
     .map((question) => {
@@ -144,7 +147,7 @@ export const getSmartPracticeQuestions = (progress: ProgressState, limit = 10): 
       let score = 0;
 
       if (!attempts.length) score += 40;
-      if (weakविषयांशIds.has(question.विषयांशId)) score += 45;
+      if (weakTopicIds.has(question.topicId)) score += 45;
       if (latest && !latest.isCorrect) score += 35;
       if (question.difficulty === 'hard' || question.difficulty === 'challenge') score += 5;
 
@@ -183,14 +186,14 @@ export const buildJnvstMockPaper = (seed = 'jnvst-2027'): Question[] => {
 export const getPerformanceSummary = (progress: ProgressState) => {
   const attempts = Object.values(progress.questionAttempts ?? {}).flat();
   const correct = attempts.filter((attempt) => attempt.isCorrect).length;
-  const performances = getविषयांशPerformances(progress);
+  const performances = getTopicPerformances(progress);
 
   return {
     totalAttempts: attempts.length,
     overallAccuracy: attempts.length ? Math.round((correct / attempts.length) * 100) : 0,
-    attemptedविषयांशs: performances.filter((विषयांश) => विषयांश.attempts > 0).length,
-    totalविषयांशs: performances.length,
-    weakविषयांशs: performances.filter((विषयांश) => विषयांश.priority === 'उच्च').length,
+    attemptedTopics: performances.filter((topic) => topic.attempts > 0).length,
+    totalTopics: performances.length,
+    weakTopics: performances.filter((topic) => topic.priority === 'उच्च').length,
     practiceReadyQuestions: jnvstExamQuestions.length,
   };
 };
