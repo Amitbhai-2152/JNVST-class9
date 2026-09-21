@@ -80,10 +80,10 @@ const Dashboard = () => {
       <Card><b>{allLessons.length}</b><span>कुल पाठ</span></Card>
     </section>
 
-    {summary.totalAttempts > 0 && <section>
+    <section>
       <div className="page-head">
-        <h2>आपकी तैयारी का विश्लेषण</h2>
-        <p>{summary.attemptedTopics} / {summary.totalTopics} topics पर आपने अभ्यास किया है।</p>
+        <h2>आपके लिए अगला कदम</h2>
+        <p>{summary.totalAttempts > 0 ? summary.attemptedTopics + ' / ' + summary.totalTopics + ' विषयांशों पर आपका अभ्यास दर्ज है।' : 'अभी आपकी अभ्यास-इतिहास खाली है। शुरुआत के लिए ये विषयांश चुने गए हैं।'}</p>
       </div>
       <div className="grid">
         {recommendations.map((item) => <Card key={item.topicId}>
@@ -93,7 +93,7 @@ const Dashboard = () => {
           <div className="actions"><Link className="btn primary" to={'/practice/' + item.topicId}>{item.action === 'सीखना' ? 'पढ़कर अभ्यास करें' : item.action}</Link></div>
         </Card>)}
       </div>
-    </section>}
+    </section>
 
     {weakTopics.length > 0 && <section>
       <div className="page-head"><h2>कमजोर क्षेत्र</h2><p>जहाँ आपकी सटीकता 80% से कम है, वहाँ targeted practice पहले करें।</p></div>
