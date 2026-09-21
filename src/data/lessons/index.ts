@@ -46,6 +46,9 @@ const questionUnits = (lesson: Lesson): ContentBlock[] => {
       { type: 'list', style: 'bullet', items: question.options.map((option) => `${option.id}: ${option.text}`) } satisfies ContentBlock,
       { type: 'callout', style: 'example', title: 'सही उत्तर', text: correct || 'उत्तर उपलब्ध' } satisfies ContentBlock,
       { type: 'callout', style: 'info', title: 'समाधान और कारण', text: question.explanationPlain ?? 'इस प्रश्न में जाँची गई अवधारणा को lesson content से दोबारा पढ़ें।' } satisfies ContentBlock,
+      ...(question.metadata?.commonTrap
+        ? [{ type: 'callout', style: 'warning', title: 'सामान्य गलती से बचें', text: question.metadata.commonTrap } satisfies ContentBlock]
+        : []),
     ];
   });
 };
