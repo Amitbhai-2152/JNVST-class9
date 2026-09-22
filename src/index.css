@@ -1279,3 +1279,398 @@ a { color: inherit; text-decoration: none; }
 .math-challenger-card .actions { margin-top:14px; }
 .math-challenger-card .btn.challenger { background:#efe7ff; color:#6741a8; border-color:#dfd2f6; }
 @media (max-width:820px) { .math-challenger-grid { grid-template-columns:1fr; } }
+
+
+/* Mobile-first refinement for Maths + Science subject/chapter surfaces */
+@media (max-width: 700px) {
+  /* Prevent page-level horizontal squeeze while preserving intentional scrollers. */
+  .math-hub,
+  .science-hub,
+  .math-chapter-page,
+  .science-chapter-shell,
+  .science-study-page,
+  .math-study-page {
+    min-width: 0;
+  }
+
+  .math-hub-hero,
+  .science-hub-hero,
+  .math-chapter-hero,
+  .science-chapter-hero,
+  .science-study-hero {
+    width: 100%;
+  }
+
+  .math-hub-hero > div:first-child,
+  .science-hub-hero > div:first-child,
+  .math-chapter-hero > div:first-child,
+  .science-chapter-hero > div:first-child,
+  .science-study-hero > div:first-child {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .math-hub-hero h2,
+  .science-hub-hero h2,
+  .math-chapter-hero h1,
+  .science-chapter-hero h1,
+  .science-study-hero h1 {
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  .math-hub-hero .actions,
+  .science-hub-hero .actions,
+  .math-chapter-hero .actions,
+  .science-chapter-hero .actions {
+    width: 100%;
+  }
+
+  .math-hub-hero .actions .btn,
+  .science-hub-hero .actions .btn,
+  .math-chapter-hero .actions .btn,
+  .science-chapter-hero .actions .btn {
+    flex: 1 1 220px;
+    min-height: 44px;
+  }
+
+  .math-hub-badge,
+  .science-hub-badge,
+  .math-chapter-index,
+  .science-chapter-index,
+  .science-study-hero-progress {
+    flex: 0 0 auto;
+  }
+
+  .math-mastery-head,
+  .math-chapter-section-head,
+  .science-section-head,
+  .science-mastery,
+  .science-study-content-head {
+    min-width: 0;
+  }
+
+  .math-mastery-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .math-mastery-head > .btn {
+    width: 100%;
+  }
+
+  .math-unit summary,
+  .science-unit summary {
+    min-width: 0;
+  }
+
+  .math-unit summary > div,
+  .science-unit summary > div {
+    min-width: 0;
+  }
+
+  .math-unit summary b,
+  .math-unit summary small,
+  .science-unit summary b,
+  .science-unit summary small {
+    overflow-wrap: anywhere;
+  }
+
+  .math-unit-body,
+  .science-unit-body {
+    min-width: 0;
+  }
+
+  .math-formula-chips > span,
+  .science-fact-chips span {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .math-practice-card,
+  .math-challenger-card,
+  .science-learning-card,
+  .science-chapter-content-grid .card {
+    min-width: 0;
+  }
+
+  .math-practice-card .actions,
+  .math-challenger-card .actions,
+  .science-learning-card .actions {
+    width: 100%;
+  }
+
+  .math-practice-card .actions .btn,
+  .math-challenger-card .actions .btn,
+  .science-learning-card .actions .btn {
+    flex: 1 1 190px;
+    min-height: 44px;
+  }
+
+  .science-source-strip > div:first-child,
+  .science-learning-card-top,
+  .science-visual-head,
+  .science-chapter-content-grid {
+    min-width: 0;
+  }
+
+  .science-source-strip b,
+  .science-source-strip small,
+  .science-learning-card-top h4,
+  .science-learning-focus,
+  .science-chapter-content-grid li {
+    overflow-wrap: anywhere;
+  }
+
+  .science-learning-meta,
+  .science-chapter-footer,
+  .math-chapter-footer {
+    min-width: 0;
+  }
+
+  .science-study-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .science-study-hero-progress {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 72px;
+    border-radius: 16px;
+  }
+
+  .science-study-content-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .science-study-page-chip {
+    width: max-content;
+    max-width: 100%;
+  }
+
+  .science-study-content-card .lesson-content,
+  .math-study-page .science-study-content-card .lesson-content {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .science-study-content-card .lesson-content img,
+  .math-study-page .science-study-content-card .lesson-content img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .science-study-page-actions {
+    min-width: 0;
+  }
+
+  .science-study-page-actions > button,
+  .science-study-page-actions > a {
+    min-height: 44px;
+  }
+
+  .science-outline-list button,
+  .science-study-map-list button,
+  .science-study-stage-list button {
+    min-height: 74px;
+  }
+}
+
+@media (max-width: 520px) {
+  .math-hub-hero,
+  .science-hub-hero {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .math-hub-hero h2,
+  .science-hub-hero h2 {
+    font-size: 28px;
+    line-height: 1.15;
+  }
+
+  .math-hub-hero p,
+  .science-hub-hero p,
+  .math-chapter-hero p,
+  .science-chapter-hero p,
+  .science-study-hero p {
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  .math-hub-hero .actions,
+  .science-hub-hero .actions,
+  .math-chapter-hero .actions,
+  .science-chapter-hero .actions,
+  .math-practice-card .actions,
+  .math-challenger-card .actions,
+  .science-learning-card .actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .math-hub-hero .actions .btn,
+  .science-hub-hero .actions .btn,
+  .math-chapter-hero .actions .btn,
+  .science-chapter-hero .actions .btn,
+  .math-practice-card .actions .btn,
+  .math-challenger-card .actions .btn,
+  .science-learning-card .actions .btn {
+    width: 100%;
+    flex-basis: auto;
+  }
+
+  .math-stats,
+  .science-stats,
+  .math-chapter-stats,
+  .science-chapter-stats,
+  .science-learning-summary {
+    gap: 7px;
+  }
+
+  .math-stats .card,
+  .science-stats .card,
+  .math-chapter-stats .card,
+  .science-chapter-stats .card {
+    padding: 12px;
+  }
+
+  .math-stats b,
+  .science-stats b,
+  .math-chapter-stats b,
+  .science-chapter-stats b {
+    font-size: 22px;
+  }
+
+  .math-stats span,
+  .science-stats span,
+  .math-chapter-stats span,
+  .science-chapter-stats span {
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  .math-chapter-card,
+  .math-challenger-card,
+  .science-learning-card,
+  .science-chapter-content-grid .card,
+  .science-study-side-card {
+    padding: 13px;
+  }
+
+  .math-chapter-card-head {
+    grid-template-columns: 36px minmax(0, 1fr);
+  }
+
+  .math-chapter-card-head h4,
+  .math-challenger-card-top h4 {
+    font-size: 16px;
+  }
+
+  .math-mini-topic {
+    align-items: flex-start;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .science-learning-card-top {
+    grid-template-columns: 36px minmax(0, 1fr);
+  }
+
+  .science-learning-card-top h4 {
+    font-size: 15px;
+  }
+
+  .science-status {
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  .science-learning-summary > div {
+    padding: 9px 10px;
+    min-width: 0;
+  }
+
+  .science-learning-summary b {
+    font-size: 20px;
+  }
+
+  .science-learning-summary span {
+    font-size: 10px;
+    line-height: 1.3;
+  }
+
+  .science-chapter-hero,
+  .math-chapter-hero,
+  .science-study-hero {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .science-chapter-hero h1,
+  .math-chapter-hero h1,
+  .science-study-hero h1 {
+    font-size: 28px;
+  }
+
+  .science-chapter-index {
+    min-height: 86px;
+    height: auto;
+  }
+
+  .math-chapter-index {
+    min-height: 72px;
+    height: auto;
+  }
+
+  .science-study-content-head {
+    padding: 16px 14px 12px;
+  }
+
+  .science-study-content-card .lesson-content,
+  .math-study-page .science-study-content-card .lesson-content {
+    padding: 14px 14px 18px;
+  }
+
+  .science-study-content-card .lesson-content > p,
+  .math-study-page .science-study-content-card .lesson-content > p {
+    font-size: 14px;
+    line-height: 1.72;
+  }
+
+  .science-study-content-card .lesson-content > h2,
+  .math-study-page .science-study-content-card .lesson-content > h2 {
+    font-size: 23px;
+  }
+
+  .science-study-content-card .lesson-content > h3,
+  .math-study-page .science-study-content-card .lesson-content > h3 {
+    font-size: 19px;
+  }
+}
+
+@media (max-width: 380px) {
+  .math-stats,
+  .science-stats,
+  .math-chapter-stats,
+  .science-chapter-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .math-hub-hero h2,
+  .science-hub-hero h2,
+  .math-chapter-hero h1,
+  .science-chapter-hero h1,
+  .science-study-hero h1 {
+    font-size: 26px;
+  }
+
+  .math-chapter-footer,
+  .science-chapter-footer {
+    gap: 8px;
+  }
+}
