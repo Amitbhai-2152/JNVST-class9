@@ -440,28 +440,33 @@ const EnglishSubjectOverview = () => {
 
     <section className="english-mastery">
       <div className="english-section-head">
-        <span className="eyebrow">10-SKILL MASTERY CHECKLIST</span>
-        <h3>हर skill को मजबूत करने का roadmap</h3>
-        <p>कमज़ोर skill पर वापस जाएँ, English example पढ़ें और फिर बिना सहायता के उसी pattern को लागू करें।</p>
+        <span className="eyebrow">10 SKILLS • TOPIC MASTERY CARDS</span>
+        <h3>हर topic को अलग सीखें — revision list की तरह नहीं</h3>
+        <p>हर card में उसी topic का concept, हिन्दी explanation, rules, examples, solving method और JNVST traps दिए गए हैं। पहले card पढ़ें, फिर उसी topic के questions लगाएँ।</p>
       </div>
-      <div className="english-mastery-grid">
+      <div className="english-mastery-grid english-topic-card-grid">
         {englishMasteryUnits.map((unit, index) => {
           const performance = performances.find((item) => item.topicId === unit.topicId);
           const unitAccuracy = performance?.attempts ? performance.accuracy : 0;
-          return <details className="english-mastery-card" key={unit.topicId}>
-            <summary><span className="english-unit-number">{String(index + 1).padStart(2,'0')}</span><div><b>{unit.title}</b><small>{performance?.attempts ? unitAccuracy + '% accuracy' : 'अभी अभ्यास नहीं'}</small></div><span>＋</span></summary>
-            <div className="english-mastery-body">
-              <div className="english-hindi-focus"><b>पहले हिन्दी में समझें</b><p>{unit.hindiFocus}</p></div>
-              <div><h4>क्या सीखना है</h4><ul>{unit.coreSkills.map((item) => <li key={item}>{item}</li>)}</ul></div>
-              <div><h4>Must Know</h4><ul>{unit.mustKnow.map((item) => <li key={item}>{item}</li>)}</ul></div>
-              <div><h4>Quick Recall</h4><div className="english-chip-list">{unit.quickFacts.map((fact) => <span key={fact}>{fact}</span>)}</div></div>
-              <div><h4>Exam Traps</h4><ul>{unit.examTraps.map((item) => <li key={item}>{item}</li>)}</ul></div>
-              <div className="actions">
-                <Link className="btn primary" to={'/practice/' + unit.topicId}>अभ्यास करें →</Link>
-                <Link className="btn" to={'/chapters/' + (topics.find((topic) => topic.id === unit.topicId)?.chapterId ?? '') + '/study'}>📖 पढ़ें</Link>
-              </div>
+          const chapterId = topics.find((topic) => topic.id === unit.topicId)?.chapterId ?? '';
+          return <Card className="english-mastery-card english-topic-mastery-card" key={unit.topicId}>
+            <div className="english-topic-card-head">
+              <span className="english-unit-number">{String(index + 1).padStart(2,'0')}</span>
+              <div><span className="english-topic-label">TOPIC {String(index + 1).padStart(2,'0')}</span><h4>{unit.title}</h4><small>{performance?.attempts ? `${performance.attempts} attempts · ${unitAccuracy}% accuracy` : 'अभी अभ्यास शुरू नहीं हुआ'}</small></div>
             </div>
-          </details>;
+            <div className="english-hindi-focus"><span>CONCEPT</span><b>पहले हिन्दी में समझें</b><p>{unit.hindiFocus}</p></div>
+            <div className="english-topic-sections">
+              <div><h5>क्या सीखना है</h5><ul>{unit.coreSkills.map((item) => <li key={item}>{item}</li>)}</ul></div>
+              <div><h5>मुख्य नियम</h5><ul>{unit.mustKnow.map((item) => <li key={item}>{item}</li>)}</ul></div>
+              <div><h5>उदाहरण</h5><ul>{unit.examples.map((item) => <li key={item}><InlineText text={item} /></li>)}</ul></div>
+              <div><h5>कैसे हल करें</h5><ol>{unit.solveMethod.map((item) => <li key={item}>{item}</li>)}</ol></div>
+              <div><h5>JNVST Trap Check</h5><ul>{unit.examTraps.map((item) => <li key={item}>{item}</li>)}</ul></div>
+            </div>
+            <div className="english-topic-facts"><span>Quick facts</span>{unit.quickFacts.map((fact) => <b key={fact}>{fact}</b>)}</div>
+            <div className="english-topic-card-footer"><div className="english-topic-progress"><span style={{width: (performance?.attempts ? unitAccuracy : 0) + '%'}} /></div>
+              <div className="actions"><Link className="btn primary" to={'/practice/' + unit.topicId}>🎯 इस topic का अभ्यास</Link><Link className="btn" to={'/chapters/' + chapterId + '/study'}>📖 पूरा concept</Link></div>
+            </div>
+          </Card>;
         })}
       </div>
     </section>
