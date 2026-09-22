@@ -291,7 +291,7 @@ const VocabularyLearn = ({
   );
 };
 
-const TranslationLab = () => {
+const TranslationLab = ({ initialMode = 'learn' }: { initialMode?: 'learn' | 'practice' }) => {
   const p = useProgressStore();
   const [direction, setDirection] = useState<TranslationDirection>('hi-en');
   const [level, setLevel] = useState(1);
@@ -302,7 +302,7 @@ const TranslationLab = () => {
   const [checked, setChecked] = useState(false);
   const [correct, setCorrect] = useState(false);
   const [showHint, setShowHint] = useState(false);
-  const [labMode, setLabMode] = useState<'learn' | 'practice'>('learn');
+  const [labMode, setLabMode] = useState<'learn' | 'practice'>(initialMode);
 
   const item = useMemo(
     () => generateTranslationItem(level, direction, 4100 + session * 100000 + index * 97),
@@ -440,7 +440,7 @@ const TranslationLab = () => {
   );
 };
 
-const VocabularyLab = () => {
+const VocabularyLab = ({ initialMode = 'learn' }: { initialMode?: 'learn' | 'practice' }) => {
   const p = useProgressStore();
   const [level, setLevel] = useState<typeof vocabularyLevels[number]['id']>('beginner');
   const [learnLevel, setLearnLevel] = useState<typeof vocabularyLevels[number]['id'] | 'all'>('all');
@@ -449,7 +449,7 @@ const VocabularyLab = () => {
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState('');
   const [checked, setChecked] = useState(false);
-  const [labMode, setLabMode] = useState<'learn' | 'practice'>('learn');
+  const [labMode, setLabMode] = useState<'learn' | 'practice'>(initialMode);
 
   const item = useMemo(
     () => generateVocabularyItem(level, 9100 + session * 100000 + index * 71, vocabularyLabItems),
@@ -577,3 +577,5 @@ const VocabularyLab = () => {
 
 export const EnglishTranslationLabPage = TranslationLab;
 export const EnglishVocabularyLabPage = VocabularyLab;
+export const EnglishTranslationPracticePage = () => <TranslationLab initialMode="practice" />;
+export const EnglishVocabularyPracticePage = () => <VocabularyLab initialMode="practice" />;
