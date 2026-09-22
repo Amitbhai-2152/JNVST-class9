@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { chapters, allLessons, getSubject, topics } from '../data';
-import { scienceLessonLens } from '../data/scienceLessonCore';
+import { scienceLessonCore, scienceLessonLens } from '../data/scienceLessonCore';
 import { scienceMasteryUnits } from '../data/sciencePrep';
 import { getChapterStudyPages } from '../data/lessons/chapterStudy';
 import { MathAwareText, MathText } from '../components/MathText';
@@ -30,8 +30,7 @@ export default function ChapterStudyPage() {
   const isScience = chapter?.subjectId === 'sub_sci';
 
   const scienceTopic = isScience ? topics.find((t) => t.id === chapter?.topicIds[0]) : undefined;
-  const scienceLesson = isScience ? allLessons.find((lesson) => lesson.topicId === scienceTopic?.id) : undefined;
-  const scienceBlocks = scienceLesson?.content ?? [];
+  const scienceBlocks = isScience && scienceTopic?.id ? (scienceLessonCore[scienceTopic.id] ?? []) : [];
   const sciencePages = useMemo(() => {
     if (!isScience) return [];
     const pages: ContentBlock[][] = [];
