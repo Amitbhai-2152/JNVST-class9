@@ -15,8 +15,8 @@ const scienceChapterByTopic: Record<string, string> = {
   'top_sci_01_02': 'chap_sci_12',
   'top_sci_01_03': 'chap_sci_13',
   'top_sci_01_04': 'chap_sci_14',
-  'top_sci_01_05': 'chap_sci_15',
-  'top_sci_01_06': 'chap_sci_16',
+  'top_sci_01_05': 'chap_sci_16',
+  'top_sci_01_06': 'chap_sci_15',
   'top_sci_01_07': 'chap_sci_17',
   'top_sci_02_05': 'chap_sci_18'
 };
