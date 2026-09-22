@@ -7,7 +7,7 @@ import MathFormulaSheet from './pages/MathFormulaSheetPage';
 import { MathAwareText, MathText } from './components/MathText';
 import { useProgressStore } from './store/progress';
 import type { ContentBlock, ID, MockTestResult, Question } from './types';
-import { buildJnvstMockPaper, buildMathMockPaper, buildScienceMockPaper, getPerformanceSummary, getRevisionTopics, getSmartPracticeQuestions, getMathSmartPracticeQuestions, getScienceSmartPracticeQuestions, getSmartRecommendations, getWeakTopics, getTopicPerformances } from './utils/jnvstIntelligence';
+import { buildJnvstMockPaper, buildMathMockPaper, buildScienceMockPaper, getChapterChallengerQuestions, getPerformanceSummary, getRevisionTopics, getSmartPracticeQuestions, getMathSmartPracticeQuestions, getScienceSmartPracticeQuestions, getSmartRecommendations, getWeakTopics, getTopicPerformances } from './utils/jnvstIntelligence';
 import { mathMasteryUnits } from './data/mathMastery';
 import { scienceMasteryUnits } from './data/sciencePrep';
 import { scienceLessonCore } from './data/scienceLessonCore';
@@ -613,6 +613,7 @@ const ChapterPage = () => {
             <div className="actions">
               <Link className="btn primary" to={`/chapters/${c.id}/study`}>📖 अध्याय अध्ययन शुरू करें</Link>
               <Link className="btn" to={`/practice/${topic?.id ?? ''}`}>🎯 {questionCountForChapter} प्रश्न हल करें</Link>
+              <Link className="btn challenger" to={`/chapters/${c.id}/challenger`}>⚡ Challenger Questions · {getChapterChallengerQuestions(c.id, 100).length}</Link>
             </div>
           </div>
           <div className="science-chapter-index">
@@ -662,7 +663,7 @@ const ChapterPage = () => {
   }
 
   const pageCount = getChapterStudyPages(c, allLessons, 12).length;
-  return <Shell><div className="page-head"><Link to={`/subjects/${s.id}`}>← {s.title}</Link><h1>{c.title}</h1><p>{pageCount} पृष्ठ का अध्याय अध्ययन पाठ उपलब्ध है।</p><div className="actions"><Link className="btn primary" to={`/chapters/${c.id}/study`}>📖 अध्याय पढ़ें · {pageCount}+ पृष्ठ</Link></div></div><div className="grid">{c.topicIds.map(id => <TopicCard key={id} topicId={id} />)}</div></Shell>;
+  return <Shell><div className="page-head"><Link to={`/subjects/${s.id}`}>← {s.title}</Link><h1>{c.title}</h1><p>{pageCount} पृष्ठ का अध्याय अध्ययन पाठ उपलब्ध है।</p><div className="actions"><Link className="btn primary" to={`/chapters/${c.id}/study`}>📖 अध्याय पढ़ें · {pageCount}+ पृष्ठ</Link><Link className="btn challenger" to={`/chapters/${c.id}/challenger`}>⚡ Challenger Questions · {getChapterChallengerQuestions(c.id, 100).length}</Link></div></div><div className="grid">{c.topicIds.map(id => <TopicCard key={id} topicId={id} />)}</div></Shell>;
 };
 
 const LessonPage = () => {
@@ -1088,6 +1089,25 @@ const PracticePage = () => {
   />;
 };
 
+const ChapterChallengerPage = () => {
+  const { chapterId } = useParams();
+  const chapter = chapters.find((item) => item.id === chapterId);
+  const questions = chapter ? getChapterChallengerQuestions(chapter.id, 10, 'jnvst-challenger-' + chapter.id) : [];
+  if (!chapter) return <Shell><Card className="empty"><h1>अध्याय नहीं मिला</h1><Link className="btn" to="/subjects">विषयों पर जाएँ</Link></Card></Shell>;
+
+  return <AssessmentRunner
+    questions={questions}
+    title={'⚡ ' + chapter.title + ' — Challenger Questions'}
+    backTo={'/chapters/' + chapter.id}
+    backLabel="अध्याय"
+    description="यह chapter का केवल Challenge-level question set है। प्रश्नों का उत्तर बीच में नहीं दिखेगा; marks और पूरा answer review केवल टेस्ट के अंत में मिलेगा।"
+    badge="CHALLENGER MODE"
+    bannerLink={{ to: '/chapters/' + chapter.id + '/study', label: '📖 अध्याय अध्ययन →' }}
+    emptyTitle="इस अध्याय में अभी Challenger Questions उपलब्ध नहीं हैं"
+    emptyText="इस chapter के लिए challenge-level question bank उपलब्ध होने पर यह test यहाँ दिखाई देगा।"
+  />;
+};
+
 const BookmarksPage = () => { const p = useProgressStore(); const bookmarked = allLessons.filter(l => p.bookmarks.lessonIds.includes(l.id)); return <Shell><div className="page-head"><h1>बुकमार्क</h1><p>सहेजे गए पाठ</p></div>{bookmarked.length ? <div className="grid">{bookmarked.map(l => <Card key={l.id}><h3>{l.title}</h3><Link className="btn" to={`/lessons/${l.id}`}>पाठ खोलें</Link></Card>)}</div> : <Card className="empty"><h2>अभी कोई बुकमार्क नहीं है</h2><p>पाठ पढ़ते समय बुकमार्क जोड़ें।</p></Card>}</Shell>; };
 
 const SmartPracticePage = () => {
@@ -1382,4 +1402,4 @@ const MockTestsPage = () => {
   </Shell>;
 };
 
-export default function App() { return <HashRouter><Routes><Route path="/" element={<Dashboard />} /><Route path="/subjects" element={<SubjectsPage />} /><Route path="/subjects/:subjectId" element={<SubjectPage />} /><Route path="/chapters/:chapterId" element={<ChapterPage />} /><Route path="/chapters/:chapterId/study" element={<ChapterStudyPage />} /><Route path="/lessons/:lessonId" element={<LessonPage />} /><Route path="/math-formulas" element={<Shell><MathFormulaSheet /></Shell>} /><Route path="/science-revision" element={<ScienceRevisionPage />} /><Route path="/science-smart-practice" element={<ScienceSmartPracticePage />} /><Route path="/science-mock-test" element={<ScienceMockTestPage />} /><Route path="/practice/:topicId" element={<PracticePage />} /><Route path="/smart-practice" element={<SmartPracticePage />} /><Route path="/math-smart-practice" element={<MathSmartPracticePage />} /><Route path="/bookmarks" element={<BookmarksPage />} /><Route path="/mock-tests" element={<MockTestsPage />} /><Route path="/math-mock-test" element={<MathMockTestPage />} /><Route path="*" element={<Dashboard />} /></Routes></HashRouter>; }
+export default function App() { return <HashRouter><Routes><Route path="/" element={<Dashboard />} /><Route path="/subjects" element={<SubjectsPage />} /><Route path="/subjects/:subjectId" element={<SubjectPage />} /><Route path="/chapters/:chapterId" element={<ChapterPage />} /><Route path="/chapters/:chapterId/study" element={<ChapterStudyPage />} /><Route path="/chapters/:chapterId/challenger" element={<ChapterChallengerPage />} /><Route path="/lessons/:lessonId" element={<LessonPage />} /><Route path="/math-formulas" element={<Shell><MathFormulaSheet /></Shell>} /><Route path="/science-revision" element={<ScienceRevisionPage />} /><Route path="/science-smart-practice" element={<ScienceSmartPracticePage />} /><Route path="/science-mock-test" element={<ScienceMockTestPage />} /><Route path="/practice/:topicId" element={<PracticePage />} /><Route path="/smart-practice" element={<SmartPracticePage />} /><Route path="/math-smart-practice" element={<MathSmartPracticePage />} /><Route path="/bookmarks" element={<BookmarksPage />} /><Route path="/mock-tests" element={<MockTestsPage />} /><Route path="/math-mock-test" element={<MathMockTestPage />} /><Route path="*" element={<Dashboard />} /></Routes></HashRouter>; }
