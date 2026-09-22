@@ -36,6 +36,51 @@ const ContentRenderer = ({ blocks }: { blocks: ContentBlock[] }) => <div classNa
   }
 })}</div>;
 
+const ScienceVisual = ({ topicId }: { topicId: ID }) => {
+  const visuals: Record<string, { title: string; caption: string; items: { label: string; value: string }[] }> = {
+    top_sci_01_01: { title: 'बल और दाब को ऐसे देखें', caption: 'पहले मात्रा पहचानें, फिर कारण और दिशा देखें।', items: [
+      { label: 'बल', value: 'धक्का / खिंचाव' }, { label: 'दाब', value: 'बल ÷ क्षेत्रफल' }, { label: 'द्रव', value: 'गहराई बढ़े → दाब बढ़े' },
+    ]},
+    top_sci_01_02: { title: 'घर्षण का सरल मॉडल', caption: 'घर्षण गति या गति की प्रवृत्ति का विरोध करता है।', items: [
+      { label: 'गति', value: '→ आगे' }, { label: 'घर्षण', value: '← विरोध' }, { label: 'उपयोग', value: 'चलना, ब्रेक, पकड़' },
+    ]},
+    top_sci_01_03: { title: 'ध्वनि: दो संकेत याद रखें', caption: 'आयाम loudness से और आवृत्ति pitch से जुड़ी है।', items: [
+      { label: 'आयाम', value: 'बड़ा → अधिक प्रबल' }, { label: 'आवृत्ति', value: 'अधिक → ऊँची pitch' }, { label: 'माध्यम', value: 'कंपन को आगे पहुँचाता है' },
+    ]},
+    top_sci_01_04: { title: 'विद्युत अपघटन का flow', caption: 'घोल में आयन मौजूद हों तो विद्युत धारा रासायनिक परिवर्तन करा सकती है।', items: [
+      { label: 'घोल', value: 'आयन मौजूद' }, { label: 'धारा', value: 'आयन गतिशील' }, { label: 'इलेक्ट्रोड', value: 'नया पदार्थ / जमाव' },
+    ]},
+    top_sci_01_05: { title: 'परावर्तन को ऐसे सोचें', caption: 'Normal हमेशा सतह पर आपतित बिंदु पर खींची गई लंब होती है।', items: [
+      { label: 'आपतित किरण', value: '→ सतह' }, { label: 'Normal', value: '⊥ सतह' }, { label: 'परावर्तित किरण', value: '← दूर' },
+    ]},
+    top_sci_01_06: { title: 'तड़ित सुरक्षा की chain', caption: 'चालक का उद्देश्य आवेश को सुरक्षित मार्ग देना है।', items: [
+      { label: 'बादल', value: 'आवेश' }, { label: 'तड़ित चालक', value: 'कम प्रतिरोध मार्ग' }, { label: 'भूमि', value: 'सुरक्षित विसर्जन' },
+    ]},
+    top_sci_02_04: { title: 'दहन के लिए तीन शर्तें', caption: 'ईंधन + ऑक्सीजन + ज्वलन ताप — तीनों का संबंध समझें।', items: [
+      { label: 'ईंधन', value: 'दाह्य पदार्थ' }, { label: 'ऑक्सीजन', value: 'हवा का सहायक घटक' }, { label: 'ताप', value: 'ज्वलन ताप तक पहुँचे' },
+    ]},
+    top_sci_03_03: { title: 'कोशिका का कामकाजी नक्शा', caption: 'हर संरचना को उसके काम से जोड़कर याद करें।', items: [
+      { label: 'कोशिका झिल्ली', value: 'आवागमन नियंत्रण' }, { label: 'केंद्रक', value: 'नियंत्रण / गुणसूत्र' }, { label: 'कोशिकाद्रव्य', value: 'अनेक कोशिकीय क्रियाएँ' },
+    ]},
+    top_sci_03_06: { title: 'संरक्षण को cause → action से समझें', caption: 'आवास बचाएँ तो उससे जुड़ी जैव विविधता भी सुरक्षित होती है।', items: [
+      { label: 'समस्या', value: 'आवास का नष्ट होना' }, { label: 'प्रभाव', value: 'प्रजातियों पर दबाव' }, { label: 'कार्यवाही', value: 'आवास + प्रजाति संरक्षण' },
+    ]},
+    top_sci_02_05: { title: 'प्रदूषण का 4-step map', caption: 'हर प्रश्न में source, pollutant, effect और prevention अलग करें।', items: [
+      { label: 'Source', value: 'कहाँ से निकला?' }, { label: 'Pollutant', value: 'क्या प्रदूषक है?' }, { label: 'Effect', value: 'क्या नुकसान?' },
+    ]},
+  };
+  const visual = visuals[topicId];
+  if (!visual) return null;
+  return <aside className="science-visual-card" aria-label={visual.title}>
+    <div className="science-visual-head"><span className="science-panel-label">VISUAL THINKING</span><b>{visual.title}</b><p>{visual.caption}</p></div>
+    <div className="science-visual-grid">
+      {visual.items.map((item, index) => <div className="science-visual-item" key={item.label}>
+        <span>{String(index + 1).padStart(2, '0')}</span><b>{item.label}</b><small>{item.value}</small>
+      </div>)}
+    </div>
+  </aside>;
+};
+
 const questionTextBlocks = (q: Question): ContentBlock[] => q.text ?? (q.textPlain ? [{ type: 'paragraph', text: q.textPlain }] : []);
 const questionExplanationBlocks = (q: Question): ContentBlock[] => q.explanation ?? (q.explanationPlain ? [{ type: 'paragraph', text: q.explanationPlain }] : []);
 
@@ -255,7 +300,6 @@ const ScienceSubjectOverview = () => {
   const completedLessons = Object.entries(p.lessonActivity ?? {}).filter(([id, activity]) => id.startsWith('les_sci_') && activity.status === 'completed').length;
   const masteredTopics = performances.filter((topic) => topic.attempts > 0 && topic.accuracy >= 80).length;
   const questionCount = getQuestionsBySubject('sub_sci').length;
-  const scienceChapters = chapters.filter((chapter) => chapter.subjectId === 'sub_sci').sort((a, b) => a.order - b.order);
 
   return <section className="science-hub">
     <div className="science-hub-hero">
@@ -273,7 +317,7 @@ const ScienceSubjectOverview = () => {
     </div>
 
     <div className="science-source-strip">
-      <div><span className="eyebrow">CONTENT BASIS</span><b>NCERT Class VIII Science + JNVST Class IX scope</b><small>18 units · guided lessons · 360 MCQs · adaptive practice · timed Science mock</small></div>
+      <div><span className="eyebrow">CONTENT BASIS</span><b>NCERT Class VIII Science + JNVST Class IX scope</b><small>18 NCERT Science units · guided lessons · {questionCount} practice MCQs · adaptive practice · dedicated Science mock</small></div>
       <Link className="btn" to="/science-revision">18-unit revision map →</Link>
     </div>
 
@@ -300,30 +344,53 @@ const ScienceSubjectOverview = () => {
       </Card>
     </div>
 
-    <section className="science-chapter-map">
-      <div className="science-section-head"><span className="eyebrow">3 CHAPTERS • 18 UNITS</span><h3>Science Study Roadmap</h3><p>Physics, Chemistry और Biology chapters में सभी 18 Class VIII Science units structured रूप से जुड़े हैं।</p></div>
-      <div className="science-chapter-grid">
-        {scienceChapters.map((chapter) => {
-          const chapterTopics = chapter.topicIds.map((id) => topics.find((topic) => topic.id === id)).filter(Boolean) as typeof topics;
-          const attempted = chapterTopics.filter((topic) => (performances.find((item) => item.topicId === topic.id)?.attempts ?? 0) > 0).length;
-          const mastered = chapterTopics.filter((topic) => { const item = performances.find((perf) => perf.topicId === topic.id); return Boolean(item?.attempts && item.accuracy >= 80); }).length;
-          const pct = chapterTopics.length ? Math.round((mastered / chapterTopics.length) * 100) : 0;
-          return <Card className="science-chapter-card" key={chapter.id}>
-            <div className="science-chapter-head"><span className="science-unit-number">{String(chapter.order).padStart(2,'0')}</span><div><h4>{chapter.title}</h4><small>{chapterTopics.length} units · {attempted} practiced · {mastered} mastered</small></div></div>
-            <div className="science-progress"><span style={{width:pct + '%'}} /></div>
-            <div className="science-mini-topics">{chapterTopics.map((topic) => {
-              const perf = performances.find((item) => item.topicId === topic.id);
-              const done = Boolean(perf?.attempts && perf.accuracy >= 80);
-              return <Link key={topic.id} className={`science-mini-topic \${done ? 'done' : ''}`} to={`/practice/\${topic.id}`}><span>{done ? '✓' : '•'}</span><span>{topic.title}</span></Link>;
-            })}</div>
-            <div className="actions"><Link className="btn" to={`/chapters/\${chapter.id}`}>Chapter खोलें</Link><Link className="btn primary" to={`/chapters/\${chapter.id}/study`}>पूरा अध्ययन</Link></div>
+    <section className="science-learning-map">
+      <div className="science-section-head">
+        <span className="eyebrow">18 STUDY UNITS • DIRECT NAVIGATION</span>
+        <h3>अपनी Science पढ़ाई सीधे Unit से शुरू करें</h3>
+        <p>सभी 18 units बिना किसी अतिरिक्त chapter grouping के सीधे यहाँ दिखाए गए हैं। हर unit में concept lesson, practice और exam-focused revision तक सीधा रास्ता है।</p>
+      </div>
+      <div className="science-learning-summary">
+        <div><b>18</b><span>कक्षा VIII Science units</span></div>
+        <div><b>{scienceMasteryUnits.filter((unit) => (performances.find((item) => item.topicId === unit.topicId)?.attempts ?? 0) > 0).length}</b><span>अभ्यास शुरू</span></div>
+        <div><b>{masteredTopics}</b><span>80%+ accuracy</span></div>
+        <div><b>{questionCount}</b><span>कुल Science MCQs</span></div>
+      </div>
+      <div className="science-learning-grid">
+        {scienceMasteryUnits.map((unit, index) => {
+          const topic = topics.find((item) => item.id === unit.topicId);
+          const lessonId = topic?.lessonIds[0];
+          const performance = performances.find((item) => item.topicId === unit.topicId);
+          const attemptsForUnit = performance?.attempts ?? 0;
+          const unitAccuracy = performance?.accuracy ?? 0;
+          const mastered = Boolean(attemptsForUnit && unitAccuracy >= 80);
+          const status = mastered ? 'मजबूत' : attemptsForUnit ? 'अभ्यास चल रहा' : 'शुरू नहीं';
+          const questionCountForUnit = topic ? getQuestionsByTopic(topic.id).length : 0;
+          const coverage = questionCountForUnit ? Math.min(100, Math.round((attemptsForUnit / questionCountForUnit) * 100)) : 0;
+          return <Card className="science-learning-card" key={unit.topicId}>
+            <div className="science-learning-card-top">
+              <span className="science-unit-number">{String(index + 1).padStart(2, '0')}</span>
+              <div>
+                <span className={`science-status ${mastered ? 'mastered' : attemptsForUnit ? 'active' : 'new'}`}>{status}</span>
+                <h4>{unit.title}</h4>
+                <small>{questionCountForUnit} प्रश्न · {lessonId ? '1 guided lesson' : 'lesson unavailable'}</small>
+              </div>
+            </div>
+            <p className="science-learning-focus">{unit.coreSkills.slice(0, 2).join(' · ')}</p>
+            <div className="science-learning-meta"><span>अभ्यास कवरेज</span><b>{coverage}%</b></div>
+            <div className="science-progress"><span style={{width: coverage + '%'}} /></div>
+            {attemptsForUnit > 0 && <div className="science-learning-accuracy">हाल की सटीकता: <b>{unitAccuracy}%</b></div>}
+            <div className="actions">
+              {lessonId && <Link className="btn" to={`/lessons/${lessonId}`}>पाठ पढ़ें</Link>}
+              <Link className="btn primary" to={`/practice/${unit.topicId}`}>अभ्यास करें</Link>
+            </div>
           </Card>;
         })}
       </div>
     </section>
 
     <section className="science-mastery">
-      <div className="science-section-head"><span className="eyebrow">18-UNIT MASTERY MAP</span><h3>Science Mastery Checklist</h3><p>हर unit में core skills, must-know facts, quick recall और exam traps एक जगह।</p></div>
+      <div className="science-section-head"><span className="eyebrow">REFERENCE & REVISION</span><h3>Science Mastery Checklist</h3><p>हर unit में core skills, must-know facts, quick recall और exam traps — lesson से पहले planning या आखिरी revision के लिए।</p></div>
       <div className="science-unit-grid">
         {scienceMasteryUnits.map((unit, index) => {
           const topic = topics.find((item) => item.id === unit.topicId);
@@ -482,7 +549,7 @@ const SubjectPage = () => {
     </div>
     {s.id === 'sub_math' && <MathSubjectOverview />}
     {s.id === 'sub_sci' && <ScienceSubjectOverview />}
-    {cs.map(c => <Card key={c.id} className="chapter-section"><Link className="chapter-link" to={`/chapters/${c.id}`}><h2>{c.title} →</h2></Link><div className="grid">{c.topicIds.map(id => <TopicCard key={id} topicId={id} />)}</div></Card>)}
+    {s.id !== 'sub_sci' && cs.map(c => <Card key={c.id} className="chapter-section"><Link className="chapter-link" to={`/chapters/${c.id}`}><h2>{c.title} →</h2></Link><div className="grid">{c.topicIds.map(id => <TopicCard key={id} topicId={id} />)}</div></Card>)}
   </Shell>;
 };
 
@@ -546,6 +613,8 @@ const LessonPage = () => {
         </div>
       </div>
     </section>}
+
+    {isScience && <ScienceVisual topicId={l.topicId} />}
 
     <Card className="lesson-card">
       <div className="study-reader">
