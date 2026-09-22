@@ -5,7 +5,7 @@ export const scienceQuestionsPart01: Question[] = [
     id: 'q_sci_b1_01_001',
     type: 'mcq',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_01',
+    chapterId: 'chap_sci_11',
     topicId: 'top_sci_01_01',
     textPlain: "दाब (Pressure) की मानक SI इकाई क्या है?",
     options: [
@@ -23,7 +23,7 @@ export const scienceQuestionsPart01: Question[] = [
     id: 'q_sci_b1_01_002',
     type: 'mcq',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_01',
+    chapterId: 'chap_sci_11',
     topicId: 'top_sci_01_01',
     textPlain: "एक लोहे की कील का सिरा नुकीला क्यों बनाया जाता है?",
     options: [
@@ -41,7 +41,7 @@ export const scienceQuestionsPart01: Question[] = [
     id: 'q_sci_b1_01_003',
     type: 'mcq',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_01',
+    chapterId: 'chap_sci_11',
     topicId: 'top_sci_01_01',
     textPlain: "निम्नलिखित में से कौन-सा बल 'असम्पर्क बल' (Non-contact force) का उदाहरण नहीं है?",
     options: [
@@ -59,7 +59,7 @@ export const scienceQuestionsPart01: Question[] = [
     id: 'q_sci_b1_01_004',
     type: 'multiple-select',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_01',
+    chapterId: 'chap_sci_11',
     topicId: 'top_sci_01_01',
     textPlain: "तरलों (Liquids/Gases) द्वारा लगाए जाने वाले दाब के संबंध में सत्य कथन चुनें: (एक से अधिक सही हो सकते हैं)",
     options: [
@@ -77,7 +77,7 @@ export const scienceQuestionsPart01: Question[] = [
     id: 'q_sci_b1_01_005',
     type: 'mcq',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_01',
+    chapterId: 'chap_sci_11',
     topicId: 'top_sci_01_01',
     textPlain: "20 न्यूटन (N) का बल 0.5 m² क्षेत्रफल पर लंबवत लगाया जाता है। उत्पन्न दाब की गणना कीजिए।",
     options: [
@@ -95,7 +95,7 @@ export const scienceQuestionsPart01: Question[] = [
     id: 'q_sci_b1_02_001',
     type: 'mcq',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_01',
+    chapterId: 'chap_sci_12',
     topicId: 'top_sci_01_02',
     textPlain: "वाहनों के टायरों को खाँचेदार (Treaded) क्यों बनाया जाता है?",
     options: [
@@ -113,7 +113,7 @@ export const scienceQuestionsPart01: Question[] = [
     id: 'q_sci_b1_02_002',
     type: 'mcq',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_01',
+    chapterId: 'chap_sci_12',
     topicId: 'top_sci_01_02',
     textPlain: "निम्नलिखित में से घर्षण कम करने का तरीका कौन-सा नहीं है?",
     options: [
@@ -131,7 +131,7 @@ export const scienceQuestionsPart01: Question[] = [
     id: 'q_sci_b1_02_003',
     type: 'mcq',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_01',
+    chapterId: 'chap_sci_12',
     topicId: 'top_sci_01_02',
     textPlain: "घर्षण बलों को उनके मान के बढ़ते क्रम में सही ढंग से कैसे व्यवस्थित किया जाएगा?",
     options: [
@@ -149,7 +149,7 @@ export const scienceQuestionsPart01: Question[] = [
     id: 'q_sci_b1_02_004',
     type: 'true-false',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_01',
+    chapterId: 'chap_sci_12',
     topicId: 'top_sci_01_02',
     textPlain: "सत्य/असत्य: किसी भारी बक्से को खिसकाते समय, जब बक्सा एक बार चलना शुरू कर देता है, तो उसे गतिमान रखने के लिए आवश्यक बल उस बल से कम होता है जो बक्से को विरामावस्था से खिसकाने के लिए आवश्यक था।",
     options: [
@@ -165,7 +165,7 @@ export const scienceQuestionsPart01: Question[] = [
     id: 'q_sci_b1_02_005',
     type: 'mcq',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_01',
+    chapterId: 'chap_sci_12',
     topicId: 'top_sci_01_02',
     textPlain: "तरल कर्षण (Fluid Friction/Drag) को कम करने के लिए हवाई जहाज़ों और मछलियों के शरीर की बनावट कैसी होती है?",
     options: [
@@ -183,7 +183,7 @@ export const scienceQuestionsPart01: Question[] = [
     id: 'q_sci_b1_03_001',
     type: 'mcq',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_01',
+    chapterId: 'chap_sci_13',
     topicId: 'top_sci_01_03',
     textPlain: "ध्वनि के संचरण (Propagation of Sound) के लिए निम्नलिखित में से किसकी आवश्यकता होती है?",
     options: [
@@ -201,7 +201,7 @@ export const scienceQuestionsPart01: Question[] = [
     id: 'q_sci_b1_03_002',
     type: 'mcq',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_01',
+    chapterId: 'chap_sci_13',
     topicId: 'top_sci_01_03',
     textPlain: "ध्वनि की प्रबलता (Loudness) और तारत्व (Pitch) क्रमशः किन भौतिक राशियों पर निर्भर करते हैं?",
     options: [
@@ -219,7 +219,7 @@ export const scienceQuestionsPart01: Question[] = [
     id: 'q_sci_b1_03_003',
     type: 'mcq',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_01',
+    chapterId: 'chap_sci_13',
     topicId: 'top_sci_01_03',
     textPlain: "मानव कान के लिए श्रव्य आवृत्ति का परास (Audible Range of Frequency) लगभग कितना है?",
     options: [
@@ -237,7 +237,7 @@ export const scienceQuestionsPart01: Question[] = [
     id: 'q_sci_b1_03_004',
     type: 'mcq',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_01',
+    chapterId: 'chap_sci_13',
     topicId: 'top_sci_01_03',
     textPlain: "जब किसी मच्छर के पंख एक सेकंड में 500 बार कंपन करते हैं, तो उत्पन्न ध्वनि की आवृत्ति और आवर्तकाल (Time period) क्या होंगे?",
     options: [
@@ -255,7 +255,7 @@ export const scienceQuestionsPart01: Question[] = [
     id: 'q_sci_b1_03_005',
     type: 'multiple-select',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_01',
+    chapterId: 'chap_sci_13',
     topicId: 'top_sci_01_03',
     textPlain: "निम्नलिखित में से किन परिघटनाओं का कारण ध्वनि का कंपन (Vibration) है? (एक से अधिक सही हो सकते हैं)",
     options: [
