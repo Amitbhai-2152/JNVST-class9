@@ -19,7 +19,7 @@ const subjectPatterns = {
   math: /^q_math_/,
   sci: /^q_sci_/,
 };
-const expected = { eng: 100, hin: 110, math: 220, sci: 180 };
+const expected = { eng: 100, hin: 110, math: 220, sci: 270 };
 const ids = new Set();
 const counts = { eng: 0, hin: 0, math: 0, sci: 0 };
 
@@ -62,7 +62,7 @@ if (missingCurriculumQuestionIds.length) {
 }
 
 const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
-if (total !== 610) throw new Error(`Total question count mismatch: expected 610, found ${total}`);
+if (total !== 700) throw new Error(`Total question count mismatch: expected 700, found ${total}`);
 
 const requiredPrefixes = ['q_eng_', 'q_hin_', 'q_math_', 'q_sci_'];
 if (ids.size !== total) throw new Error(`Question ID integrity mismatch: expected ${total}, indexed ${ids.size}`);
