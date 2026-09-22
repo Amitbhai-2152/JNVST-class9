@@ -451,3 +451,32 @@ a { color: inherit; text-decoration: none; }
   .science-result-hero { padding:25px 18px; }
   .science-result-hero strong { font-size:50px; }
 }
+
+
+/* Science self-learning companion */
+.science-lesson-companion { margin:0 0 16px; display:grid; gap:12px; }
+.science-source-note { display:flex; align-items:flex-start; gap:12px; padding:12px 14px; border:1px solid #d8e9e2; border-radius:14px; background:linear-gradient(135deg,#f4fbf8,#fbfdfc); }
+.science-source-note b { white-space:nowrap; color:#1f594b; }
+.science-source-note span { color:#637487; line-height:1.55; }
+.science-lesson-companion-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:11px; }
+.science-lesson-companion-panel { min-width:0; padding:14px; border:1px solid #e2e8ee; border-radius:15px; background:#fff; }
+.science-panel-label { display:block; font-size:11px; letter-spacing:.08em; font-weight:900; color:#6d7b8d; margin-bottom:8px; }
+.science-skill-chips { display:flex; flex-wrap:wrap; gap:6px; }
+.science-skill-chips span { padding:6px 8px; border-radius:8px; background:#f3f7f6; border:1px solid #dfeae6; color:#38594f; font-size:12px; }
+.science-lesson-companion-panel ul { margin:0; padding-left:18px; }
+.science-lesson-companion-panel li { margin:5px 0; color:#5a697c; line-height:1.45; }
+.science-lesson-companion-action { display:flex; flex-direction:column; justify-content:space-between; }
+.science-lesson-companion-action p { margin:0 0 10px; color:#5a697c; line-height:1.5; }
+.science-lesson-actions { margin-top:18px; padding-top:16px; border-top:1px solid #e7ebf0; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.science-lesson-actions > div:first-child { display:grid; gap:4px; min-width:0; }
+.science-lesson-actions b { color:#21483f; }
+.science-lesson-actions span { color:#718096; line-height:1.45; }
+@media (max-width:1000px) {
+  .science-lesson-companion-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:700px) {
+  .science-source-note { flex-direction:column; gap:4px; }
+  .science-lesson-companion-grid { grid-template-columns:1fr; }
+  .science-lesson-actions { flex-direction:column; align-items:flex-start; }
+  .science-lesson-actions .actions { width:100%; }
+}
