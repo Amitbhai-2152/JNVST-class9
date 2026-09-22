@@ -190,7 +190,7 @@ const VocabularyLearn = ({
         <div>
           <span className="eyebrow">VOCABULARY MEMORY STREAM</span>
           <h2>Word → Meaning → Example → Revision</h2>
-          <p>हर word को हिन्दी meaning, synonyms, antonyms और fresh context sentence के साथ याद करें। All Levels में पूरा 100-word bank क्रम से पढ़ें; उसके बाद generated variations जारी रहती हैं।</p>
+          <p>हर word को हिन्दी meaning, synonyms, antonyms और fresh context sentence के साथ याद करें। All Levels में पूरा expanded word bank क्रम से पढ़ें; उसके बाद fresh revision examples जारी रहते हैं।</p>
         </div>
         <div className="english-learn-progress">
           <b>Word {exampleIndex + 1}</b>
@@ -203,7 +203,7 @@ const VocabularyLearn = ({
           className={level === 'all' ? 'active' : ''}
           onClick={() => { setLevel('all'); setExampleIndex(0); setShowMeaning(true); }}
         >
-          <b>All Levels</b><small>पूरे 100 words</small>
+          <b>All Levels</b><small>पूरा expanded bank</small>
         </button>
         {vocabularyLevels.map((entry) => (
           <button
