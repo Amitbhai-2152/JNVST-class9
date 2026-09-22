@@ -1,8 +1,6 @@
 name: Rebuild and Publish Pages
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
