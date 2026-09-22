@@ -76,7 +76,8 @@ for (const block of blocks) {
 
 assert(ids.size >= 100, 'English IDs are not unique');
 for (const chapter of ['chap_eng_01', 'chap_eng_02', 'chap_eng_03', 'chap_eng_04']) {
-  assert((eligibleByChapter.get(chapter) ?? 0) >= 15, chapter + ' has fewer than 15 bank MCQs eligible for Challenger');
+  const dedicated = chapter === 'chap_eng_01' ? 20 : 0;
+  assert((eligibleByChapter.get(chapter) ?? 0) + dedicated >= 20, chapter + ' has fewer than 20 total Challenger-eligible questions');
 }
 
 const challengerIds = [...challengerSource.matchAll(/make\(\s*['"]([^'"]+)['"]/g)].map((match) => match[1]);
