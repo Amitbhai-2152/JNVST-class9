@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { translationLabItems, translationLevels, vocabularyLabItems, vocabularyLevels, type TranslationDirection } from '../data/englishLabs';
+import { translationLevels, vocabularyLabItems, vocabularyLevels, type TranslationDirection } from '../data/englishLabs';
 import { generateTranslationItem, generateVocabularyItem } from '../data/englishLabGenerator';
 import { useProgressStore } from '../store/progress';
 import type { ID } from '../types';
@@ -15,8 +15,6 @@ const matchesTranslation = (answer: string, acceptable: string[]) => {
   const normalized = normalize(answer);
   return normalized.length > 0 && acceptable.some((candidate) => normalize(candidate) === normalized);
 };
-
-const labLevelFor = (index: number, length: number) => Math.min(length - 1, Math.floor(index / Math.max(1, Math.ceil(length / 6))));
 
 const shuffle = <T,>(items: T[], seed: number): T[] => {
   const copy = [...items];
