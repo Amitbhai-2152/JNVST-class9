@@ -11,8 +11,8 @@ import type { ContentBlock } from "../types";
 
 const InlineText = ({ text }: { text: string }) => <MathAwareText text={text} />;
 
-const Content = ({ blocks }: { blocks: ContentBlock[] }) => (
-  <div className="lesson-content">
+const Content = ({ blocks, className = "" }: { blocks: ContentBlock[]; className?: string }) => (
+  <div className={className ? `lesson-content ${className}` : "lesson-content"}>
     {blocks.map((b, i) => {
       switch (b.type) {
         case "heading": {
@@ -225,7 +225,7 @@ export default function ChapterStudyPage() {
                   <span className="science-study-page-chip">{stageIndex < 2 ? "CONCEPT" : stageIndex < 4 ? "APPLICATION" : stageIndex === 4 ? "EXAM" : "RECALL"}</span>
                 </div>
 
-                <Content blocks={current.filter((b, index) => !(index === 0 && b.type === "heading"))} />
+                <Content className="math-chapter-content" blocks={current.filter((b, index) => !(index === 0 && b.type === "heading"))} />
 
                 <div className="science-study-page-actions">
                   <button className="btn" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>← पिछला</button>
