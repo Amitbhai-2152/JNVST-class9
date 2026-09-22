@@ -148,6 +148,7 @@ export const englishChapterChallengers: Question[] = [
     'The reading corner would automatically have become busier.',
     'The students would have needed no books at all.'
   ],0,'challenge',['comprehension','inference','cause-effect']),
+];
 
 export const englishChapterChallengerAudit = {
   chapterId: 'chap_eng_01',
