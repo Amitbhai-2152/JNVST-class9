@@ -2,6 +2,7 @@ import type { ID, ProgressState, Question } from '../types';
 import { chapters, subjects, topics } from '../data/curriculum';
 import { allQuestions, jnvstExamQuestions } from '../data/questions';
 import { mathChapterChallengers } from '../data/questions/mathChapterChallengers';
+import { mathTopicChallengers } from '../data/questions/mathTopicChallengers';
 
 export interface TopicPerformance {
   topicId: ID;
@@ -293,9 +294,11 @@ const arrangeChallengerOptions = (question: Question, index: number, seed: strin
     .slice()
     .sort((a, b) => stableHash(seed + ':' + question.id + ':' + a.id) - stableHash(seed + ':' + question.id + ':' + b.id));
 
-  // Deliberately rotate the correct answer through A → B → C → D.
-  // This removes the "correct answer is always A" shortcut without changing correctness.
-  const targetIndex = index % 4;
+  // Use a balanced but non-linear answer-position pattern so the key is not guessable.
+  // Across any 20-question set this gives exactly five A/B/C/D positions without A-B-C-D repetition.
+  const answerPositionPattern = [2,0,3,1,1,3,0,2,3,1,2,0,0,2,1,3,2,3,1,0];
+  const rotation = stableHash(seed + ':answer-pattern') % answerPositionPattern.length;
+  const targetIndex = answerPositionPattern[(rotation + index) % answerPositionPattern.length];
   const arranged: Question['options'] = new Array(4);
   arranged[targetIndex] = correct;
   let distractorIndex = 0;
@@ -322,7 +325,7 @@ export const getChapterChallengerQuestions = (
   };
 
   const sourceQuestions = chapterId.startsWith('chap_math_')
-    ? [...mathChapterChallengers, ...allQuestions]
+    ? [...mathTopicChallengers, ...mathChapterChallengers, ...allQuestions]
     : allQuestions;
 
   const candidates = sourceQuestions
@@ -343,6 +346,41 @@ export const getChapterChallengerQuestions = (
   return candidates
     .slice(0, target)
     .map((question, index) => arrangeChallengerOptions(question, index, seed + ':' + chapterId));
+};
+
+
+export const getTopicChallengerQuestions = (
+  topicId: ID,
+  limit = 20,
+  seed = 'jnvst-topic-challenger',
+): Question[] => {
+  const target = Math.max(20, limit);
+  const difficultyRank: Record<Question['difficulty'], number> = {
+    challenge: 0,
+    hard: 1,
+    medium: 2,
+    easy: 3,
+  };
+
+  const candidates = [...mathTopicChallengers, ...allQuestions]
+    .filter((question) =>
+      question.subjectId === 'sub_math' &&
+      question.topicId === topicId &&
+      question.type === 'mcq' &&
+      question.options.length === 4 &&
+      question.correctOptionIds.length === 1 &&
+      question.options.every((option) => challengerOptionIsMeaningful(option.text)) &&
+      new Set(question.options.map((option) => option.text.trim().toLowerCase())).size === 4
+    )
+    .sort((a, b) =>
+      difficultyRank[a.difficulty] - difficultyRank[b.difficulty] ||
+      stableHash(seed + ':' + topicId + ':' + a.id) - stableHash(seed + ':' + topicId + ':' + b.id) ||
+      a.id.localeCompare(b.id)
+    );
+
+  return candidates
+    .slice(0, target)
+    .map((question, index) => arrangeChallengerOptions(question, index, seed + ':' + topicId));
 };
 
 export const buildMathMockPaper = (seed = 'jnvst-math-2027'): Question[] => {
