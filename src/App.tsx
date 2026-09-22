@@ -345,6 +345,125 @@ const MathSubjectOverview = () => {
 
 
 // Production build marker: source changes must flow through Rebuild and Publish Pages.
+const EnglishSubjectOverview = () => {
+  const p = useProgressStore();
+  const performances = getTopicPerformances(p).filter((item) => item.subjectId === 'sub_eng');
+  const attempts = performances.reduce((sum, item) => sum + item.attempts, 0);
+  const correct = performances.reduce((sum, item) => sum + item.correct, 0);
+  const accuracy = attempts ? Math.round((correct / attempts) * 100) : 0;
+  const masteredUnits = englishMasteryUnits.filter((unit) => {
+    const performance = performances.find((item) => item.topicId === unit.topicId);
+    return Boolean(performance?.attempts && performance.accuracy >= 80);
+  }).length;
+
+  return <section className="english-hub">
+    <div className="english-hub-hero">
+      <div>
+        <span className="eyebrow">JNVST ENGLISH • HINDI-FIRST MASTERY</span>
+        <h2>अंग्रेज़ी तैयारी केंद्र</h2>
+        <p>अंग्रेज़ी को शुरुआत से समझें: पहले आसान हिन्दी में concept, फिर English examples, guided practice, independent solving और अंत में JNVST-style timed practice.</p>
+        <div className="actions">
+          <Link className="btn primary" to="/english-revision">🧠 त्वरित पुनरावृत्ति</Link>
+          <Link className="btn" to="/english-smart-practice">🎯 स्मार्ट English अभ्यास</Link>
+          <Link className="btn" to="/english-mock-test">⏱ English Mock</Link>
+          <Link className="btn challenger" to="/chapters/chap_eng_01/challenger">⚡ Challenger Mode</Link>
+        </div>
+      </div>
+      <div className="english-hub-badge"><b>15</b><span>प्रश्न</span><small>English practice section</small></div>
+    </div>
+
+    <div className="english-source-strip">
+      <div><span className="eyebrow">LEARNING METHOD</span><b>हिन्दी में समझें → English में सोचें → बिना मदद के solve करें</b><small>4 chapters · 10 skill units · 100 base practice questions · adaptive practice</small></div>
+      <Link className="btn" to="/english-revision">Mastery map →</Link>
+    </div>
+
+    <div className="english-stats">
+      <Card><b>4</b><span>अध्याय</span></Card>
+      <Card><b>10</b><span>Skill units</span></Card>
+      <Card><b>{getQuestionsBySubject('sub_eng').length}</b><span>English अभ्यास प्रश्न</span></Card>
+      <Card><b>{attempts ? accuracy + '%' : '—'}</b><span>आपकी सटीकता</span></Card>
+    </div>
+
+    <div className="english-hub-grid">
+      <Card>
+        <div className="topic-top"><div><h3>आपकी English progress</h3><p>{attempts ? attempts + ' प्रयास · ' + masteredUnits + ' units 80%+ accuracy पर' : 'अभी English के प्रयास दर्ज नहीं हैं।'}</p></div><span className="count">{attempts ? accuracy + '%' : 'शुरू करें'}</span></div>
+        <div className="actions"><Link className="btn primary" to={attempts ? '/english-smart-practice' : '/practice/top_eng_01_01'}>{attempts ? 'स्मार्ट अभ्यास शुरू करें' : 'पहला topic शुरू करें'}</Link></div>
+      </Card>
+      <Card>
+        <h3>Mastery का learning cycle</h3>
+        <ol className="english-steps">
+          <li><b>समझें</b> — rule और meaning हिन्दी में।</li>
+          <li><b>देखें</b> — English example + हिन्दी अर्थ।</li>
+          <li><b>Guided practice</b> — clues के साथ questions।</li>
+          <li><b>Independent practice</b> — बिना answer hint के।</li>
+          <li><b>Challenger</b> — कठिन JNVST-style application।</li>
+          <li><b>Mock</b> — समयबद्ध English paper।</li>
+        </ol>
+      </Card>
+    </div>
+
+    <section className="english-learning-map">
+      <div className="english-section-head">
+        <span className="eyebrow">4 CHAPTERS • 10 SKILLS</span>
+        <h3>English Chapters — सीखें, अभ्यास करें, master करें</h3>
+        <p>हर chapter में हिन्दी-first explanation, English examples, practice और आगे बढ़ने का स्पष्ट रास्ता है।</p>
+      </div>
+      <div className="english-learning-grid">
+        {chapters.filter((chapter) => chapter.subjectId === 'sub_eng').sort((a,b) => a.order-b.order).map((chapter) => {
+          const chapterTopics = chapter.topicIds.map((id) => topics.find((topic) => topic.id === id)).filter(Boolean) as typeof topics;
+          const questionCount = chapterTopics.reduce((sum, topic) => sum + getQuestionsByTopic(topic.id).length, 0);
+          const chapterAttempts = chapterTopics.reduce((sum, topic) => sum + (performances.find((item) => item.topicId === topic.id)?.attempts ?? 0), 0);
+          const chapterCorrect = chapterTopics.reduce((sum, topic) => sum + (performances.find((item) => item.topicId === topic.id)?.correct ?? 0), 0);
+          const chapterAccuracy = chapterAttempts ? Math.round((chapterCorrect / chapterAttempts) * 100) : 0;
+          const pageCount = getChapterStudyPages(chapter, allLessons, 12).length;
+          const challengerCount = getChapterChallengerQuestions(chapter.id, 20).length;
+          return <Card className="english-learning-card" key={chapter.id}>
+            <div className="english-learning-card-top">
+              <span className="english-unit-number">{String(chapter.order).padStart(2,'0')}</span>
+              <div><span className="english-status">{chapterAttempts ? 'अभ्यास चल रहा' : 'शुरू नहीं'}</span><h4>{chapter.title}</h4><small>{questionCount} प्रश्न · {pageCount} अध्ययन पृष्ठ · {challengerCount} Challenger</small></div>
+            </div>
+            <p className="english-learning-focus">{chapterTopics.map((topic) => englishMasteryUnitMap.get(topic.id)?.hindiFocus).filter(Boolean).join(' ')}</p>
+            <div className="english-learning-meta"><span>{chapterAttempts ? 'आपकी accuracy' : 'Topics'}</span><b>{chapterAttempts ? chapterAccuracy + '%' : chapterTopics.length}</b></div>
+            <div className="english-progress"><span style={{width: (chapterAttempts ? chapterAccuracy : 0) + '%'}} /></div>
+            <div className="actions">
+              <Link className="btn primary" to={'/chapters/' + chapter.id + '/study'}>📖 अध्याय पढ़ें</Link>
+              <Link className="btn" to={'/chapters/' + chapter.id}>Chapter map</Link>
+              <Link className="btn challenger" to={'/chapters/' + chapter.id + '/challenger'}>⚡ Challenger</Link>
+            </div>
+          </Card>;
+        })}
+      </div>
+    </section>
+
+    <section className="english-mastery">
+      <div className="english-section-head">
+        <span className="eyebrow">10-SKILL MASTERY CHECKLIST</span>
+        <h3>हर skill को मजबूत करने का roadmap</h3>
+        <p>कमज़ोर skill पर वापस जाएँ, English example पढ़ें और फिर बिना सहायता के उसी pattern को लागू करें।</p>
+      </div>
+      <div className="english-mastery-grid">
+        {englishMasteryUnits.map((unit, index) => {
+          const performance = performances.find((item) => item.topicId === unit.topicId);
+          const unitAccuracy = performance?.attempts ? performance.accuracy : 0;
+          return <details className="english-mastery-card" key={unit.topicId}>
+            <summary><span className="english-unit-number">{String(index + 1).padStart(2,'0')}</span><div><b>{unit.title}</b><small>{performance?.attempts ? unitAccuracy + '% accuracy' : 'अभी अभ्यास नहीं'}</small></div><span>＋</span></summary>
+            <div className="english-mastery-body">
+              <div className="english-hindi-focus"><b>पहले हिन्दी में समझें</b><p>{unit.hindiFocus}</p></div>
+              <div><h4>क्या सीखना है</h4><ul>{unit.coreSkills.map((item) => <li key={item}>{item}</li>)}</ul></div>
+              <div><h4>Must Know</h4><ul>{unit.mustKnow.map((item) => <li key={item}>{item}</li>)}</ul></div>
+              <div><h4>Quick Recall</h4><div className="english-chip-list">{unit.quickFacts.map((fact) => <span key={fact}>{fact}</span>)}</div></div>
+              <div><h4>Exam Traps</h4><ul>{unit.examTraps.map((item) => <li key={item}>{item}</li>)}</ul></div>
+              <div className="actions">
+                <Link className="btn primary" to={'/practice/' + unit.topicId}>अभ्यास करें →</Link>
+                <Link className="btn" to={'/chapters/' + (topics.find((topic) => topic.id === unit.topicId)?.chapterId ?? '') + '/study'}>📖 पढ़ें</Link>
+              </div>
+            </div>
+          </details>;
+        })}
+      </div>
+    </section>
+  </section>;
+};
 const ScienceSubjectOverview = () => {
   const p = useProgressStore();
   const performances = getTopicPerformances(p).filter((topic) => topic.subjectId === 'sub_sci');
