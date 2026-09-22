@@ -272,6 +272,11 @@ const ScienceSubjectOverview = () => {
       <div className="science-hub-badge"><b>35</b><span>प्रश्न</span><small>JNVST विज्ञान</small></div>
     </div>
 
+    <div className="science-source-strip">
+      <div><span className="eyebrow">CONTENT BASIS</span><b>NCERT Class VIII Science + JNVST Class IX scope</b><small>18 units · guided lessons · 360 MCQs · adaptive practice · timed Science mock</small></div>
+      <Link className="btn" to="/science-revision">18-unit revision map →</Link>
+    </div>
+
     <div className="science-stats">
       <Card><b>18</b><span>Science इकाइयाँ</span></Card>
       <Card><b>{questionCount}</b><span>Science अभ्यास प्रश्न</span></Card>
