@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { HashRouter, Link, Route, Routes, useParams } from 'react-router-dom';
+import { HashRouter, Link, Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { allQuestions, allLessons, chapters, getLesson, getQuestionsBySubject, getQuestionsByTopic, getSubject, subjects, topics, jnvstExamQuestions } from './data';
 import { getChapterStudyPages, getScienceChapterStudyPages } from './data/lessons/chapterStudy';
 import ChapterStudyPage from './pages/ChapterStudyPage';
@@ -343,7 +343,7 @@ const ScienceSubjectOverview = () => {
       <div>
         <span className="eyebrow">JNVST SCIENCE • COMPLETE PREPARATION CENTER</span>
         <h2>विज्ञान तैयारी केंद्र</h2>
-        <p>कक्षा VIII स्तर के 18 Science chapters, 12-पृष्ठ अध्याय अध्ययन, deep-dive revision, {questionCount} practice questions, adaptive practice और 35-प्रश्न Science mock एक ही जगह।</p>
+        <p>18 अध्यायों को एक ही 12-पृष्ठ अध्ययन मार्ग में पढ़ें—concept से application और फिर JNVST-style recall तक। इसके बाद chapter practice और 35-प्रश्न Science mock से अपनी तैयारी जाँचें।</p>
         <div className="actions">
           <Link className="btn primary" to="/science-revision">🧠 त्वरित पुनरावृत्ति</Link>
           <Link className="btn" to="/science-smart-practice">🎯 स्मार्ट विज्ञान अभ्यास</Link>
@@ -354,7 +354,7 @@ const ScienceSubjectOverview = () => {
     </div>
 
     <div className="science-source-strip">
-      <div><span className="eyebrow">CONTENT BASIS</span><b>NCERT Class VIII Science + JNVST Class IX preparation</b><small>18 NCERT Science chapters · 12-पृष्ठ अध्याय अध्ययन · {questionCount} practice MCQs · adaptive practice · dedicated Science mock</small></div>
+      <div><span className="eyebrow">CONTENT BASIS</span><b>NCERT Class VIII Science + JNVST Class IX preparation</b><small>12-पृष्ठ अध्याय अध्ययन · {questionCount} अभ्यास प्रश्न · adaptive practice · 35-प्रश्न Science mock</small></div>
       <Link className="btn" to="/science-revision">18-unit revision map →</Link>
     </div>
 
@@ -385,7 +385,7 @@ const ScienceSubjectOverview = () => {
       <div className="science-section-head">
         <span className="eyebrow">18 अध्याय • NCERT क्रम</span>
         <h3>Science Chapters — सीधे अध्याय चुनें</h3>
-        <p>अध्याय 01 से 18 तक क्रमबद्ध सूची। हर अध्याय से concept lesson, अध्याय अध्ययन और practice तक सीधा रास्ता है।</p>
+        <p>अध्याय 01 से 18 तक क्रम में। हर card में पूरा अध्ययन और उसी chapter के प्रश्न तक सीधा रास्ता है।</p>
       </div>
       <div className="science-learning-summary">
         <div><b>18</b><span>कक्षा VIII Science units</span></div>
@@ -409,7 +409,7 @@ const ScienceSubjectOverview = () => {
               <div>
                 <span className={`science-status ${mastered ? 'mastered' : attemptsForUnit ? 'active' : 'new'}`}>{status}</span>
                 <h4>{unit.title}</h4>
-                <small>{questionCountForUnit} प्रश्न · 12-पृष्ठ अध्याय अध्ययन</small>
+                <small>{questionCountForUnit} प्रश्न · 12 पृष्ठ · एकीकृत अध्ययन</small>
               </div>
             </div>
             <p className="science-learning-focus">{unit.coreSkills.slice(0, 2).join(' · ')}</p>
@@ -425,25 +425,19 @@ const ScienceSubjectOverview = () => {
       </div>
     </section>
 
-    <section className="science-mastery">
-      <div className="science-section-head"><span className="eyebrow">REFERENCE & REVISION</span><h3>Science Mastery Checklist</h3><p>हर unit में core skills, must-know facts, quick recall और exam traps — lesson से पहले planning या आखिरी revision के लिए।</p></div>
-      <div className="science-unit-grid">
-        {scienceMasteryUnits.map((unit, index) => {
-          const topic = topics.find((item) => item.id === unit.topicId);
-          const questionCountForTopic = topic ? getQuestionsByTopic(topic.id).length : 0;
-          const lessonCount = topic?.lessonIds.length ?? 0;
-          return <details className="science-unit" key={unit.topicId}>
-            <summary><span className="science-unit-number">{String(index + 1).padStart(2,'0')}</span><div><b>{unit.title}</b><small>{questionCountForTopic} प्रश्न · {lessonCount} पाठ</small></div><span>＋</span></summary>
-            <div className="science-unit-body">
-              <div><h4>क्या सीखना है</h4><ul>{unit.coreSkills.map((item) => <li key={item}>{item}</li>)}</ul></div>
-              <div><h4>Must Know</h4><ul>{unit.mustKnow.map((item) => <li key={item}>{item}</li>)}</ul></div>
-              <div><h4>Quick Facts</h4><div className="science-fact-chips">{unit.quickFacts.map((item) => <span key={item}>{item}</span>)}</div></div>
-              <div><h4>Exam Traps</h4><ul>{unit.examTraps.map((item) => <li key={item}>{item}</li>)}</ul></div>
-              <div className="actions"><Link className="btn" to={`/chapters/${topic?.chapterId ?? ''}/study`}>अध्याय अध्ययन</Link><Link className="btn primary" to={`/practice/${unit.topicId}`}>प्रश्न हल करें</Link></div>
-            </div>
-          </details>;
-        })}
+    <section className="science-study-system">
+      <div className="science-section-head">
+        <span className="eyebrow">HOW TO USE SCIENCE</span>
+        <h3>हर अध्याय के लिए एक ही पढ़ाई का तरीका</h3>
+        <p>अध्याय अध्ययन को मुख्य learning path रखें; फिर उसी अध्याय के questions, smart practice और mock से application मजबूत करें।</p>
       </div>
+      <div className="science-study-system-grid">
+        <div><span>01</span><b>अध्याय अध्ययन</b><p>12 पृष्ठों में concept, examples, comparison और self-check.</p></div>
+        <div><span>02</span><b>Chapter Practice</b><p>उसी topic के प्रश्न लगाकर समझ को application में बदलें।</p></div>
+        <div><span>03</span><b>Smart Practice</b><p>कमजोर और पिछली गलतियों पर दोबारा अभ्यास करें।</p></div>
+        <div><span>04</span><b>Science Mock</b><p>35 प्रश्नों में पूरी Science readiness जाँचें।</p></div>
+      </div>
+    </section>
     </section>
   </section>;
 };
@@ -702,6 +696,8 @@ const LessonPage = () => {
 
   const t = topics.find((x) => x.id === l.topicId);
   const c = t ? chapters.find((x) => x.id === t.chapterId) : undefined;
+  if (isScience && c) return <Navigate to={"/chapters/" + c.id + "/study"} replace />;
+
   const done = p.lessonActivity[l.id]?.status === 'completed';
   const mastery = isScience ? scienceMasteryUnits.find((unit) => unit.topicId === l.topicId) : undefined;
   const scienceChapter = isScience ? c : undefined;
@@ -718,7 +714,7 @@ const LessonPage = () => {
         {isScience && scienceChapter
           ? <span>अध्याय {String(scienceChapter.order).padStart(2, '0')} / 18</span>
           : <span>{pages.length} अध्ययन पृष्ठ</span>}
-        {isScience && <span>{pages.length} learning stages</span>}
+        {isScience && <span>12-पृष्ठ अध्याय अध्ययन</span>}
         <span>{done ? '✅ पूरा हुआ' : '📖 सीख रहे हैं'}</span>
       </div>
     </div>
