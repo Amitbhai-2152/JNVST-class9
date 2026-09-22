@@ -356,33 +356,72 @@ const scienceChaptersForSmartPractice = () =>
 export const buildScienceMockPaper = (seed = 'jnvst-science-2027'): Question[] => {
   const scienceTopics = topics
     .filter((topic) => topic.chapterId.startsWith('chap_sci_'))
-    .sort((a, b) => (chapterOrder.get(a.chapterId)! - chapterOrder.get(b.chapterId)!) || (a.order - b.order));
+    .sort((a, b) => (chapterOrder.get(a.chapterId)! - chapterOrder.get(b.chapterId)!) || (topicOrder.get(a.id)! - topicOrder.get(b.id)!));
+
   const candidates = jnvstExamQuestions.filter((question) => question.subjectId === 'sub_sci');
   const result: Question[] = [];
   const used = new Set<ID>();
+  const perTopic = new Map<ID, number>();
 
-  // One question from every Science topic: all 18 units are guaranteed to appear.
-  for (const topic of scienceTopics) {
-    const question = candidates
-      .filter((item) => item.topicId === topic.id)
-      .sort((a, b) => stableHash(seed + ':topic:' + topic.id + ':' + a.id) - stableHash(seed + ':topic:' + topic.id + ':' + b.id))[0];
-    if (question && !used.has(question.id)) {
-      result.push(question);
-      used.add(question.id);
-    }
-  }
+  // This is a project-level practice mix, not an official NVS difficulty distribution.
+  // Keep the paper class-VIII appropriate while preventing one difficulty band from dominating.
+  const preferredDifficulty: Question['difficulty'][] = [
+    'easy','easy','easy','easy','easy','easy','easy','easy',
+    'medium','medium','medium','medium','medium','medium','medium','medium','medium','medium','medium','medium','medium','medium','medium',
+    'hard','hard','hard','hard','hard','hard','hard','hard','hard',
+    'challenge','challenge','challenge','challenge',
+  ];
+  const difficultyUsed = new Map<Question['difficulty'], number>();
 
-  // Fill to the official 35-question Science section with seeded variety.
-  for (const question of candidates
-    .filter((item) => !used.has(item.id))
-    .sort((a, b) => stableHash(seed + ':extra:' + a.id) - stableHash(seed + ':extra:' + b.id))) {
-    if (result.length >= 35) break;
+  const scoreQuestion = (question: Question, slot: number, topicId?: ID) => {
+    const preferred = preferredDifficulty[Math.min(slot, preferredDifficulty.length - 1)];
+    let score = stableHash(seed + ':science:' + slot + ':' + question.id) % 40;
+    if (question.difficulty === preferred) score += 80;
+    if (question.difficulty === (preferred === 'easy' ? 'medium' : preferred === 'medium' ? 'hard' : 'medium')) score += 20;
+    if (topicId && question.topicId === topicId) score += 25;
+    if ((perTopic.get(question.topicId) ?? 0) === 0) score += 10;
+    return score;
+  };
+
+  // First pass: every Science chapter appears at least once.
+  for (let index = 0; index < scienceTopics.length && result.length < 35; index += 1) {
+    const topic = scienceTopics[index];
+    const pool = candidates
+      .filter((question) => question.topicId === topic.id && !used.has(question.id))
+      .sort((a, b) => scoreQuestion(b, index, topic.id) - scoreQuestion(a, index, topic.id) || a.id.localeCompare(b.id));
+    const question = pool[0];
+    if (!question) continue;
     result.push(question);
     used.add(question.id);
+    perTopic.set(question.topicId, 1);
+    difficultyUsed.set(question.difficulty, (difficultyUsed.get(question.difficulty) ?? 0) + 1);
   }
-  return result;
-};
 
+  // Second pass: meet the intended difficulty mix while keeping chapter breadth.
+  for (let slot = result.length; slot < 35; slot += 1) {
+    const available = candidates.filter((question) => !used.has(question.id));
+    if (!available.length) break;
+
+    const remainingPreferred = preferredDifficulty
+      .slice(0, 35)
+      .filter((difficulty) => (difficultyUsed.get(difficulty) ?? 0) < preferredDifficulty.slice(0, 35).filter((item) => item === difficulty).length);
+
+    const pool = (remainingPreferred.length ? available.filter((question) => remainingPreferred.includes(question.difficulty)) : available);
+    const rankedPool = (pool.length ? pool : available).slice().sort((a, b) =>
+      scoreQuestion(b, slot) - scoreQuestion(a, slot)
+      || (perTopic.get(a.topicId) ?? 0) - (perTopic.get(b.topicId) ?? 0)
+      || a.id.localeCompare(b.id),
+    );
+
+    const question = rankedPool[0];
+    result.push(question);
+    used.add(question.id);
+    perTopic.set(question.topicId, (perTopic.get(question.topicId) ?? 0) + 1);
+    difficultyUsed.set(question.difficulty, (difficultyUsed.get(question.difficulty) ?? 0) + 1);
+  }
+
+  return result.slice(0, 35);
+};
 export const getPerformanceSummary = (progress: ProgressState) => {
   const attempts = Object.values(progress.questionAttempts ?? {}).flat();
   const correct = attempts.filter((attempt) => attempt.isCorrect).length;
