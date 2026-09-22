@@ -1121,7 +1121,7 @@ const LessonPage = () => {
 };
 
 
-const AssessmentAnswerReview = ({ questions, answers }: { questions: Question[]; answers: Record<string, ID[]> }) => (
+const AssessmentAnswerReview = ({ questions, answers, englishMode = false }: { questions: Question[]; answers: Record<string, ID[]>; englishMode?: boolean }) => (
   <Card className="assessment-answer-review">
     <div className="assessment-section-head">
       <span className="eyebrow">ANSWER REVIEW</span>
@@ -1144,6 +1144,12 @@ const AssessmentAnswerReview = ({ questions, answers }: { questions: Question[];
             <div className="assessment-review-body">
               <div className="assessment-review-answer"><b>सही उत्तर</b><span>{correctLabels.join(' · ')}</span></div>
               <div className="assessment-review-answer"><b>आपका उत्तर</b><span>{selectedLabels.length ? selectedLabels.join(' · ') : 'उत्तर नहीं दिया'}</span></div>
+              {englishMode && englishMasteryUnitMap.get(question.topicId) && (
+                <aside className="english-review-hint">
+                  <strong>हिन्दी में समझें</strong>
+                  <p>{englishMasteryUnitMap.get(question.topicId)?.hindiFocus}</p>
+                </aside>
+              )}
               {questionExplanationBlocks(question).map((block, index) => <ContentRenderer key={index} blocks={[block]} />)}
             </div>
           </details>
@@ -1301,7 +1307,7 @@ const AssessmentRunner = ({
             <b>{accuracy >= 80 ? 'अच्छा प्रदर्शन — अब weak questions revise करें।' : accuracy >= 60 ? 'अच्छी शुरुआत — गलत questions को दोबारा लगाएँ।' : 'अवधारणाएँ दोहराकर फिर से timed practice करें।'}</b>
           </div>
         </Card>
-        <AssessmentAnswerReview questions={questions} answers={answers} />
+        <AssessmentAnswerReview questions={questions} answers={answers} englishMode={isEnglishAssessment} />
         <div className="actions">
           <button className="btn primary" onClick={startTest}>फिर से यह टेस्ट दें</button>
           {bannerLink && <Link className="btn" to={bannerLink.to}>{bannerLink.label}</Link>}
