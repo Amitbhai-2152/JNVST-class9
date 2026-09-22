@@ -461,7 +461,7 @@ const ScienceRevisionPage = () => (
         <div className="science-revision-head"><span className="science-unit-number">{String(index + 1).padStart(2,'0')}</span><div><h3>{unit.title}</h3><small>{unit.coreSkills.length} skills · {unit.quickFacts.length} quick facts</small></div></div>
         <h4>Quick Recall</h4><ul>{unit.quickFacts.map((fact) => <li key={fact}>{fact}</li>)}</ul>
         <h4>Exam Traps</h4><ul>{unit.examTraps.map((trap) => <li key={trap}>{trap}</li>)}</ul>
-        <div className="actions"><Link className="btn" to={`/lessons/\${topics.find((topic) => topic.id === unit.topicId)?.lessonIds[0] ?? ''}`}>पाठ</Link><Link className="btn primary" to={`/practice/\${unit.topicId}`}>अभ्यास</Link></div>
+        <div className="actions"><Link className="btn" to={`/chapters/${topics.find((topic) => topic.id === unit.topicId)?.chapterId ?? ""}/study`}>अध्याय अध्ययन</Link><Link className="btn primary" to={`/practice/${unit.topicId}`}>अभ्यास</Link></div>
       </Card>)}
     </div>
   </Shell>
