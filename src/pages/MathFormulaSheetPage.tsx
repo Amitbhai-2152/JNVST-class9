@@ -91,7 +91,7 @@ const groups: FormulaGroup[] = [
     focus: 'गुण, कोण और विकर्ण',
     formulas: [
       { label: 'चतुर्भुज के कोणों का योग', value: '\\angle A+\\angle B+\\angle C+\\angle D=360^\\circ' },
-      { label: 'समांतर चतुर्भुज', value: 'A+B=180^\\circ' },
+      { label: 'समांतर चतुर्भुज के आसन्न कोण', value: 'A+B=180^\\circ' },
       { label: 'समांतर चतुर्भुज का क्षेत्रफल', value: 'A=bh' },
       { label: 'समचतुर्भुज का क्षेत्रफल', value: 'A=\\frac{1}{2}d_1d_2' },
     ],
