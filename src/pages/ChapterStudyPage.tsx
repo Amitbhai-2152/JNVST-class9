@@ -1,9 +1,9 @@
 import { Link, useParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { chapters, allLessons, getSubject, topics } from '../data';
-import { scienceLessonCore, scienceLessonLens } from '../data/scienceLessonCore';
+import { scienceLessonLens } from '../data/scienceLessonCore';
 import { scienceMasteryUnits } from '../data/sciencePrep';
-import { getChapterStudyPages } from '../data/lessons/chapterStudy';
+import { getChapterStudyPages, getScienceChapterStudyPages } from '../data/lessons/chapterStudy';
 import { MathAwareText, MathText } from '../components/MathText';
 import type { ContentBlock, ID } from '../types';
 
@@ -30,22 +30,10 @@ export default function ChapterStudyPage() {
   const isScience = chapter?.subjectId === 'sub_sci';
 
   const scienceTopic = isScience ? topics.find((t) => t.id === chapter?.topicIds[0]) : undefined;
-  const scienceBlocks = isScience && scienceTopic?.id ? (scienceLessonCore[scienceTopic.id] ?? []) : [];
-  const sciencePages = useMemo(() => {
-    if (!isScience) return [];
-    const pages: ContentBlock[][] = [];
-    let current: ContentBlock[] = [];
-    for (const block of scienceBlocks) {
-      const isStageHeading = block.type === 'heading' && block.level === 2;
-      if (isStageHeading && current.length) {
-        pages.push(current);
-        current = [];
-      }
-      current.push(block);
-    }
-    if (current.length) pages.push(current);
-    return pages.length ? pages : [scienceBlocks];
-  }, [isScience, scienceBlocks]);
+  const sciencePages = useMemo(
+    () => chapter && isScience ? getScienceChapterStudyPages(chapter) : [],
+    [chapter, isScience],
+  );
 
   const pages = useMemo(
     () => chapter && !isScience ? getChapterStudyPages(chapter, allLessons, 12) : [],
@@ -62,13 +50,9 @@ export default function ChapterStudyPage() {
   const totalPages = isScience ? sciencePages.length : pages.length;
   const scienceMastery = isScience ? scienceMasteryUnits.find((unit) => unit.topicId === scienceTopic?.id) : undefined;
   const scienceLens = isScience ? (scienceTopic?.id ? scienceLessonLens[scienceTopic.id] : undefined) : undefined;
-  const stageLabels = ['समझें', 'जोड़ें', 'समझाएँ', 'देखें', 'परखें', 'दोहराएँ'];
-
-  const scienceStageTitle = (blocks: ContentBlock[], index: number) => {
-    const heading = blocks.find((block) => block.type === 'heading' && block.level === 2);
-    if (heading?.type === 'heading') return heading.text.replace(/^(?:अध्ययन भाग\s+\d+\s*[—-]\s*|\d+\.\s*)/, '').trim();
-    return stageLabels[index] ?? `अध्याय चरण ${index + 1}`;
-  };
+  const stageLabels = ['समझें','जोड़ें','समझाएँ','देखें','परखें','दोहराएँ'];
+  const sciencePageStage = (index: number) => stageLabels[Math.floor(index / 2)] ?? 'अध्याय अध्ययन';
+  const sciencePagePart = (index: number) => (index % 2) + 1;
 
   return <div className="app-shell">
     <header className="topbar"><Link to="/" className="brand">JNVST कक्षा 9</Link><nav><Link to="/">डैशबोर्ड</Link><Link to="/subjects">विषय</Link><Link to="/bookmarks">बुकमार्क</Link><Link to="/mock-tests">मॉक टेस्ट</Link></nav></header>
@@ -89,7 +73,7 @@ export default function ChapterStudyPage() {
             <h2>पहले समझें, फिर प्रश्न लगाएँ</h2>
             <p>{scienceLens?.bigQuestion ?? `${chapter.title} के मुख्य concepts को क्रम से समझें और फिर अभ्यास करें।`}</p>
           </div>
-          <div className="science-study-stat"><b>{totalPages}</b><span>learning stages</span></div>
+          <div className="science-study-stat"><b>{totalPages}</b><span>अध्ययन पृष्ठ</span></div>
         </div>
         <div className="science-study-companion-grid">
           <div><span className="science-panel-label">CORE SKILLS</span><div className="science-skill-chips">{scienceMastery.coreSkills.map((item) => <span key={item}>{item}</span>)}</div></div>
@@ -106,9 +90,9 @@ export default function ChapterStudyPage() {
             <small>किसी भी चरण पर सीधे जा सकते हैं</small>
           </div>
           <div className="science-study-map-list">
-            {sciencePages.map((blocks, i) => <button key={i} className={i === page ? 'active' : ''} onClick={() => setPage(i)} aria-current={i === page ? 'step' : undefined}>
-              <span>{String(i + 1).padStart(2, '0')} · {stageLabels[i] ?? 'चरण'}</span>
-              <b>{scienceStageTitle(blocks, i)}</b>
+            {sciencePages.map((_, i) => <button key={i} className={i === page ? 'active' : ''} onClick={() => setPage(i)} aria-current={i === page ? 'page' : undefined}>
+              <span>{String(i + 1).padStart(2, '0')} · {sciencePageStage(i)}</span>
+              <b>भाग {sciencePagePart(i)} पढ़ें</b>
             </button>)}
           </div>
         </nav>}
@@ -123,7 +107,7 @@ export default function ChapterStudyPage() {
 
         {isScience && <div className="science-chapter-study-reader">
           <div className="study-reader-head">
-            <div><b>{stageLabels[page] ?? 'अध्याय अध्ययन'}</b><span>चरण {page + 1} / {totalPages}</span></div>
+            <div><b>{sciencePageStage(page)}</b><span>पृष्ठ {page + 1} / {totalPages}</span></div>
             <div className="study-progress"><span style={{ width: `${((page + 1) / Math.max(1, totalPages)) * 100}%` }} /></div>
           </div>
         </div>}
@@ -140,7 +124,7 @@ export default function ChapterStudyPage() {
         <div className="study-reader-actions">
           <button className="btn" disabled={page === 0} onClick={() => setPage((x) => x - 1)}>← पिछला</button>
           {page < totalPages - 1
-            ? <button className="btn primary" onClick={() => setPage((x) => x + 1)}>अगला {isScience ? 'चरण' : 'पृष्ठ'} →</button>
+            ? <button className="btn primary" onClick={() => setPage((x) => x + 1)}>अगला पृष्ठ →</button>
             : <div className="actions">
                 <Link className="btn" to={isScience ? `/practice/${scienceTopic?.id ?? ''}` : `/chapters/${chapter.id}`}>🎯 अभ्यास करें</Link>
                 {isScience && <Link className="btn primary" to="/science-smart-practice">स्मार्ट विज्ञान अभ्यास →</Link>}
