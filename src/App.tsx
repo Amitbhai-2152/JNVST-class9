@@ -404,8 +404,9 @@ const ScienceSubjectOverview = () => {
             <div className="science-progress"><span style={{width: accuracyForUnit + '%'}} /></div>
             {attemptsForUnit > 0 && <div className="science-learning-accuracy">{attemptsForUnit} प्रश्न-प्रयास दर्ज हैं</div>}
             <div className="actions">
+              <Link className="btn primary" to={`/chapters/chap_sci_${String(index + 1).padStart(2, '0')}`}>अध्याय देखें</Link>
               {lessonId && <Link className="btn" to={`/lessons/${lessonId}`}>पाठ पढ़ें</Link>}
-              <Link className="btn primary" to={`/practice/${unit.topicId}`}>अभ्यास करें</Link>
+              <Link className="btn" to={`/practice/${unit.topicId}`}>अभ्यास करें</Link>
             </div>
           </Card>;
         })}
@@ -576,7 +577,92 @@ const SubjectPage = () => {
   </Shell>;
 };
 
-const ChapterPage = () => { const { chapterId } = useParams(); const c = chapters.find(x => x.id === chapterId); const s = c ? getSubject(c.subjectId) : undefined; if (!c || !s) return <Shell><Card className="empty"><h1>अध्याय नहीं मिला</h1></Card></Shell>; const pageCount = getChapterStudyPages(c, allLessons, 12).length; return <Shell><div className="page-head"><Link to={`/subjects/${s.id}`}>← {s.title}</Link><h1>{c.title}</h1><p>{pageCount} पृष्ठ का अध्याय अध्ययन पाठ उपलब्ध है।</p><div className="actions"><Link className="btn primary" to={`/chapters/${c.id}/study`}>📖 अध्याय पढ़ें · {pageCount}+ पृष्ठ</Link></div></div><div className="grid">{c.topicIds.map(id => <TopicCard key={id} topicId={id} />)}</div></Shell>; };
+const ChapterPage = () => {
+  const { chapterId } = useParams();
+  const c = chapters.find(x => x.id === chapterId);
+  const s = c ? getSubject(c.subjectId) : undefined;
+  const p = useProgressStore();
+  if (!c || !s) return <Shell><Card className="empty"><h1>अध्याय नहीं मिला</h1></Card></Shell>;
+
+  if (c.subjectId === 'sub_sci') {
+    const topic = topics.find((item) => item.id === c.topicIds[0]);
+    const mastery = topic ? scienceMasteryUnits.find((unit) => unit.topicId === topic.id) : undefined;
+    const lessonId = topic?.lessonIds[0];
+    const questionCountForChapter = topic ? getQuestionsByTopic(topic.id).length : 0;
+    const performance = topic ? getTopicPerformances(p).find((item) => item.topicId === topic.id) : undefined;
+    const accuracyForChapter = performance?.accuracy ?? 0;
+    const previous = chapters.find((item) => item.subjectId === 'sub_sci' && item.order === c.order - 1);
+    const next = chapters.find((item) => item.subjectId === 'sub_sci' && item.order === c.order + 1);
+    const lesson = lessonId ? getLesson(lessonId) : undefined;
+    const pageCount = lesson ? getScienceStudyPages(lesson.content).length : 0;
+
+    return <Shell>
+      <section className="science-chapter-shell">
+        <div className="science-chapter-topbar">
+          <Link to="/subjects/sub_sci">← विज्ञान तैयारी केंद्र</Link>
+          <span>अध्याय {String(c.order).padStart(2, '0')} / 18</span>
+        </div>
+
+        <div className="science-chapter-hero">
+          <div>
+            <span className="eyebrow">NCERT CLASS VIII SCIENCE • JNVST PREPARATION</span>
+            <h1>{c.title}</h1>
+            <p>{mastery?.coreSkills.slice(0, 3).join(' · ') ?? 'इस अध्याय के मुख्य Science concepts और अभ्यास।'}</p>
+            <div className="actions">
+              {lessonId && <Link className="btn primary" to={`/lessons/${lessonId}`}>📖 पाठ पढ़ें</Link>}
+              <Link className="btn" to={`/practice/${topic?.id ?? ''}`}>🎯 {questionCountForChapter} प्रश्न हल करें</Link>
+              <Link className="btn" to={`/chapters/${c.id}/study`}>अध्याय अध्ययन</Link>
+            </div>
+          </div>
+          <div className="science-chapter-index">
+            <span>CHAPTER</span>
+            <strong>{String(c.order).padStart(2, '0')}</strong>
+            <small>{pageCount ? pageCount + ' study sections' : 'study sections'}</small>
+          </div>
+        </div>
+
+        <div className="science-chapter-stats">
+          <Card><b>{questionCountForChapter}</b><span>अभ्यास प्रश्न</span></Card>
+          <Card><b>{pageCount || '—'}</b><span>Study sections</span></Card>
+          <Card><b>{performance?.attempts ?? 0}</b><span>आपके प्रयास</span></Card>
+          <Card><b>{performance?.attempts ? accuracyForChapter + '%' : '—'}</b><span>आपकी सटीकता</span></Card>
+        </div>
+
+        <div className="science-chapter-content-grid">
+          <Card>
+            <span className="science-panel-label">WHAT YOU WILL LEARN</span>
+            <h3>मुख्य कौशल</h3>
+            <div className="science-chapter-skills">
+              {(mastery?.coreSkills ?? topic ? (mastery?.coreSkills ?? []) : []).map((item) => <span key={item}>{item}</span>)}
+            </div>
+            <h3>Must Know</h3>
+            <ul>{(mastery?.mustKnow ?? []).map((item) => <li key={item}>{item}</li>)}</ul>
+          </Card>
+
+          <Card>
+            <span className="science-panel-label">EXAM FOCUS</span>
+            <h3>Quick Recall</h3>
+            <ul>{(mastery?.quickFacts ?? []).slice(0, 4).map((item) => <li key={item}>{item}</li>)}</ul>
+            <h3>Exam Traps</h3>
+            <ul>{(mastery?.examTraps ?? []).map((item) => <li key={item}>{item}</li>)}</ul>
+          </Card>
+        </div>
+
+        <div className="science-chapter-footer">
+          <div>
+            {previous ? <Link className="science-chapter-nav" to={`/chapters/${previous.id}`}>← अध्याय {String(previous.order).padStart(2, '0')} · {previous.title}</Link> : <span />}
+          </div>
+          <div>
+            {next ? <Link className="science-chapter-nav next" to={`/chapters/${next.id}`}>अध्याय {String(next.order).padStart(2, '0')} · {next.title} →</Link> : <span />}
+          </div>
+        </div>
+      </section>
+    </Shell>;
+  }
+
+  const pageCount = getChapterStudyPages(c, allLessons, 12).length;
+  return <Shell><div className="page-head"><Link to={`/subjects/${s.id}`}>← {s.title}</Link><h1>{c.title}</h1><p>{pageCount} पृष्ठ का अध्याय अध्ययन पाठ उपलब्ध है।</p><div className="actions"><Link className="btn primary" to={`/chapters/${c.id}/study`}>📖 अध्याय पढ़ें · {pageCount}+ पृष्ठ</Link></div></div><div className="grid">{c.topicIds.map(id => <TopicCard key={id} topicId={id} />)}</div></Shell>;
+};
 
 const LessonPage = () => {
   const { lessonId } = useParams();
