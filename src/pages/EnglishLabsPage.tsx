@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { translationLevels, vocabularyLabItems, vocabularyLevels, type TranslationDirection } from '../data/englishLabs';
+import { translationLabItems, translationLevels, vocabularyLabItems, vocabularyLevels, type TranslationDirection } from '../data/englishLabs';
 import { generateTranslationItem, generateVocabularyItem } from '../data/englishLabGenerator';
 import { useProgressStore } from '../store/progress';
 import type { ID } from '../types';
@@ -68,10 +68,15 @@ const TranslationLearn = ({
   const [exampleIndex, setExampleIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(true);
 
-  const example = useMemo(
-    () => generateTranslationItem(level, direction, 7200 + level * 1009 + exampleIndex * 131),
-    [direction, level, exampleIndex],
-  );
+  const example = useMemo(() => {
+    if (exampleIndex < translationLabItems.length) {
+      const source = translationLabItems[exampleIndex];
+      if (source.direction === direction) return source;
+      return { ...source, direction, prompt: source.displayAnswer, displayAnswer: source.prompt, acceptableAnswers: [source.prompt] };
+    }
+    const generatedLevel = level === 0 ? ((exampleIndex % 6) + 1) : level;
+    return generateTranslationItem(generatedLevel, direction, 7200 + generatedLevel * 1009 + (exampleIndex - translationLabItems.length) * 7919);
+  }, [direction, level, exampleIndex]);
 
   const nextExample = () => {
     setExampleIndex((value) => value + 1);
@@ -84,7 +89,7 @@ const TranslationLearn = ({
         <div>
           <span className="eyebrow">TRANSLATION EXAMPLE STREAM</span>
           <h2>पहले examples समझें, फिर translation practice करें</h2>
-          <p>हर example में source sentence, natural translation, grammar structure और sentence बनाने के steps देखें। Next दबाते रहें—यह learning stream खत्म नहीं होती।</p>
+          <p>हर example में source sentence, natural translation, grammar structure और sentence बनाने के steps देखें। All Levels में पहले पूरा translation bank आता है; उसके बाद generated examples जारी रहते हैं।</p>
         </div>
         <div className="english-learn-progress">
           <b>Example {exampleIndex + 1}</b>
@@ -112,7 +117,7 @@ const TranslationLearn = ({
 
       {!example ? <p>इस level के लिए example उपलब्ध नहीं है।</p> : (
         <div className="english-example-card">
-          <div className="english-example-label">Example {exampleIndex + 1} · Level {level}</div>
+          <div className="english-example-label">Example {exampleIndex + 1} · {level === 0 ? 'All Levels' : 'Level ' + level}</div>
           <div className="english-example-source">
             <small>{direction === 'hi-en' ? 'Hindi sentence' : 'English sentence'}</small>
             <h3>{example.prompt}</h3>
@@ -156,8 +161,8 @@ const VocabularyLearn = ({
   level,
   setLevel,
 }: {
-  level: typeof vocabularyLevels[number]['id'];
-  setLevel: (value: typeof vocabularyLevels[number]['id']) => void;
+  level: typeof vocabularyLevels[number]['id'] | 'all';
+  setLevel: (value: typeof vocabularyLevels[number]['id'] | 'all') => void;
 }) => {
   const [exampleIndex, setExampleIndex] = useState(0);
   const [showMeaning, setShowMeaning] = useState(true);
@@ -178,7 +183,7 @@ const VocabularyLearn = ({
         <div>
           <span className="eyebrow">VOCABULARY MEMORY STREAM</span>
           <h2>Word → Meaning → Example → Revision</h2>
-          <p>हर word को हिन्दी meaning, synonyms, antonyms और एक fresh context sentence के साथ याद करें। Next दबाकर लगातार नए revision cards देखें।</p>
+          <p>हर word को हिन्दी meaning, synonyms, antonyms और fresh context sentence के साथ याद करें। All Levels में पूरा 100-word bank क्रम से पढ़ें; उसके बाद generated variations जारी रहती हैं।</p>
         </div>
         <div className="english-learn-progress">
           <b>Word {exampleIndex + 1}</b>
@@ -187,6 +192,12 @@ const VocabularyLearn = ({
       </div>
 
       <div className="english-lab-levels vocabulary compact">
+        <button
+          className={level === 'all' ? 'active' : ''}
+          onClick={() => { setLevel('all'); setExampleIndex(0); setShowMeaning(true); }}
+        >
+          <b>All Levels</b><small>पूरे 100 words</small>
+        </button>
         {vocabularyLevels.map((entry) => (
           <button
             key={entry.id}
@@ -200,7 +211,7 @@ const VocabularyLearn = ({
 
       {!word ? <p>इस level के लिए word उपलब्ध नहीं है।</p> : (
         <div className="english-memory-card">
-          <div className="english-example-label">{level.toUpperCase()} · Word {exampleIndex + 1}</div>
+          <div className="english-example-label">{level === 'all' ? 'ALL LEVELS' : level.toUpperCase()} · Word {exampleIndex + 1}</div>
           <div className="english-memory-word">{word.word}</div>
           {showMeaning ? (
             <>
@@ -387,6 +398,7 @@ const TranslationLab = () => {
 const VocabularyLab = () => {
   const p = useProgressStore();
   const [level, setLevel] = useState<typeof vocabularyLevels[number]['id']>('beginner');
+  const [learnLevel, setLearnLevel] = useState<typeof vocabularyLevels[number]['id'] | 'all'>('all');
   const [mode, setMode] = useState<'meaning' | 'reverse' | 'synonym' | 'antonym' | 'context'>('meaning');
   const [session, setSession] = useState(0);
   const [index, setIndex] = useState(0);
@@ -465,7 +477,7 @@ const VocabularyLab = () => {
       <LabModeToggle mode={labMode} onChange={setLabMode} />
 
       {labMode === 'learn' ? (
-        <VocabularyLearn level={level} setLevel={changeLevel} />
+        <VocabularyLearn level={learnLevel} setLevel={setLearnLevel} />
       ) : (
         <>
           <div className="english-lab-toolbar">
