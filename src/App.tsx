@@ -309,9 +309,9 @@ const ScienceSubjectOverview = () => {
             <div className="science-mini-topics">{chapterTopics.map((topic) => {
               const perf = performances.find((item) => item.topicId === topic.id);
               const done = Boolean(perf?.attempts && perf.accuracy >= 80);
-              return <Link key={topic.id} className={\`science-mini-topic \${done ? 'done' : ''}\`} to={\`/practice/\${topic.id}\`}><span>{done ? '✓' : '•'}</span><span>{topic.title}</span></Link>;
+              return <Link key={topic.id} className={`science-mini-topic \${done ? 'done' : ''}`} to={`/practice/\${topic.id}`}><span>{done ? '✓' : '•'}</span><span>{topic.title}</span></Link>;
             })}</div>
-            <div className="actions"><Link className="btn" to={\`/chapters/\${chapter.id}\`}>Chapter खोलें</Link><Link className="btn primary" to={\`/chapters/\${chapter.id}/study\`}>पूरा अध्ययन</Link></div>
+            <div className="actions"><Link className="btn" to={`/chapters/\${chapter.id}`}>Chapter खोलें</Link><Link className="btn primary" to={`/chapters/\${chapter.id}/study`}>पूरा अध्ययन</Link></div>
           </Card>;
         })}
       </div>
@@ -331,7 +331,7 @@ const ScienceSubjectOverview = () => {
               <div><h4>Must Know</h4><ul>{unit.mustKnow.map((item) => <li key={item}>{item}</li>)}</ul></div>
               <div><h4>Quick Facts</h4><div className="science-fact-chips">{unit.quickFacts.map((item) => <span key={item}>{item}</span>)}</div></div>
               <div><h4>Exam Traps</h4><ul>{unit.examTraps.map((item) => <li key={item}>{item}</li>)}</ul></div>
-              <div className="actions">{topic?.lessonIds[0] && <Link className="btn" to={\`/lessons/\${topic.lessonIds[0]}\`}>पाठ पढ़ें</Link>}<Link className="btn primary" to={\`/practice/\${unit.topicId}\`}>प्रश्न हल करें</Link></div>
+              <div className="actions">{topic?.lessonIds[0] && <Link className="btn" to={`/lessons/\${topic.lessonIds[0]}`}>पाठ पढ़ें</Link>}<Link className="btn primary" to={`/practice/\${unit.topicId}`}>प्रश्न हल करें</Link></div>
             </div>
           </details>;
         })}
@@ -353,7 +353,7 @@ const ScienceRevisionPage = () => (
         <div className="science-revision-head"><span className="science-unit-number">{String(index + 1).padStart(2,'0')}</span><div><h3>{unit.title}</h3><small>{unit.coreSkills.length} skills · {unit.quickFacts.length} quick facts</small></div></div>
         <h4>Quick Recall</h4><ul>{unit.quickFacts.map((fact) => <li key={fact}>{fact}</li>)}</ul>
         <h4>Exam Traps</h4><ul>{unit.examTraps.map((trap) => <li key={trap}>{trap}</li>)}</ul>
-        <div className="actions"><Link className="btn" to={\`/lessons/\${topics.find((topic) => topic.id === unit.topicId)?.lessonIds[0] ?? ''}\`}>पाठ</Link><Link className="btn primary" to={\`/practice/\${unit.topicId}\`}>अभ्यास</Link></div>
+        <div className="actions"><Link className="btn" to={`/lessons/\${topics.find((topic) => topic.id === unit.topicId)?.lessonIds[0] ?? ''}`}>पाठ</Link><Link className="btn primary" to={`/practice/\${unit.topicId}`}>अभ्यास</Link></div>
       </Card>)}
     </div>
   </Shell>
