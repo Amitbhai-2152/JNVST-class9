@@ -8,6 +8,10 @@ const adjectives = ['careful', 'helpful', 'honest', 'patient', 'active', 'curiou
 const actions = ['study', 'read', 'help', 'play', 'clean', 'practise'];
 
 const hindiName: Record<string, string> = { Ravi:'रवि', Meena:'मीना', Arjun:'अर्जुन', Nita:'नीता', Aman:'अमन', Tara:'तारा', Rohan:'रोहन', Priya:'प्रिया' };
+const hindiGender: Record<string, 'm' | 'f'> = {
+  Ravi:'m', Meena:'f', Arjun:'m', Nita:'f', Aman:'m', Tara:'f', Rohan:'m', Priya:'f'
+};
+
 const hindiObject: Record<string, string> = {
   'the book':'किताब', 'the question':'प्रश्न', 'the letter':'पत्र', 'the door':'दरवाज़ा',
   'the garden':'बगीचा', 'the answer':'उत्तर', 'the bag':'बैग', 'the lesson':'पाठ'
@@ -41,9 +45,10 @@ const simplePresent = (seed: number, direction: TranslationDirection): Translati
   const object = pick(objects, hashSeed(seed, 12));
   const time = pick(times, hashSeed(seed, 13));
   const verb = pick(['reads', 'opens', 'checks', 'cleans', 'answers'], hashSeed(seed, 14));
-  const hiVerb: Record<string,string> = { reads:'पढ़ता है', opens:'खोलता है', checks:'जाँचता है', cleans:'साफ़ करता है', answers:'उत्तर देता है' };
+  const hiVerbBase: Record<string,[string,string]> = { reads:['पढ़ता है','पढ़ती है'], opens:['खोलता है','खोलती है'], checks:['जाँचता है','जाँचती है'], cleans:['साफ़ करता है','साफ़ करती है'], answers:['उत्तर देता है','उत्तर देती है'] };
+  const hiVerb = hiVerbBase[verb][hindiGender[name] === 'f' ? 1 : 0];
   const en = `${name} ${verb} ${object} ${time}.`;
-  const hi = `${hindiName[name]} ${hindiObject[object]} ${hiVerb[verb]} ${hindiTime[time]}।`;
+  const hi = `${hindiName[name]} ${hindiObject[object]} ${hiVerb} ${hindiTime[time]}।`;
   return direction === 'hi-en'
     ? { id:`gen-tr-${seed}`,level:1,direction,prompt:hi,acceptableAnswers:[en],displayAnswer:en,hint:`${hindiName[name]} = ${name}. समय-संकेत “${hindiTime[time]}” आदत दिखाता है।`,explanation:`पहले subject पहचानें, फिर habit के लिए Simple Present लगाएँ। ${name} singular है, इसलिए verb में s/es आता है। अंत में object और time phrase जोड़ें।`,grammarPoint:'Subject + V1(s/es) + Object + Time'}
     : { id:`gen-tr-${seed}`,level:1,direction,prompt:en,acceptableAnswers:[hi],displayAnswer:hi,hint:`${name} = ${hindiName[name]}; ${verb} = ${hiVerb[verb]}.`,explanation:`पहले subject और main verb पहचानें। यह habitual action है, इसलिए हिन्दी में सामान्य वर्तमानकाल का अर्थ रखें और time phrase अंत में जोड़ें।`,grammarPoint:'Simple Present → हिन्दी सामान्य वर्तमानकाल' };
@@ -52,8 +57,9 @@ const simplePresent = (seed: number, direction: TranslationDirection): Translati
 const presentContinuous = (seed:number, direction:TranslationDirection): TranslationItem => {
   const name=pick(names,hashSeed(seed,21)); const action=pick(['study','read','clean','play','write'],hashSeed(seed,22));
   const enVerb:Record<string,string>={study:'studying',read:'reading',clean:'cleaning',play:'playing',write:'writing'};
-  const hiVerb:Record<string,string>={study:'पढ़ रहा है',read:'पढ़ रहा है',clean:'साफ़ कर रहा है',play:'खेल रहा है',write:'लिख रहा है'};
-  const en=`${name} is ${enVerb[action]} now.`; const hi=`${hindiName[name]} अभी ${hiVerb[action]}।`;
+  const hiVerbBase:Record<string,[string,string]>={study:['पढ़ रहा है','पढ़ रही है'],read:['पढ़ रहा है','पढ़ रही है'],clean:['साफ़ कर रहा है','साफ़ कर रही है'],play:['खेल रहा है','खेल रही है'],write:['लिख रहा है','लिख रही है']};
+  const hiVerb=hiVerbBase[action][hindiGender[name]==='f'?1:0];
+  const en=`${name} is ${enVerb[action]} now.`; const hi=`${hindiName[name]} अभी ${hiVerb}।`;
   return direction==='hi-en'
     ? {id:`gen-tr-${seed}`,level:2,direction,prompt:hi,acceptableAnswers:[en],displayAnswer:en,hint:'“अभी” = now. काम इस समय चल रहा है।',explanation:'“अभी” देखकर Present Continuous चुनें: subject + is/am/are + verb-ing. यहाँ subject singular है, इसलिए is आएगा.',grammarPoint:'Present Continuous: is/am/are + V-ing'}
     : {id:`gen-tr-${seed}`,level:2,direction,prompt:en,acceptableAnswers:[hi],displayAnswer:hi,hint:'“now” वर्तमान में चल रहे काम का clue है।',explanation:'“is + V-ing” ongoing action दिखाता है। इसे हिन्दी के “... रहा है” pattern से जोड़ें.',grammarPoint:'is + V-ing → “... रहा है”'};
@@ -79,7 +85,8 @@ const conditionalPassive = (seed:number, direction:TranslationDirection): Transl
 const advanced = (seed:number, direction:TranslationDirection): TranslationItem => {
   const name=pick(names,hashSeed(seed,51)); const adj=pick(adjectives,hashSeed(seed,52));
   const en=`Although the question was difficult, ${name} remained ${adj} and checked every option carefully.`;
-  const hi=`हालाँकि प्रश्न कठिन था, ${hindiName[name]} ${hindiAdj[adj]} रहा/रही और हर विकल्प को ध्यान से जाँचा।`;
+  const remained = hindiGender[name] === 'f' ? 'रही' : 'रहा';
+  const hi=`हालाँकि प्रश्न कठिन था, ${hindiName[name]} ${hindiAdj[adj]} ${remained} और हर विकल्प को ध्यान से जाँचा।`;
   return direction==='hi-en'
     ? {id:`gen-tr-${seed}`,level:6,direction,prompt:hi,acceptableAnswers:[en],displayAnswer:en,hint:'“हालाँकि” = although; “ध्यान से” = carefully.',explanation:'पहले contrast clause बनाइए: Although + past clause. फिर main clause में past action रखें और adjective को linking verb के बाद रखें.',grammarPoint:'Although + clause + main clause'}
     : {id:`gen-tr-${seed}`,level:6,direction,prompt:en,acceptableAnswers:[hi],displayAnswer:hi,hint:'although = हालाँकि; remained = बना/रहा।',explanation:'Although contrast दिखाता है। फिर main clause का action और manner phrase हिन्दी में रखें.',grammarPoint:'Contrast + past action + adverb' };
