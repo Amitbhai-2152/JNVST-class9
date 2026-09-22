@@ -1158,3 +1158,12 @@ a { color: inherit; text-decoration: none; }
   .assessment-review-question { font-size:11px; }
   .assessment-review-answer { grid-template-columns:86px minmax(0,1fr); }
 }
+
+
+/* Challenger mode */
+.btn.challenger {
+  border-color:#d9c98c;
+  background:linear-gradient(135deg,#fffaf0,#fff4d3);
+  color:#755d1c;
+}
+.btn.challenger:hover { border-color:#cdb86b; background:#fff7df; }
