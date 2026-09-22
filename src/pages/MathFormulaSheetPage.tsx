@@ -117,7 +117,7 @@ const groups: FormulaGroup[] = [
       { label: 'माध्य', value: '\\bar{x}=\\frac{\\Sigma x}{n}' },
       { label: 'वृत्त आलेख से मान', value: 'A=\\frac{\\theta}{360^\\circ}\\times T' },
       { label: 'प्रायिकता', value: 'P(E)=\\frac{n(E)}{n(S)}' },
-      { label: 'पूरक घटना', value: 'P(E')=1-P(E)' },
+      { label: 'पूरक घटना', value: 'P(E^{\\prime})=1-P(E)' },
     ],
   },
 ];
