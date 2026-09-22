@@ -7,7 +7,8 @@ import MathFormulaSheet from './pages/MathFormulaSheetPage';
 import { MathAwareText, MathText } from './components/MathText';
 import { useProgressStore } from './store/progress';
 import type { ContentBlock, ID, MockTestResult, Question } from './types';
-import { buildJnvstMockPaper, getPerformanceSummary, getRevisionTopics, getSmartPracticeQuestions, getSmartRecommendations, getWeakTopics, getTopicPerformances } from './utils/jnvstIntelligence';
+import { buildJnvstMockPaper, buildMathMockPaper, getPerformanceSummary, getRevisionTopics, getSmartPracticeQuestions, getMathSmartPracticeQuestions, getSmartRecommendations, getWeakTopics, getTopicPerformances } from './utils/jnvstIntelligence';
+import { mathMasteryUnits } from './data/mathMastery';
 
 const examSections = [
   { id: 'sub_hin', title: 'हिंदी', questions: 15 },
@@ -135,29 +136,30 @@ const MathSubjectOverview = () => {
   const mathAccuracy = mathAttempts ? Math.round((mathCorrect / mathAttempts) * 100) : 0;
   const completedLessons = Object.entries(p.lessonActivity ?? {}).filter(([id, activity]) => id.startsWith('les_math_') && activity.status === 'completed').length;
   const masteredTopics = performances.filter((topic) => topic.attempts > 0 && topic.accuracy >= 80).length;
+  const mathQuestionCount = getQuestionsBySubject('sub_math').length;
 
   return <section className="math-hub">
     <div className="math-hub-hero">
       <div>
-        <span className="eyebrow">JNVST MATHS • PREPARATION CENTER</span>
+        <span className="eyebrow">JNVST MATHS • COMPLETE PREPARATION CENTER</span>
         <h2>गणित तैयारी केंद्र</h2>
-        <p>सिर्फ सूत्र याद नहीं करें—अवधारणा समझें, उदाहरण हल करें, फिर समयबद्ध अभ्यास से accuracy मजबूत करें।</p>
+        <p>एक ही जगह पर पूरा JNVST गणित: concept notes, सूत्र, solved examples, chapter study, 220+ practice questions, smart revision और केवल गणित का 35-प्रश्न mock test।</p>
         <div className="actions">
           <Link className="btn primary" to="/math-formulas">📐 11 इकाइयों का सूत्र-पत्र</Link>
-          <Link className="btn" to="/smart-practice">🎯 स्मार्ट गणित अभ्यास</Link>
-          <Link className="btn" to="/mock-tests">⏱ JNVST मॉक टेस्ट</Link>
+          <Link className="btn" to="/math-smart-practice">🎯 स्मार्ट गणित अभ्यास</Link>
+          <Link className="btn" to="/math-mock-test">⏱ गणित मॉक टेस्ट</Link>
         </div>
       </div>
       <div className="math-hub-badge">
         <b>35</b>
         <span>प्रश्न</span>
-        <small>JNVST में गणित</small>
+        <small>JNVST गणित</small>
       </div>
     </div>
 
     <div className="math-stats">
       <Card><b>11</b><span>आधिकारिक इकाइयाँ</span></Card>
-      <Card><b>110</b><span>अभ्यास प्रश्न</span></Card>
+      <Card><b>{mathQuestionCount}</b><span>Math अभ्यास प्रश्न</span></Card>
       <Card><b>{completedLessons}</b><span>पूरे किए पाठ</span></Card>
       <Card><b>{mathAttempts ? mathAccuracy + '%' : '—'}</b><span>गणित सटीकता</span></Card>
     </div>
@@ -165,17 +167,49 @@ const MathSubjectOverview = () => {
     <div className="math-hub-grid">
       <Card>
         <div className="topic-top"><div><h3>आपकी गणित प्रगति</h3><p>{mathAttempts ? mathAttempts + ' प्रयास · ' + masteredTopics + ' इकाइयाँ 80%+ accuracy पर' : 'अभी गणित के प्रयास दर्ज नहीं हैं।'}</p></div><span className="count">{mathAttempts ? mathAccuracy + '%' : 'शुरू करें'}</span></div>
-        <div className="actions"><Link className="btn primary" to={mathAttempts ? "/smart-practice" : "/practice/top_math_01_01"}>{mathAttempts ? 'गलतियों पर अभ्यास' : 'पहला टॉपिक शुरू करें'}</Link></div>
+        <div className="actions"><Link className="btn primary" to={mathAttempts ? "/math-smart-practice" : "/practice/top_math_01_01"}>{mathAttempts ? 'स्मार्ट अभ्यास शुरू करें' : 'पहला टॉपिक शुरू करें'}</Link></div>
       </Card>
       <Card>
-        <h3>हर टॉपिक का 3-स्टेप सिस्टम</h3>
+        <h3>हर इकाई का पूरा अध्ययन चक्र</h3>
         <ol className="math-steps">
-          <li><b>पढ़ें</b> — परिभाषा, नियम और सूत्र समझें।</li>
-          <li><b>देखें</b> — हल किया हुआ उदाहरण और सामान्य गलती जाँचें।</li>
-          <li><b>लगाएँ</b> — JNVST-शैली प्रश्न करके तुरंत उत्तर जाँचें।</li>
+          <li><b>समझें</b> — concept, definition और नियम।</li>
+          <li><b>सीखें</b> — formula + solved example + common trap।</li>
+          <li><b>लगाएँ</b> — topic practice और smart revision।</li>
+          <li><b>जाँचें</b> — 35-question Math mock से readiness देखें।</li>
         </ol>
       </Card>
     </div>
+
+    <section className="math-mastery">
+      <div className="math-mastery-head">
+        <div>
+          <span className="eyebrow">COMPLETE JNVST MATH SYLLABUS MAP</span>
+          <h3>11 इकाइयों की Mastery Checklist</h3>
+          <p>हर इकाई में क्या पढ़ना है, क्या याद रखना है और परीक्षा में कहाँ गलती होती है—सब एक जगह।</p>
+        </div>
+        <Link className="btn" to="/math-formulas">सूत्र-पत्र →</Link>
+      </div>
+      <div className="math-unit-grid">
+        {mathMasteryUnits.map((unit, index) => {
+          const topic = topics.find((item) => item.id === unit.topicId);
+          const questionCount = topic ? getQuestionsByTopic(topic.id).length : 0;
+          const lessonCount = topic?.lessonIds.length ?? 0;
+          return <details className="math-unit" key={unit.topicId}>
+            <summary><span className="math-unit-number">{String(index + 1).padStart(2, '0')}</span><div><b>{unit.title}</b><small>{questionCount} प्रश्न · {lessonCount} पाठ</small></div><span>＋</span></summary>
+            <div className="math-unit-body">
+              <div><h4>क्या सीखना है</h4><ul>{unit.coreSkills.map((item) => <li key={item}>{item}</li>)}</ul></div>
+              <div><h4>Must Know</h4><ul>{unit.mustKnow.map((item) => <li key={item}><InlineText text={item} /></li>)}</ul></div>
+              <div><h4>मुख्य सूत्र</h4><div className="math-formula-chips">{unit.formulaFacts.map((formula) => <span key={formula}><MathText value={formula} /></span>)}</div></div>
+              <div><h4>Exam Traps</h4><ul>{unit.examTraps.map((item) => <li key={item}>{item}</li>)}</ul></div>
+              <div className="actions">
+                {topic?.lessonIds[0] && <Link className="btn" to={`/lessons/${topic.lessonIds[0]}`}>पाठ पढ़ें</Link>}
+                <Link className="btn primary" to={`/practice/${unit.topicId}`}>प्रश्न हल करें</Link>
+              </div>
+            </div>
+          </details>;
+        })}
+      </div>
+    </section>
   </section>;
 };
 
@@ -225,13 +259,156 @@ const SmartPracticePage = () => {
   };
 
   return <Shell>
-    <div className="page-head"><Link to="/">← डैशबोर्ड</Link><p>आपके पिछले प्रदर्शन के आधार पर चुने गए 10 परीक्षा-योग्य प्रश्न</p><h1>स्मार्ट अभ्यास</h1><div className="progressline"><span>प्रश्न {i + 1} / {qs.length}</span></div></div>
+    <div className="page-head"><Link to="/">← डैशबोर्ड</Link><p>सभी विषयों के प्रदर्शन के आधार पर चुने गए परीक्षा-योग्य प्रश्न</p><h1>स्मार्ट अभ्यास</h1><div className="progressline"><span>प्रश्न {i + 1} / {qs.length}</span></div></div>
     <Card className="question-card"><div className="question-body">
       <div className="question-text">{questionTextBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div>
       <div className="options">{q.options.map(o => <button key={o.id} className={'option ' + (selected.includes(o.id) ? 'selected' : '') + ' ' + (checked && q.correctOptionIds.includes(o.id) ? 'correct' : '')} onClick={() => choose(o.id)}><InlineText text={o.text} /></button>)}</div>
       {checked && <div className={'answer ' + (correct ? 'correct' : 'wrong')}><b>{correct ? 'सही उत्तर ✅' : 'उत्तर की जाँच करें'}</b><div>{questionExplanationBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div></div>}
       <div className="study-reader-actions">{!checked ? <button className="btn primary" onClick={check}>उत्तर जाँचें</button> : <button className="btn primary" onClick={() => { setI((x) => (x + 1) % qs.length); setSelected([]); setChecked(false); }}>{i === qs.length - 1 ? 'फिर से शुरू करें →' : 'अगला प्रश्न →'}</button>}</div>
     </div></Card>
+  </Shell>;
+};
+
+const MathSmartPracticePage = () => {
+  const p = useProgressStore();
+  const [qs] = useState(() => getMathSmartPracticeQuestions(useProgressStore.getState(), 12));
+  const [i, setI] = useState(0);
+  const [selected, setSelected] = useState<ID[]>([]);
+  const [checked, setChecked] = useState(false);
+
+  if (!qs.length) return <Shell><Card className="empty"><h1>स्मार्ट गणित अभ्यास तैयार नहीं हो सका</h1><p>गणित के विषयांशों में अभ्यास प्रश्न उपलब्ध हैं।</p></Card></Shell>;
+
+  const q = qs[i];
+  const topic = topics.find((item) => item.id === q.topicId);
+  const correct = sameAnswer(selected, q.correctOptionIds);
+  const choose = (id: ID) => { if (!checked) setSelected([id]); };
+  const check = () => {
+    if (!selected.length) return;
+    setChecked(true);
+    p.recordAttempt(q.id, { selectedOptionIds: selected, isCorrect: correct, timestamp: Date.now(), mode: 'practice' });
+  };
+
+  return <Shell>
+    <div className="page-head">
+      <Link to="/subjects/sub_math">← गणित तैयारी केंद्र</Link>
+      <p>यह अभ्यास केवल <b>गणित</b> के प्रश्नों से बनता है और आपके गलत, कमजोर तथा अनदेखे प्रश्नों को प्राथमिकता देता है।</p>
+      <h1>🎯 स्मार्ट गणित अभ्यास</h1>
+      <div className="progressline"><span>प्रश्न {i + 1} / {qs.length}</span><span>{topic?.title ?? 'गणित'}</span></div>
+    </div>
+    <Card className="math-smart-banner">
+      <div><b>12 प्रश्न · Math-only adaptive set</b><span>पहले coverage, फिर आपकी weak areas और पिछली गलतियों पर फोकस।</span></div>
+      <Link className="btn" to="/math-mock-test">35 प्रश्न का गणित Mock →</Link>
+    </Card>
+    <Card className="question-card"><div className="question-body">
+      <div className="question-text">{questionTextBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div>
+      <div className="options">{q.options.map(o => <button key={o.id} className={'option ' + (selected.includes(o.id) ? 'selected' : '') + ' ' + (checked && q.correctOptionIds.includes(o.id) ? 'correct' : '')} onClick={() => choose(o.id)}><InlineText text={o.text} /></button>)}</div>
+      {checked && <div className={'answer ' + (correct ? 'correct' : 'wrong')}><b>{correct ? 'सही उत्तर ✅' : 'गलत उत्तर — समाधान पढ़ें'}</b><div>{questionExplanationBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div></div>}
+      <div className="study-reader-actions">
+        {!checked ? <button className="btn primary" onClick={check}>उत्तर जाँचें</button> : <button className="btn primary" onClick={() => { setI((x) => (x + 1) % qs.length); setSelected([]); setChecked(false); }}>{i === qs.length - 1 ? 'Set फिर से बनाएं →' : 'अगला प्रश्न →'}</button>}
+      </div>
+    </div></Card>
+  </Shell>;
+};
+
+const MathMockTestPage = () => {
+  const p = useProgressStore();
+  const qs = useMemo(() => buildMathMockPaper(), []);
+  const mathTopics = topics.filter((topic) => topic.chapterId.startsWith('chap_math_')).sort((a, b) => a.order - b.order);
+  const [started, setStarted] = useState(false);
+  const [index, setIndex] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, ID[]>>({});
+  const [finished, setFinished] = useState(false);
+
+  const q = qs[index];
+  const selected = q ? (answers[q.id] || []) : [];
+  const answeredCount = Object.values(answers).filter((value) => value.length > 0).length;
+  const score = qs.reduce((sum, question) => sum + (sameAnswer(answers[question.id] || [], question.correctOptionIds) ? 1 : 0), 0);
+  const choose = (id: ID) => { if (q) setAnswers((current) => ({ ...current, [q.id]: [id] })); };
+
+  const finish = () => {
+    const now = Date.now();
+    p.recordAttempts(qs.map((question) => ({
+      id: question.id,
+      attempt: {
+        selectedOptionIds: answers[question.id] || [],
+        isCorrect: sameAnswer(answers[question.id] || [], question.correctOptionIds),
+        timestamp: now,
+        mode: 'mock-test',
+      },
+    })));
+    setFinished(true);
+  };
+
+  if (finished) {
+    const topicStats = mathTopics.map((topic) => {
+      const topicQuestions = qs.filter((question) => question.topicId === topic.id);
+      const topicCorrect = topicQuestions.filter((question) => sameAnswer(answers[question.id] || [], question.correctOptionIds)).length;
+      return { ...topic, count: topicQuestions.length, correct: topicCorrect };
+    });
+
+    return <Shell>
+      <div className="page-head"><Link to="/subjects/sub_math">← गणित तैयारी केंद्र</Link><h1>गणित Mock Test परिणाम</h1><p>यह 35-प्रश्न Math-only practice test था। आपके उत्तर progress में दर्ज किए गए हैं।</p></div>
+      <section className="math-result-hero">
+        <span>आपका स्कोर</span>
+        <strong>{score} / {qs.length}</strong>
+        <b>{Math.round((score / qs.length) * 100)}% accuracy</b>
+      </section>
+      <div className="math-result-grid">
+        <Card><b>{answeredCount}</b><span>attempted</span></Card>
+        <Card><b>{qs.length - answeredCount}</b><span>unanswered</span></Card>
+        <Card><b>{Math.round((score / qs.length) * 100)}%</b><span>accuracy</span></Card>
+      </div>
+      <Card>
+        <div className="page-head"><h2>इकाई-वार प्रदर्शन</h2><p>हर official Math unit से कम-से-कम 3 प्रश्न इस paper में रखे गए हैं; 2 अतिरिक्त प्रश्न coverage बढ़ाते हैं।</p></div>
+        <div className="math-result-topics">
+          {topicStats.map((topic) => <div className="math-result-topic" key={topic.id}><div><b>{topic.title}</b><span>{topic.correct} / {topic.count} सही</span></div><span className="count">{topic.count ? Math.round((topic.correct / topic.count) * 100) + '%' : '—'}</span></div>)}
+        </div>
+      </Card>
+      <div className="actions"><button className="btn primary" onClick={() => { setStarted(false); setFinished(false); setIndex(0); setAnswers({}); }}>नया गणित Mock</button><Link className="btn" to="/math-smart-practice">गलतियों पर स्मार्ट अभ्यास</Link><Link className="btn" to="/math-formulas">सूत्र-पत्र</Link></div>
+    </Shell>;
+  }
+
+  return <Shell>
+    <div className="page-head">
+      <Link to="/subjects/sub_math">← गणित तैयारी केंद्र</Link>
+      <h1>⏱ गणित Mock Test</h1>
+      <p>35 प्रश्न · 35 अंक · केवल गणित · सभी 11 आधिकारिक इकाइयों से balanced coverage</p>
+      {!started && <div className="actions"><button className="btn primary" onClick={() => setStarted(true)}>टेस्ट शुरू करें</button></div>}
+    </div>
+    {!started ? <Card className="math-mock-intro">
+      <h2>टेस्ट से पहले</h2>
+      <div className="pattern">
+        <div><b>35</b><span>प्रश्न</span></div>
+        <div><b>35</b><span>अंक</span></div>
+        <div><b>11</b><span>इकाइयाँ</span></div>
+        <div><b>3+</b><span>प्रश्न/इकाई</span></div>
+        <div><b>4</b><span>विकल्प/प्रश्न</span></div>
+      </div>
+      <ul>
+        <li>यह केवल गणित का अभ्यास mock है; इसमें हिंदी, अंग्रेज़ी या विज्ञान का प्रश्न नहीं आएगा।</li>
+        <li>हर प्रश्न में चार विकल्प हैं और एक सही उत्तर है।</li>
+        <li>किसी प्रश्न को खाली छोड़ सकते हैं और बाद में वापस आ सकते हैं।</li>
+      </ul>
+    </Card> : q && <div className="math-mock-layout">
+      <Card className="question-card">
+        <div className="progressline"><span>प्रश्न {index + 1} / {qs.length}</span><span>हल किए: {answeredCount}</span></div>
+        <div className="question-text">{questionTextBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div>
+        <div className="options">{q.options.map(o => <button key={o.id} className={'option ' + (selected.includes(o.id) ? 'selected' : '')} onClick={() => choose(o.id)}><InlineText text={o.text} /></button>)}</div>
+        <div className="study-reader-actions">
+          <button className="btn" disabled={index === 0} onClick={() => setIndex((x) => x - 1)}>← पिछला</button>
+          {index === qs.length - 1
+            ? <button className="btn primary" onClick={finish}>टेस्ट जमा करें</button>
+            : <button className="btn primary" onClick={() => setIndex((x) => x + 1)}>अगला प्रश्न →</button>}
+        </div>
+      </Card>
+      <Card className="math-mock-palette">
+        <h3>Question Navigator</h3>
+        <p>{answeredCount} / {qs.length} answered</p>
+        <div className="math-palette-grid">
+          {qs.map((question, questionIndex) => <button key={question.id} className={(answers[question.id]?.length ? 'answered ' : '') + (questionIndex === index ? 'current' : '')} onClick={() => setIndex(questionIndex)}>{questionIndex + 1}</button>)}
+        </div>
+      </Card>
+    </div>}
   </Shell>;
 };
 
@@ -298,4 +475,4 @@ const MockTestsPage = () => {
   </Shell>;
 };
 
-export default function App() { return <HashRouter><Routes><Route path="/" element={<Dashboard />} /><Route path="/subjects" element={<SubjectsPage />} /><Route path="/subjects/:subjectId" element={<SubjectPage />} /><Route path="/chapters/:chapterId" element={<ChapterPage />} /><Route path="/chapters/:chapterId/study" element={<ChapterStudyPage />} /><Route path="/lessons/:lessonId" element={<LessonPage />} /><Route path="/math-formulas" element={<Shell><MathFormulaSheet /></Shell>} /><Route path="/practice/:topicId" element={<PracticePage />} /><Route path="/smart-practice" element={<SmartPracticePage />} /><Route path="/bookmarks" element={<BookmarksPage />} /><Route path="/mock-tests" element={<MockTestsPage />} /><Route path="*" element={<Dashboard />} /></Routes></HashRouter>; }
+export default function App() { return <HashRouter><Routes><Route path="/" element={<Dashboard />} /><Route path="/subjects" element={<SubjectsPage />} /><Route path="/subjects/:subjectId" element={<SubjectPage />} /><Route path="/chapters/:chapterId" element={<ChapterPage />} /><Route path="/chapters/:chapterId/study" element={<ChapterStudyPage />} /><Route path="/lessons/:lessonId" element={<LessonPage />} /><Route path="/math-formulas" element={<Shell><MathFormulaSheet /></Shell>} /><Route path="/practice/:topicId" element={<PracticePage />} /><Route path="/smart-practice" element={<SmartPracticePage />} /><Route path="/math-smart-practice" element={<MathSmartPracticePage />} /><Route path="/bookmarks" element={<BookmarksPage />} /><Route path="/mock-tests" element={<MockTestsPage />} /><Route path="/math-mock-test" element={<MathMockTestPage />} /><Route path="*" element={<Dashboard />} /></Routes></HashRouter>; }
