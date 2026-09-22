@@ -34,7 +34,7 @@ for (const file of files) {
     counts[key] += 1;
   }
 
-  // mathPart5 uses a small factory to keep 110 new MCQs readable.
+  // mathPart5 and sciencePart14 use small factories to keep generated MCQs readable.
   // Validate those generated IDs from their explicit make('xx', ...) codes too.
   if (file === 'mathPart5.ts') {
     for (const match of source.matchAll(/\bmake\(\s*['\"]([^'\"]+)['\"]/g)) {
@@ -42,6 +42,15 @@ for (const file of files) {
       if (ids.has(id)) throw new Error(`Duplicate question ID: ${id}`);
       ids.add(id);
       counts.math += 1;
+    }
+  }
+
+  if (file === 'sciencePart14.ts') {
+    for (const match of source.matchAll(/\bmake\(\s*['\"]([^'\"]+)['\"]/g)) {
+      const id = `q_sci_b3_${match[1]}`;
+      if (ids.has(id)) throw new Error(`Duplicate question ID: ${id}`);
+      ids.add(id);
+      counts.sci += 1;
     }
   }
 }
