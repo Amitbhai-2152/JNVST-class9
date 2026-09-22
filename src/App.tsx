@@ -262,7 +262,7 @@ const ScienceSubjectOverview = () => {
       <div>
         <span className="eyebrow">JNVST SCIENCE • COMPLETE PREPARATION CENTER</span>
         <h2>विज्ञान तैयारी केंद्र</h2>
-        <p>कक्षा VIII स्तर की 18 NCERT-aligned Science units, concept lessons, deep-dive revision, 270 practice questions, adaptive practice और 35-प्रश्न Science mock एक ही जगह।</p>
+        <p>कक्षा VIII स्तर की 18 NCERT-aligned Science units, concept lessons, deep-dive revision, 360 practice questions, adaptive practice और 35-प्रश्न Science mock एक ही जगह।</p>
         <div className="actions">
           <Link className="btn primary" to="/science-revision">🧠 त्वरित पुनरावृत्ति</Link>
           <Link className="btn" to="/science-smart-practice">🎯 स्मार्ट विज्ञान अभ्यास</Link>
