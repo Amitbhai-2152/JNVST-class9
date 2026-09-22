@@ -396,8 +396,7 @@ const ScienceSubjectOverview = () => {
       <div className="science-learning-grid">
         {scienceMasteryUnits.map((unit, index) => {
           const topic = topics.find((item) => item.id === unit.topicId);
-          const lessonId = topic?.lessonIds[0];
-          const performance = performances.find((item) => item.topicId === unit.topicId);
+                const performance = performances.find((item) => item.topicId === unit.topicId);
           const attemptsForUnit = performance?.attempts ?? 0;
           const unitAccuracy = performance?.accuracy ?? 0;
           const mastered = Boolean(attemptsForUnit && unitAccuracy >= 80);
@@ -629,13 +628,13 @@ const ChapterPage = () => {
           <div className="science-chapter-index">
             <span>CHAPTER</span>
             <strong>{String(c.order).padStart(2, '0')}</strong>
-            <small>{pageCount ? pageCount + ' sections · ' + contentBlockCount + ' learning blocks' : 'learning content'}</small>
+            <small>{pageCount ? pageCount + ' अध्ययन पृष्ठ · ' + contentBlockCount + ' learning blocks' : 'learning content'}</small>
           </div>
         </div>
 
         <div className="science-chapter-stats">
           <Card><b>{questionCountForChapter}</b><span>अभ्यास प्रश्न</span></Card>
-          <Card><b>{pageCount || '—'}</b><span>अध्ययन भाग</span></Card>
+          <Card><b>{pageCount || '—'}</b><span>अध्ययन पृष्ठ</span></Card>
           <Card><b>{performance?.attempts ?? 0}</b><span>आपके प्रयास</span></Card>
           <Card><b>{performance?.attempts ? accuracyForChapter + '%' : '—'}</b><span>आपकी सटीकता</span></Card>
         </div>
