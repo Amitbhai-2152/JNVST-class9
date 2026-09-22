@@ -362,7 +362,7 @@ export const getTopicChallengerQuestions = (
     easy: 3,
   };
 
-  const candidates = [...mathTopicChallengers, ...allQuestions]
+  const candidates = [...mathTopicChallengersV2, ...allQuestions]
     .filter((question) =>
       question.subjectId === 'sub_math' &&
       question.topicId === topicId &&
