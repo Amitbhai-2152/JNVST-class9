@@ -3035,6 +3035,26 @@
   overflow-wrap: anywhere;
 }
 
+.english-review-hint {
+  margin: 12px 0;
+  padding: 11px 13px;
+  border: 1px solid #e1eaff;
+  border-radius: 12px;
+  background: #f6f9ff;
+}
+
+.english-review-hint strong {
+  display: block;
+  color: var(--chapter-blue);
+  margin-bottom: 3px;
+}
+
+.english-review-hint p {
+  margin: 0;
+  color: #46566b;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
 .english-assessment-shell .assessment-options .option {
   min-width: 0;
   max-width: 100%;
