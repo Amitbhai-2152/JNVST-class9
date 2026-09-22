@@ -4,6 +4,7 @@ import { chapters, getSubject, topics } from "../data";
 import { scienceLessonLens } from "../data/scienceLessonCore";
 import { mathMasteryUnitMap } from "../data/mathMastery";
 import { scienceMasteryUnits } from "../data/sciencePrep";
+import { englishMasteryUnits } from "../data/englishPrep";
 import { getScienceChapterStudyPages, getChapterStudyPages } from "../data/lessons/chapterStudy";
 import { allLessons } from "../data";
 import { MathAwareText, MathText } from "../components/MathText";
