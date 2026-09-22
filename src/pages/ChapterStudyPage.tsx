@@ -86,11 +86,13 @@ export default function ChapterStudyPage() {
   const [page, setPage] = useState(0);
   const completeLesson = useProgressStore((state) => state.completeLesson);
   const markInProgress = useProgressStore((state) => state.markInProgress);
-  const studyId = "chapter-study:" + chapter.id;
+  const studyId = chapter ? "chapter-study:" + chapter.id : "";
   useEffect(() => {
     setPage(0);
-    markInProgress(studyId, chapter.title + " — अध्याय अध्ययन");
-  }, [chapterId, markInProgress, studyId, chapter.title]);
+    if (chapter && studyId) {
+      markInProgress(studyId, chapter.title + " — अध्याय अध्ययन");
+    }
+  }, [chapterId, markInProgress, studyId, chapter]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -232,7 +234,7 @@ export default function ChapterStudyPage() {
                 </div>
                 {page < pages.length - 1
                   ? <button className="btn primary" onClick={() => setPage((p) => p + 1)}>अगला पृष्ठ →</button>
-                  : <button className="btn primary" onClick={() => completeLesson(studyId, chapter.title + " — अध्याय अध्ययन")}>अध्ययन पूरा करें →</button>}
+                  : <button className="btn primary" onClick={() => studyId && completeLesson(studyId, chapter.title + " — अध्याय अध्ययन")}>अध्ययन पूरा करें →</button>}
               </div>
             </article>
 
