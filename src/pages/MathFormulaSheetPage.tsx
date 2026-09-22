@@ -172,7 +172,7 @@ const MathFormulaSheet = () => (
         {examChecklist.map((item) => <li key={item}>{item}</li>)}
       </ol>
     </section>
-  </main>
+  </div>
 );
 
 export default MathFormulaSheet;
