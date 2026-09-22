@@ -2,7 +2,7 @@ import type { ID, ProgressState, Question } from '../types';
 import { chapters, subjects, topics } from '../data/curriculum';
 import { allQuestions, jnvstExamQuestions } from '../data/questions';
 import { mathChapterChallengers } from '../data/questions/mathChapterChallengers';
-import { mathTopicChallengers } from '../data/questions/mathTopicChallengers';
+import { mathTopicChallengersV2 } from '../data/questions/mathTopicChallengersV2';
 
 export interface TopicPerformance {
   topicId: ID;
@@ -325,7 +325,7 @@ export const getChapterChallengerQuestions = (
   };
 
   const sourceQuestions = chapterId.startsWith('chap_math_')
-    ? [...mathTopicChallengers, ...mathChapterChallengers, ...allQuestions]
+    ? [...mathTopicChallengersV2, ...mathChapterChallengers, ...allQuestions]
     : allQuestions;
 
   const candidates = sourceQuestions
