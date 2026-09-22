@@ -462,37 +462,17 @@ const ScienceRevisionPage = () => (
 );
 
 const ScienceSmartPracticePage = () => {
-  const p = useProgressStore();
-  const [setNumber, setSetNumber] = useState(0);
-  const [qs, setQs] = useState(() => getScienceSmartPracticeQuestions(useProgressStore.getState(), 12, 'jnvst-science-smart-0'));
-  const [i, setI] = useState(0);
-  const [selected, setSelected] = useState<ID[]>([]);
-  const [checked, setChecked] = useState(false);
-
-  if (!qs.length) return <Shell><Card className="empty"><h1>स्मार्ट विज्ञान अभ्यास तैयार नहीं हो सका</h1><p>विज्ञान के topic-wise MCQ उपलब्ध हैं।</p></Card></Shell>;
-  const q = qs[i];
-  const correct = sameAnswer(selected, q.correctOptionIds);
-  const choose = (id: ID) => { if (!checked) setSelected([id]); };
-  const check = () => { if (!selected.length) return; setChecked(true); p.recordAttempt(q.id,{selectedOptionIds:selected,isCorrect:correct,timestamp:Date.now(),mode:'practice'}); };
-  const regenerate = () => {
-    const next = setNumber + 1;
-    setSetNumber(next);
-    setQs(getScienceSmartPracticeQuestions(useProgressStore.getState(),12,'jnvst-science-smart-' + next));
-    setI(0); setSelected([]); setChecked(false);
-  };
-
-  return <Shell>
-    <div className="page-head"><Link to="/subjects/sub_sci">← विज्ञान तैयारी केंद्र</Link><p>यह अभ्यास केवल Science के JNVST-compatible MCQs से बनता है और आपकी कमजोर/गलत/अनदेखी items को प्राथमिकता देता है।</p><h1>🎯 स्मार्ट विज्ञान अभ्यास</h1><div className="progressline"><span>प्रश्न {i + 1} / {qs.length}</span><span>{topics.find((topic) => topic.id === q.topicId)?.title ?? 'विज्ञान'}</span><span>{difficultyLabel[q.difficulty]}</span></div></div>
-    <Card className="science-smart-banner"><div><b>12 प्रश्न · Science-only adaptive set</b><span>पहले chapter coverage, फिर weak areas और पिछली गलतियों पर फोकस।</span></div><Link className="btn" to="/science-mock-test">35 प्रश्न का Science Mock →</Link></Card>
-    <Card className="question-card"><div className="question-body">
-      <div className="question-text">{questionTextBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div>
-      <div className="options">{q.options.map((o) => <button key={o.id} className={'option ' + (selected.includes(o.id) ? 'selected' : '') + ' ' + (checked && q.correctOptionIds.includes(o.id) ? 'correct' : '')} onClick={() => choose(o.id)}><InlineText text={o.text} /></button>)}</div>
-      {checked && <div className={'answer ' + (correct ? 'correct' : 'wrong')}><b>{correct ? 'सही उत्तर ✅' : 'गलत उत्तर — समाधान पढ़ें'}</b><div>{questionExplanationBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div></div>}
-      <div className="study-reader-actions">{!checked ? <button className="btn primary" onClick={check}>उत्तर जाँचें</button> : <button className="btn primary" onClick={() => { if (i === qs.length - 1) regenerate(); else { setI((x) => x + 1); setSelected([]); setChecked(false); } }}>{i === qs.length - 1 ? 'नया Smart Set →' : 'अगला प्रश्न →'}</button>}</div>
-    </div></Card>
-  </Shell>;
+  const qs = useMemo(() => getScienceSmartPracticeQuestions(useProgressStore.getState(), 12, 'jnvst-science-smart-0'), []);
+  return <AssessmentRunner
+    questions={qs}
+    title="🎯 स्मार्ट विज्ञान अभ्यास"
+    backTo="/subjects/sub_sci"
+    backLabel="विज्ञान तैयारी केंद्र"
+    description="केवल विज्ञान का adaptive timed set — weak, wrong और unseen questions को प्राथमिकता दी जाती है।"
+    badge="SCIENCE SMART PRACTICE"
+    bannerLink={{ to: "/science-mock-test", label: "35 प्रश्न का Science Mock →" }}
+  />;
 };
-
 const ScienceMockTestPage = () => {
   const p = useProgressStore();
   const [mockNumber, setMockNumber] = useState(0);
@@ -818,93 +798,322 @@ const LessonPage = () => {
   </Shell>;
 };
 
-const PracticePage = () => { const { topicId } = useParams(); const qs = useMemo(() => getQuestionsByTopic(topicId || ''), [topicId]); const [i,setI] = useState(0); const [selected,setSelected] = useState<ID[]>([]); const [checked,setChecked] = useState(false); const p = useProgressStore(); if (!qs.length) return <Shell><Card className="empty"><h1>इस टॉपिक में प्रश्न उपलब्ध नहीं हैं</h1></Card></Shell>; const q = qs[i]; const correct = sameAnswer(selected, q.correctOptionIds); const choose = (id: ID) => { if (checked) return; if (q.type === 'multiple-select') setSelected(v => v.includes(id) ? v.filter(x => x !== id) : [...v, id]); else setSelected([id]); }; const check = () => { if (!selected.length) return; setChecked(true); p.recordAttempt(q.id, { selectedOptionIds: selected, isCorrect: correct, timestamp: Date.now(), mode: 'practice' }); }; return <Shell><div className="page-head"><Link to={q.chapterId.startsWith('chap_sci_') ? '/subjects/sub_sci' : `/chapters/${q.chapterId}`}>← {q.chapterId.startsWith('chap_sci_') ? 'विज्ञान तैयारी केंद्र' : 'अध्याय'}</Link><div className="progressline"><span>प्रश्न {i + 1} / {qs.length}</span></div><h1>अभ्यास</h1></div><Card className="question-card"><div className="question-body"><div className="question-text">{questionTextBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div><div className="options">{q.options.map((o) => <button key={o.id} className={`option ${selected.includes(o.id) ? 'selected' : ''} ${checked && q.correctOptionIds.includes(o.id) ? 'correct' : ''}`} onClick={() => choose(o.id)}><InlineText text={o.text} /></button>)}</div>{checked && <div className={`answer ${correct ? 'correct' : 'wrong'}`}><b>{correct ? 'सही उत्तर ✅' : 'उत्तर की जाँच करें'}</b><div>{questionExplanationBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div></div>}<div className="study-reader-actions">{!checked ? <button className="btn primary" onClick={check}>उत्तर जाँचें</button> : <button className="btn primary" onClick={() => { setI((x) => (x + 1) % qs.length); setSelected([]); setChecked(false); }}>अगला प्रश्न →</button>}</div></div></Card></Shell>; };
+
+const AssessmentAnswerReview = ({ questions, answers }: { questions: Question[]; answers: Record<string, ID[]> }) => (
+  <Card className="assessment-answer-review">
+    <div className="assessment-section-head">
+      <span className="eyebrow">ANSWER REVIEW</span>
+      <h2>उत्तर और समाधान</h2>
+      <p>टेस्ट पूरा होने के बाद अब हर प्रश्न का सही उत्तर और आपकी response स्थिति देखें।</p>
+    </div>
+    <div className="assessment-review-list">
+      {questions.map((question, questionIndex) => {
+        const selected = answers[question.id] || [];
+        const isCorrect = sameAnswer(selected, question.correctOptionIds);
+        const correctLabels = question.correctOptionIds.map((id) => question.options.find((option) => option.id === id)?.text ?? id);
+        const selectedLabels = selected.map((id) => question.options.find((option) => option.id === id)?.text ?? id);
+        return (
+          <details className={'assessment-review-item ' + (isCorrect ? 'correct' : 'wrong')} key={question.id} open={!isCorrect}>
+            <summary>
+              <span className="assessment-review-index">{questionIndex + 1}</span>
+              <span className="assessment-review-question">{question.textPlain ?? questionTextBlocks(question).map((block) => block.type === 'paragraph' ? block.text : '').join(' ')}</span>
+              <b>{isCorrect ? 'सही' : selected.length ? 'गलत' : 'छूटा'}</b>
+            </summary>
+            <div className="assessment-review-body">
+              <div className="assessment-review-answer"><b>सही उत्तर</b><span>{correctLabels.join(' · ')}</span></div>
+              <div className="assessment-review-answer"><b>आपका उत्तर</b><span>{selectedLabels.length ? selectedLabels.join(' · ') : 'उत्तर नहीं दिया'}</span></div>
+              {questionExplanationBlocks(question).map((block, index) => <ContentRenderer key={index} blocks={[block]} />)}
+            </div>
+          </details>
+        );
+      })}
+    </div>
+  </Card>
+);
+
+type AssessmentRunnerProps = {
+  questions: Question[];
+  title: string;
+  backTo: string;
+  backLabel: string;
+  description: string;
+  timerSeconds?: number;
+  badge?: string;
+  bannerLink?: { to: string; label: string };
+  emptyTitle?: string;
+  emptyText?: string;
+};
+
+const AssessmentRunner = ({
+  questions,
+  title,
+  backTo,
+  backLabel,
+  description,
+  timerSeconds,
+  badge = 'TIMED PRACTICE',
+  bannerLink,
+  emptyTitle = 'अभी प्रश्न उपलब्ध नहीं हैं',
+  emptyText = 'इस अभ्यास के लिए प्रश्न उपलब्ध नहीं हैं।',
+}: AssessmentRunnerProps) => {
+  const p = useProgressStore();
+  const initialTime = timerSeconds ?? Math.max(5 * 60, questions.length * 60);
+  const [started, setStarted] = useState(false);
+  const [index, setIndex] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, ID[]>>({});
+  const answersRef = useRef<Record<string, ID[]>>({});
+  const [markedForReview, setMarkedForReview] = useState<Set<ID>>(new Set());
+  const [finished, setFinished] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(initialTime);
+  const [resultStartedAt, setResultStartedAt] = useState<number | null>(null);
+
+  const q = questions[index];
+  const selected = q ? (answers[q.id] || []) : [];
+  const answeredCount = Object.values(answers).filter((value) => value.length > 0).length;
+  const score = questions.reduce((sum, question) => sum + (sameAnswer(answers[question.id] || [], question.correctOptionIds) ? 1 : 0), 0);
+
+  useEffect(() => { answersRef.current = answers; }, [answers]);
+
+  const choose = (id: ID) => {
+    if (!q || finished) return;
+    const current = answersRef.current[q.id] || [];
+    const nextSelected = q.type === 'multiple-select'
+      ? (current.includes(id) ? current.filter((item) => item !== id) : [...current, id])
+      : [id];
+    const nextAnswers = { ...answersRef.current, [q.id]: nextSelected };
+    answersRef.current = nextAnswers;
+    setAnswers(nextAnswers);
+  };
+
+  const toggleReview = (questionId: ID) => {
+    setMarkedForReview((current) => {
+      const next = new Set(current);
+      if (next.has(questionId)) next.delete(questionId);
+      else next.add(questionId);
+      return next;
+    });
+  };
+
+  const finish = () => {
+    const currentAnswers = answersRef.current;
+    const now = Date.now();
+    p.recordAttempts(questions.map((question) => ({
+      id: question.id,
+      attempt: {
+        selectedOptionIds: currentAnswers[question.id] || [],
+        isCorrect: sameAnswer(currentAnswers[question.id] || [], question.correctOptionIds),
+        timestamp: now,
+        mode: 'practice',
+      },
+    })));
+    setFinished(true);
+  };
+
+  const startTest = () => {
+    answersRef.current = {};
+    setAnswers({});
+    setMarkedForReview(new Set());
+    setIndex(0);
+    setTimeLeft(initialTime);
+    setResultStartedAt(Date.now());
+    setFinished(false);
+    setStarted(true);
+  };
+
+  useEffect(() => {
+    if (!started || finished) return;
+    const timerId = window.setInterval(() => {
+      setTimeLeft((value) => {
+        if (value <= 1) {
+          window.clearInterval(timerId);
+          finish();
+          return 0;
+        }
+        return value - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(timerId);
+  }, [started, finished]);
+
+  const formatTime = (seconds: number) => formatMockTime(seconds);
+  const usedSeconds = resultStartedAt ? Math.max(0, Math.round((Date.now() - resultStartedAt) / 1000)) : initialTime - timeLeft;
+  const accuracy = questions.length ? Math.round((score / questions.length) * 100) : 0;
+
+  if (!questions.length) {
+    return <Shell><Card className="empty"><h1>{emptyTitle}</h1><p>{emptyText}</p></Card></Shell>;
+  }
+
+  if (finished) {
+    return <Shell>
+      <div className="assessment-shell">
+        <div className="assessment-breadcrumb"><Link to={backTo}>← {backLabel}</Link><span>{badge}</span></div>
+        <section className="assessment-result-hero">
+          <span>टेस्ट पूरा हुआ</span>
+          <strong>{score} / {questions.length}</strong>
+          <b>{accuracy}% accuracy</b>
+        </section>
+        <div className="assessment-result-grid">
+          <Card><b>{answeredCount}</b><span>attempted</span></Card>
+          <Card><b>{questions.length - answeredCount}</b><span>unanswered</span></Card>
+          <Card><b>{markedForReview.size}</b><span>review marked</span></Card>
+          <Card><b>{Math.floor(usedSeconds / 60)}:{String(usedSeconds % 60).padStart(2, '0')}</b><span>time used</span></Card>
+        </div>
+        <Card className="assessment-summary-card">
+          <div className="assessment-section-head">
+            <span className="eyebrow">PERFORMANCE</span>
+            <h2>{title} — परिणाम</h2>
+            <p>आपके marks सही उत्तरों की संख्या पर आधारित हैं।</p>
+          </div>
+          <div className="assessment-result-bar">
+            <span style={{ width: accuracy + '%' }} />
+          </div>
+          <div className="assessment-result-message">
+            <b>{accuracy >= 80 ? 'अच्छा प्रदर्शन — अब weak questions revise करें।' : accuracy >= 60 ? 'अच्छी शुरुआत — गलत questions को दोबारा लगाएँ।' : 'अवधारणाएँ दोहराकर फिर से timed practice करें।'}</b>
+          </div>
+        </Card>
+        <AssessmentAnswerReview questions={questions} answers={answers} />
+        <div className="actions">
+          <button className="btn primary" onClick={startTest}>फिर से यह टेस्ट दें</button>
+          {bannerLink && <Link className="btn" to={bannerLink.to}>{bannerLink.label}</Link>}
+          <Link className="btn" to={backTo}>वापस जाएँ</Link>
+        </div>
+      </div>
+    </Shell>;
+  }
+
+  if (!started) {
+    return <Shell>
+      <div className="assessment-shell">
+        <div className="assessment-breadcrumb"><Link to={backTo}>← {backLabel}</Link><span>{badge}</span></div>
+        <section className="assessment-start-hero">
+          <div>
+            <span className="eyebrow">{badge}</span>
+            <h1>{title}</h1>
+            <p>{description}</p>
+          </div>
+          <div className="assessment-time-hero"><span>TIME LIMIT</span><strong>{formatTime(initialTime)}</strong><small>{questions.length} प्रश्न</small></div>
+        </section>
+        <div className="assessment-start-grid">
+          <Card><b>{questions.length}</b><span>प्रश्न</span></Card>
+          <Card><b>{questions.length}</b><span>अधिकतम marks</span></Card>
+          <Card><b>1</b><span>सही उत्तर = 1 mark</span></Card>
+          <Card><b>{Math.round(initialTime / Math.max(1, questions.length))}s</b><span>लगभग समय/प्रश्न</span></Card>
+        </div>
+        <Card className="assessment-instructions">
+          <div className="assessment-section-head"><span className="eyebrow">EXAM MODE</span><h2>शुरू करने से पहले</h2></div>
+          <div className="assessment-instruction-grid">
+            <div><b>⏱ Timer</b><span>समय 00:00 होने पर टेस्ट अपने-आप जमा हो जाएगा।</span></div>
+            <div><b>📝 Answer later</b><span>विकल्प चुनने पर सही उत्तर नहीं दिखेगा।</span></div>
+            <div><b>★ Review</b><span>कठिन प्रश्नों को review के लिए चिन्हित कर सकते हैं।</span></div>
+            <div><b>📊 Result</b><span>Marks, accuracy और सभी answers टेस्ट के अंत में दिखेंगे।</span></div>
+          </div>
+          <button className="btn primary assessment-start-button" onClick={startTest}>टेस्ट शुरू करें →</button>
+        </Card>
+      </div>
+    </Shell>;
+  }
+
+  return <Shell>
+    <div className="assessment-shell assessment-active">
+      <div className="assessment-topbar">
+        <div>
+          <Link to={backTo}>← {backLabel}</Link>
+          <b>{title}</b>
+        </div>
+        <div className={'assessment-live-timer ' + (timeLeft <= 60 ? 'danger' : timeLeft <= 300 ? 'warning' : '')}>
+          <span>⏱</span><strong>{formatTime(timeLeft)}</strong>
+        </div>
+      </div>
+      <div className="assessment-progress-card">
+        <div className="assessment-progress-info">
+          <span>प्रश्न {index + 1} / {questions.length}</span>
+          <span>हल किए: {answeredCount}</span>
+          <span>Review: {markedForReview.size}</span>
+          <span>{Math.round(((index + 1) / Math.max(1, questions.length)) * 100)}%</span>
+        </div>
+        <div className="assessment-progress-track"><span style={{ width: ((index + 1) / Math.max(1, questions.length)) * 100 + '%' }} /></div>
+      </div>
+
+      {bannerLink && <Card className="assessment-banner"><div><b>{badge}</b><span>{description}</span></div><Link className="btn" to={bannerLink.to}>{bannerLink.label}</Link></Card>}
+
+      <div className="assessment-layout">
+        <Card className="assessment-question-card">
+          <div className="assessment-question-meta">
+            <span>{q?.topicId ? (topics.find((topic) => topic.id === q.topicId)?.title ?? '') : ''}</span>
+            <span className={'badge ' + (q ? q.difficulty : 'medium')}>{q ? difficultyLabel[q.difficulty] : ''}</span>
+          </div>
+          <div className="assessment-question-text">{q && questionTextBlocks(q).map((block, blockIndex) => <ContentRenderer key={blockIndex} blocks={[block]} />)}</div>
+          <div className="options assessment-options">
+            {q?.options.map((option) => <button key={option.id} className={'option ' + (selected.includes(option.id) ? 'selected' : '')} onClick={() => choose(option.id)}><InlineText text={option.text} /></button>)}
+          </div>
+          <div className="assessment-actions">
+            <button className={'btn ' + (q && markedForReview.has(q.id) ? 'review-active' : '')} onClick={() => q && toggleReview(q.id)}>
+              {q && markedForReview.has(q.id) ? '★ Review में चिन्हित' : '☆ Review के लिए रखें'}
+            </button>
+            <div className="assessment-nav-actions">
+              <button className="btn" disabled={index === 0} onClick={() => setIndex((value) => value - 1)}>← पिछला</button>
+              {index === questions.length - 1
+                ? <button className="btn primary" onClick={finish}>टेस्ट जमा करें</button>
+                : <button className="btn primary" onClick={() => setIndex((value) => value + 1)}>अगला प्रश्न →</button>}
+            </div>
+          </div>
+        </Card>
+
+        <Card className="assessment-palette-card">
+          <div className="assessment-palette-head"><div><b>Question Navigator</b><span>{answeredCount} / {questions.length} answered</span></div><strong>{markedForReview.size}★</strong></div>
+          <div className="science-palette-legend"><span>● answered</span><span>★ review</span><span>○ unanswered</span></div>
+          <div className="assessment-palette-grid">
+            {questions.map((question, questionIndex) => <button key={question.id} className={(answers[question.id]?.length ? 'answered ' : '') + (markedForReview.has(question.id) ? 'marked ' : '') + (questionIndex === index ? 'current' : '')} onClick={() => setIndex(questionIndex)}>
+              {markedForReview.has(question.id) ? '★' : questionIndex + 1}
+            </button>)}
+          </div>
+        </Card>
+      </div>
+    </div>
+  </Shell>;
+};
+
+const PracticePage = () => {
+  const { topicId } = useParams();
+  const qs = useMemo(() => getQuestionsByTopic(topicId || ''), [topicId]);
+  const q = qs[0];
+  return <AssessmentRunner
+    questions={qs}
+    title="अभ्यास"
+    backTo={q?.chapterId?.startsWith('chap_sci_') ? '/subjects/sub_sci' : q?.chapterId ? '/chapters/' + q.chapterId : '/subjects'}
+    backLabel={q?.chapterId?.startsWith('chap_sci_') ? 'विज्ञान तैयारी केंद्र' : 'अध्याय'}
+    description="इस topic के पूरे question set को exam-style timed practice की तरह हल करें। सही उत्तर टेस्ट पूरा होने के बाद दिखाया जाएगा।"
+    badge="TOPIC PRACTICE"
+  />;
+};
 
 const BookmarksPage = () => { const p = useProgressStore(); const bookmarked = allLessons.filter(l => p.bookmarks.lessonIds.includes(l.id)); return <Shell><div className="page-head"><h1>बुकमार्क</h1><p>सहेजे गए पाठ</p></div>{bookmarked.length ? <div className="grid">{bookmarked.map(l => <Card key={l.id}><h3>{l.title}</h3><Link className="btn" to={`/lessons/${l.id}`}>पाठ खोलें</Link></Card>)}</div> : <Card className="empty"><h2>अभी कोई बुकमार्क नहीं है</h2><p>पाठ पढ़ते समय बुकमार्क जोड़ें।</p></Card>}</Shell>; };
 
 const SmartPracticePage = () => {
   const p = useProgressStore();
-  const [qs] = useState(() => getSmartPracticeQuestions(useProgressStore.getState(), 10));
-  const [i, setI] = useState(0);
-  const [selected, setSelected] = useState<ID[]>([]);
-  const [checked, setChecked] = useState(false);
-
-  if (!qs.length) return <Shell><Card className="empty"><h1>अभी स्मार्ट अभ्यास के लिए प्रश्न नहीं हैं</h1><p>पहले किसी विषय या topic का अभ्यास शुरू करें।</p></Card></Shell>;
-
-  const q = qs[i];
-  const correct = sameAnswer(selected, q.correctOptionIds);
-  const choose = (id: ID) => {
-    if (checked) return;
-    setSelected(q.type === 'multiple-select' ? (selected.includes(id) ? selected.filter(x => x !== id) : [...selected, id]) : [id]);
-  };
-  const check = () => {
-    if (!selected.length) return;
-    setChecked(true);
-    p.recordAttempt(q.id, { selectedOptionIds: selected, isCorrect: correct, timestamp: Date.now(), mode: 'practice' });
-  };
-
-  return <Shell>
-    <div className="page-head"><Link to="/">← डैशबोर्ड</Link><p>सभी विषयों के प्रदर्शन के आधार पर चुने गए परीक्षा-योग्य प्रश्न</p><h1>स्मार्ट अभ्यास</h1><div className="progressline"><span>प्रश्न {i + 1} / {qs.length}</span></div></div>
-    <Card className="question-card"><div className="question-body">
-      <div className="question-text">{questionTextBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div>
-      <div className="options">{q.options.map(o => <button key={o.id} className={'option ' + (selected.includes(o.id) ? 'selected' : '') + ' ' + (checked && q.correctOptionIds.includes(o.id) ? 'correct' : '')} onClick={() => choose(o.id)}><InlineText text={o.text} /></button>)}</div>
-      {checked && <div className={'answer ' + (correct ? 'correct' : 'wrong')}><b>{correct ? 'सही उत्तर ✅' : 'उत्तर की जाँच करें'}</b><div>{questionExplanationBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div></div>}
-      <div className="study-reader-actions">{!checked ? <button className="btn primary" onClick={check}>उत्तर जाँचें</button> : <button className="btn primary" onClick={() => { setI((x) => (x + 1) % qs.length); setSelected([]); setChecked(false); }}>{i === qs.length - 1 ? 'फिर से शुरू करें →' : 'अगला प्रश्न →'}</button>}</div>
-    </div></Card>
-  </Shell>;
+  const qs = useMemo(() => getSmartPracticeQuestions(useProgressStore.getState(), 10), [p.totalAttempts, p.topicPerformances]);
+  return <AssessmentRunner
+    questions={qs}
+    title="स्मार्ट अभ्यास"
+    backTo="/"
+    backLabel="डैशबोर्ड"
+    description="आपके performance के आधार पर चुने गए प्रश्नों का timed adaptive set। सही उत्तर और marks अंत में दिखेंगे।"
+    badge="SMART PRACTICE"
+    bannerLink={{ to: "/mock-tests", label: "पूरा JNVST Mock →" }}
+  />;
 };
-
 const MathSmartPracticePage = () => {
-  const p = useProgressStore();
-  const [setNumber, setSetNumber] = useState(0);
-  const [qs, setQs] = useState(() => getMathSmartPracticeQuestions(useProgressStore.getState(), 12, 'jnvst-math-smart-0'));
-  const [i, setI] = useState(0);
-  const [selected, setSelected] = useState<ID[]>([]);
-  const [checked, setChecked] = useState(false);
-
-  if (!qs.length) return <Shell><Card className="empty"><h1>स्मार्ट गणित अभ्यास तैयार नहीं हो सका</h1><p>गणित के विषयांशों में अभ्यास प्रश्न उपलब्ध हैं।</p></Card></Shell>;
-
-  const q = qs[i];
-  const topic = topics.find((item) => item.id === q.topicId);
-  const correct = sameAnswer(selected, q.correctOptionIds);
-  const choose = (id: ID) => { if (!checked) setSelected([id]); };
-  const regenerate = () => {
-    const nextSet = setNumber + 1;
-    setSetNumber(nextSet);
-    setQs(getMathSmartPracticeQuestions(useProgressStore.getState(), 12, 'jnvst-math-smart-' + nextSet));
-    setI(0);
-    setSelected([]);
-    setChecked(false);
-  };
-
-  const check = () => {
-    if (!selected.length) return;
-    setChecked(true);
-    p.recordAttempt(q.id, { selectedOptionIds: selected, isCorrect: correct, timestamp: Date.now(), mode: 'practice' });
-  };
-
-  return <Shell>
-    <div className="page-head">
-      <Link to="/subjects/sub_math">← गणित तैयारी केंद्र</Link>
-      <p>यह अभ्यास केवल <b>गणित</b> के प्रश्नों से बनता है और आपके गलत, कमजोर तथा अनदेखे प्रश्नों को प्राथमिकता देता है।</p>
-      <h1>🎯 स्मार्ट गणित अभ्यास</h1>
-      <div className="progressline"><span>प्रश्न {i + 1} / {qs.length}</span><span>{topic?.title ?? 'गणित'}</span></div>
-    </div>
-    <Card className="math-smart-banner">
-      <div><b>12 प्रश्न · Math-only adaptive set</b><span>पहले coverage, फिर आपकी weak areas और पिछली गलतियों पर फोकस।</span></div>
-      <Link className="btn" to="/math-mock-test">35 प्रश्न का गणित Mock →</Link>
-    </Card>
-    <Card className="question-card"><div className="question-body">
-      <div className="question-text">{questionTextBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div>
-      <div className="options">{q.options.map(o => <button key={o.id} className={'option ' + (selected.includes(o.id) ? 'selected' : '') + ' ' + (checked && q.correctOptionIds.includes(o.id) ? 'correct' : '')} onClick={() => choose(o.id)}><InlineText text={o.text} /></button>)}</div>
-      {checked && <div className={'answer ' + (correct ? 'correct' : 'wrong')}><b>{correct ? 'सही उत्तर ✅' : 'गलत उत्तर — समाधान पढ़ें'}</b><div>{questionExplanationBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div></div>}
-      <div className="study-reader-actions">
-        {!checked ? <button className="btn primary" onClick={check}>उत्तर जाँचें</button> : <button className="btn primary" onClick={() => { if (i === qs.length - 1) regenerate(); else { setI((x) => x + 1); setSelected([]); setChecked(false); } }}>{i === qs.length - 1 ? 'नया Smart Set →' : 'अगला प्रश्न →'}</button>}
-      </div>
-    </div></Card>
-  </Shell>;
+  const qs = useMemo(() => getMathSmartPracticeQuestions(useProgressStore.getState(), 12, 'jnvst-math-smart-0'), []);
+  return <AssessmentRunner
+    questions={qs}
+    title="🎯 स्मार्ट गणित अभ्यास"
+    backTo="/subjects/sub_math"
+    backLabel="गणित तैयारी केंद्र"
+    description="केवल गणित का adaptive timed set — गलत, कमजोर और अनदेखे questions को प्राथमिकता दी जाती है।"
+    badge="MATH SMART PRACTICE"
+    bannerLink={{ to: "/math-mock-test", label: "35 प्रश्न का गणित Mock →" }}
+  />;
 };
-
 const MathMockTestPage = () => {
   const p = useProgressStore();
   const [mockNumber, setMockNumber] = useState(0);
