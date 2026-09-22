@@ -500,7 +500,7 @@ options: [
 { id: 'opt_4', text: '-2' }
 ],
 correctOptionIds: ['opt_2'],
-explanationPlain: "1 और -1 ऐसी परिमेय संख्याएँ हैं जिनका गुणात्मक प्रतिलोम वे स्वयं होती हैं। (-1 × -1 = 1)।",
+explanationPlain: "-1 अपने गुणात्मक प्रतिलोम के बराबर है क्योंकि (-1) × (-1) = 1। दिए गए विकल्पों में 1 शामिल नहीं है, इसलिए यहाँ सही विकल्प -1 है।",
 difficulty: 'easy',
 tags: ['rational-numbers', 'inverses']
 },
