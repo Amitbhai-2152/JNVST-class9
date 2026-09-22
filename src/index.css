@@ -1674,3 +1674,128 @@ a { color: inherit; text-decoration: none; }
     gap: 8px;
   }
 }
+
+
+/* Corrective Maths chapter breakpoint */
+@media (max-width: 900px) {
+  .math-chapter-page {
+    width: 100%;
+    max-width: none;
+  }
+
+  .math-chapter-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .math-chapter-hero {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .math-chapter-hero > div:first-child {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .math-chapter-hero h1,
+  .math-chapter-hero p {
+    max-width: 100%;
+    overflow-wrap: break-word;
+  }
+
+  .math-chapter-hero .actions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .math-chapter-hero .actions .btn {
+    flex: 1 1 200px;
+    min-width: 0;
+    min-height: 44px;
+  }
+
+  .math-chapter-index {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 96px;
+  }
+
+  .math-practice-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .math-chapter-challenger {
+    align-items: stretch;
+  }
+
+  .math-chapter-challenger > div {
+    min-width: 0;
+  }
+
+  .math-chapter-challenger .btn {
+    flex: 0 0 auto;
+    min-height: 44px;
+  }
+
+  .math-chapter-footer {
+    flex-direction: column;
+  }
+
+  .math-chapter-nav,
+  .math-chapter-nav.next {
+    max-width: none;
+    width: 100%;
+    text-align: left;
+  }
+}
+
+@media (max-width: 560px) {
+  .math-chapter-page {
+    overflow-x: clip;
+  }
+
+  .math-chapter-hero {
+    padding: 16px;
+    border-radius: 17px;
+  }
+
+  .math-chapter-hero h1 {
+    font-size: 26px;
+    line-height: 1.18;
+  }
+
+  .math-chapter-hero .actions,
+  .math-chapter-challenger .actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .math-chapter-hero .actions .btn,
+  .math-chapter-challenger .btn,
+  .math-practice-card .actions .btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .math-chapter-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .math-chapter-stats .card {
+    min-width: 0;
+  }
+
+  .math-chapter-card-head,
+  .math-challenger-card-top {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 380px) {
+  .math-chapter-stats {
+    grid-template-columns: 1fr;
+  }
+}
