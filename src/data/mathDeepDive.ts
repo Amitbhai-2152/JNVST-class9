@@ -67,7 +67,7 @@ export const mathDeepDive: Record<string, ContentBlock[]> = {
     { type: 'heading', level: 2, text: 'गहरी समझ: घन और घनमूल' },
     { type: 'paragraph', text: 'घन में संख्या को तीन बार गुणा किया जाता है। घनमूल उस संख्या को खोजता है जिसका घन दिया गया है। Square root की तुलना में cube root में prime factors के तीन-तीन के समूह बनाना सबसे महत्वपूर्ण नियम है।' },
     { type: 'heading', level: 3, text: 'इकाई-अंक का cycle' },
-    { type: 'table', headers: ['संख्या का इकाई अंक', 'घन का इकाई अंक'], rows: [['0','0'],['1','1'],['2','8'],['3','7'],['4','4'],['5','5'],['6','6'],['7','3'],['8','2'],['9','9']] } },
+    { type: 'table', headers: ['संख्या का इकाई अंक', 'घन का इकाई अंक'], rows: [['0','0'],['1','1'],['2','8'],['3','7'],['4','4'],['5','5'],['6','6'],['7','3'],['8','2'],['9','9']] },
     { type: 'heading', level: 3, text: 'अभाज्य गुणनखंड विधि' },
     { type: 'step-by-step', steps: ['संख्या का prime factorisation करें।', 'हर prime की exponent को 3 के समूहों में बाँटें।', 'हर तीन factors से एक factor cube root के बाहर लें।', 'बचे हुए unpaired factors देखकर तय करें कि गुणा या भाग में क्या करना है।'] },
     { type: 'heading', level: 3, text: 'दशमलव घनमूल' },
