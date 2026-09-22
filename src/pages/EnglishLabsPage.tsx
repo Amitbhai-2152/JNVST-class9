@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { translationLabItems, translationLevels, vocabularyLabItems, vocabularyLevels, type TranslationDirection } from '../data/englishLabs';
+import { generateTranslationItem, generateVocabularyItem } from '../data/englishLabGenerator';
 import { useProgressStore } from '../store/progress';
 import type { ID } from '../types';
 
@@ -54,12 +55,10 @@ const TranslationLab = () => {
   const [correct, setCorrect] = useState(false);
   const [showHint, setShowHint] = useState(false);
 
-  const pool = useMemo(() => {
-    const filtered = translationLabItems.filter((item) => item.level === level && item.direction === direction);
-    return shuffle(filtered, 4100 + session * 97 + level * 31 + (direction === 'en-hi' ? 7 : 0));
-  }, [direction, level, session]);
-
-  const item = pool[index % Math.max(1, pool.length)];
+  const item = useMemo(
+    () => generateTranslationItem(level, direction, 4100 + session * 100000 + index * 97),
+    [direction, level, session, index],
+  );
   const attempted = Object.values(p.englishLabAttempts ?? {}).flat().filter((a) => a.mode === 'translation').length;
   const correctCount = Object.values(p.englishLabAttempts ?? {}).flat().filter((a) => a.mode === 'translation' && a.correct).length;
 
@@ -71,13 +70,7 @@ const TranslationLab = () => {
   };
 
   const next = () => {
-    if (!pool.length) return;
-    if (index + 1 >= pool.length) {
-      setSession((value) => value + 1);
-      setIndex(0);
-    } else {
-      setIndex((value) => value + 1);
-    }
+    setIndex((value) => value + 1);
     resetQuestion();
   };
 
@@ -130,7 +123,7 @@ const TranslationLab = () => {
 
         <section className="english-lab-card card">
           {!item ? <p>इस level के लिए अभी items उपलब्ध नहीं हैं।</p> : <>
-            <div className="english-lab-question-head"><span>Level {level}</span><span>Question {index + 1} / {pool.length}</span></div>
+            <div className="english-lab-question-head"><span>Level {level}</span><span>Question {index + 1} · ENDLESS</span></div>
             <div className="english-translation-prompt">
               <small>{direction === 'hi-en' ? 'इसका English translation लिखें' : 'इसका Hindi अर्थ लिखें'}</small>
               <h2>{item.prompt}</h2>
@@ -153,6 +146,7 @@ const TranslationLab = () => {
               <div><b>सही उत्तर</b><p>{item.displayAnswer}</p></div>
               <div><b>क्यों?</b><p>{item.explanation}</p></div>
               <div><b>Grammar point</b><p>{item.grammarPoint}</p></div>
+              {item.buildSteps && <div className="english-lab-build"><b>यह translation कैसे बनता है?</b><ol>{item.buildSteps.map((step) => <li key={step}>{step}</li>)}</ol></div>}
               {!correct && <button className="btn" onClick={() => { setAnswer(''); setChecked(false); setShowHint(false); }}>फिर से प्रयास करें</button>}
             </div>}
           </>}
@@ -177,16 +171,22 @@ const VocabularyLab = () => {
   const [selected, setSelected] = useState('');
   const [checked, setChecked] = useState(false);
 
-  const pool = useMemo(() => shuffle(vocabularyLabItems.filter((item) => item.level === level), 9100 + session * 71 + level.length * 13), [level, session]);
-  const item = pool[index % Math.max(1, pool.length)];
+  const item = useMemo(
+    () => generateVocabularyItem(level, 9100 + session * 100000 + index * 71, vocabularyLabItems),
+    [level, session, index],
+  );
   const options = useMemo(() => {
     if (!item) return [];
-    const candidates = vocabularyLabItems.filter((candidate) => candidate.id !== item.id);
-    const distractors = shuffle(candidates, 1000 + index * 37 + session * 11).slice(0, 3);
-    if (mode === 'synonym') return shuffle([item.synonyms[0] ?? item.word, ...distractors.map((x) => x.synonyms[0] ?? x.word)], 44 + index);
-    if (mode === 'antonym') return shuffle([item.antonyms[0] ?? item.word, ...distractors.map((x) => x.antonyms[0] ?? x.word)], 45 + index);
-    if (mode === 'reverse') return shuffle([item.word, ...distractors.map((x) => x.word)], 46 + index);
-    return shuffle([item.meaning, ...distractors.map((x) => x.meaning)], 47 + index);
+    const candidates = shuffle(vocabularyLabItems.filter((candidate) => candidate.id !== item.id), 1000 + index * 37 + session * 11);
+    const values = mode === 'synonym'
+      ? [item.synonyms[0] ?? item.word, ...candidates.map((x) => x.synonyms[0] ?? x.word)]
+      : mode === 'antonym'
+        ? [item.antonyms[0] ?? item.word, ...candidates.map((x) => x.antonyms[0] ?? x.word)]
+        : mode === 'reverse'
+          ? [item.word, ...candidates.map((x) => x.word)]
+          : [item.meaning, ...candidates.map((x) => x.meaning)];
+    const unique = [...new Set(values)].slice(0, 4);
+    return shuffle(unique, 44 + index + session * 13);
   }, [item, index, mode, session]);
 
   const attempted = Object.values(p.englishLabAttempts ?? {}).flat().filter((a) => a.mode === 'vocabulary').length;
@@ -204,10 +204,7 @@ const VocabularyLab = () => {
           : item.sentence;
 
   const next = () => {
-    if (index + 1 >= pool.length) {
-      setSession((value) => value + 1);
-      setIndex(0);
-    } else setIndex((value) => value + 1);
+    setIndex((value) => value + 1);
     setSelected('');
     setChecked(false);
   };
@@ -223,7 +220,7 @@ const VocabularyLab = () => {
     <Shell>
       <LabHeader
         title="Vocabulary Lab"
-        subtitle="शब्दों को केवल याद नहीं करना है—meaning, synonym, antonym और context में पहचानना है।"
+        subtitle="शब्दों को केवल याद नहीं करना है—meaning, synonym, antonym और context में पहचानना है। हर Next पर नया context example generate होता है, इसलिए practice की कोई अंतिम सीमा नहीं है।"
       />
       <div className="english-lab-toolbar">
         <div className="english-lab-toggle">
@@ -246,7 +243,7 @@ const VocabularyLab = () => {
 
       <section className="english-vocab-card card">
         {!item ? <p>इस level के लिए items उपलब्ध नहीं हैं।</p> : <>
-          <div className="english-lab-question-head"><span>{level}</span><span>Question {index + 1} / {pool.length}</span></div>
+          <div className="english-lab-question-head"><span>{level}</span><span>Question {index + 1} · ENDLESS</span></div>
           <div className="english-vocab-prompt"><small>{mode === 'meaning' ? 'इस शब्द का हिन्दी अर्थ चुनें' : mode === 'reverse' ? 'इस हिन्दी अर्थ के लिए सही English word चुनें' : mode === 'synonym' ? 'सही synonym चुनें' : mode === 'antonym' ? 'सही antonym चुनें' : 'Sentence में दिए शब्द का contextual meaning चुनें'}</small><h2>{prompt}</h2></div>
           <div className="english-vocab-options">
             {options.map((option) => <button key={option} className={selected === option ? 'selected' : ''} onClick={() => !checked && setSelected(option)}>{option}</button>)}
@@ -259,6 +256,7 @@ const VocabularyLab = () => {
             <p><b>सही उत्तर:</b> {targetAnswer}</p>
             <p><b>Sentence:</b> {item.sentence}</p>
             <p><b>Context:</b> {item.contextMeaning}</p>
+            <div className="english-lab-build"><b>Vocabulary example कैसे समझें?</b><p>पहले word की grammatical role पहचानें, फिर sentence में उसके आसपास के words से उसका meaning confirm करें। अगली बार इसी word के साथ एक नया context sentence मिलेगा.</p></div>
             <p><b>Synonyms:</b> {item.synonyms.length ? item.synonyms.join(', ') : '—'} · <b>Antonyms:</b> {item.antonyms.length ? item.antonyms.join(', ') : '—'}</p>
           </div>}
         </>}
