@@ -5,7 +5,7 @@ export const scienceQuestionsPart08: Question[] = [
     id: 'q_sci_b2_05_001',
     type: 'mcq',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_15', topicId: 'top_sci_01_05',
+    chapterId: 'chap_sci_16', topicId: 'top_sci_01_05',
     textPlain: "परावर्तन के नियमों के अनुसार यदि कोई प्रकाश किरण समतल दर्पण पर 30° का आपतन कोण (Angle of incidence) बनाती है, तो परावर्तन कोण कितना होगा?",
     options: [
       { id: 'opt_1', text: '60°' },
@@ -22,7 +22,7 @@ export const scienceQuestionsPart08: Question[] = [
     id: 'q_sci_b2_05_002',
     type: 'mcq',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_15', topicId: 'top_sci_01_05',
+    chapterId: 'chap_sci_16', topicId: 'top_sci_01_05',
     textPlain: "जब प्रकाश की समानांतर किरणें किसी खुरदरे (Rough) पृष्ठ से टकराकर विभिन्न दिशाओं में परावर्तित होती हैं, तो इसे क्या कहते हैं?",
     options: [
       { id: 'opt_1', text: 'नियमित परावर्तन (Regular reflection)' },
@@ -39,7 +39,7 @@ export const scienceQuestionsPart08: Question[] = [
     id: 'q_sci_b2_05_003',
     type: 'true-false',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_15', topicId: 'top_sci_01_05',
+    chapterId: 'chap_sci_16', topicId: 'top_sci_01_05',
     textPlain: "सत्य/असत्य: समतल दर्पण के सामने यदि आप अपना दायाँ हाथ उठाते हैं, तो प्रतिबिंब में ऐसा प्रतीत होता है कि बायाँ हाथ उठाया गया है। इस घटना को पार्श्व परावर्तन (Lateral inversion) कहते हैं।",
     options: [
       { id: 'opt_true', text: 'सत्य' },
@@ -54,7 +54,7 @@ export const scienceQuestionsPart08: Question[] = [
     id: 'q_sci_b2_05_004',
     type: 'mcq',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_15', topicId: 'top_sci_01_05',
+    chapterId: 'chap_sci_16', topicId: 'top_sci_01_05',
     textPlain: "मानव नेत्र का वह कौन-सा भाग है जो प्रकाश सुग्राही (Light-sensitive) होता है और जहाँ वस्तु का प्रतिबिंब (Image) बनता है?",
     options: [
       { id: 'opt_1', text: 'कॉर्निया (Cornea)' },
@@ -71,7 +71,7 @@ export const scienceQuestionsPart08: Question[] = [
     id: 'q_sci_b2_05_005',
     type: 'mcq',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_15', topicId: 'top_sci_01_05',
+    chapterId: 'chap_sci_16', topicId: 'top_sci_01_05',
     textPlain: "यदि दो समतल दर्पणों को एक-दूसरे से 90° के कोण पर रखा जाए, तो उनके बीच रखी वस्तु के कुल कितने प्रतिबिंब (Images) बनेंगे?",
     options: [
       { id: 'opt_1', text: '2' },
@@ -88,7 +88,7 @@ export const scienceQuestionsPart08: Question[] = [
     id: 'q_sci_b2_06_001',
     type: 'mcq',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_16', topicId: 'top_sci_01_06',
+    chapterId: 'chap_sci_15', topicId: 'top_sci_01_06',
     textPlain: "तड़ित (Lightning) मुख्य रूप से क्या है?",
     options: [
       { id: 'opt_1', text: 'हवा के आपस में टकराने की आवाज़' },
@@ -105,7 +105,7 @@ export const scienceQuestionsPart08: Question[] = [
     id: 'q_sci_b2_06_002',
     type: 'mcq',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_16', topicId: 'top_sci_01_06',
+    chapterId: 'chap_sci_15', topicId: 'top_sci_01_06',
     textPlain: "सजातीय (Like) आवेश एक-दूसरे को ____ करते हैं, और विजातीय (Unlike) आवेश एक-दूसरे को ____ करते हैं।",
     options: [
       { id: 'opt_1', text: 'आकर्षित (Attract) ; प्रतिकर्षित (Repel)' },
@@ -122,7 +122,7 @@ export const scienceQuestionsPart08: Question[] = [
     id: 'q_sci_b2_06_003',
     type: 'mcq',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_16', topicId: 'top_sci_01_06',
+    chapterId: 'chap_sci_15', topicId: 'top_sci_01_06',
     textPlain: "पृथ्वी के भीतर वह स्थान जहाँ से भूकंप की तरंगें उत्पन्न होती हैं (गहराई में), क्या कहलाता है?",
     options: [
       { id: 'opt_1', text: 'अधिकेंद्र (Epicenter)' },
@@ -139,7 +139,7 @@ export const scienceQuestionsPart08: Question[] = [
     id: 'q_sci_b2_06_004',
     type: 'multiple-select',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_16', topicId: 'top_sci_01_06',
+    chapterId: 'chap_sci_15', topicId: 'top_sci_01_06',
     textPlain: "भूकंप के दौरान यदि आप घर के अंदर हैं, तो सुरक्षित रहने के लिए किन उपायों का पालन करना चाहिए? (एक से अधिक सही हो सकते हैं)",
     options: [
       { id: 'opt_1', text: 'मज़बूत मेज़ या डेस्क के नीचे छिप जाएँ।' },
@@ -156,7 +156,7 @@ export const scienceQuestionsPart08: Question[] = [
     id: 'q_sci_b2_06_005',
     type: 'mcq',
     subjectId: 'sub_sci',
-    chapterId: 'chap_sci_16', topicId: 'top_sci_01_06',
+    chapterId: 'chap_sci_15', topicId: 'top_sci_01_06',
     textPlain: "भूकंपीय तरंगों (Seismic waves) को रिकॉर्ड करने वाले उपकरण को क्या कहा जाता है?",
     options: [
       { id: 'opt_1', text: 'बैरोमीटर' },
