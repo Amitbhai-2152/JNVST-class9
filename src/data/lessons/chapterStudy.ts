@@ -1,6 +1,7 @@
 import type { Chapter, ContentBlock, Lesson, Topic } from '../../types';
 import { allQuestions } from '../questions';
 import { richChapterContent } from './richChapterContent';
+import { scienceLessonCore, scienceLessonLens } from '../scienceLessonCore';
 
 const subjectGuides: Record<'अंग्रेज़ी' | 'हिंदी' | 'गणित' | 'विज्ञान', string[]> = {
   अंग्रेज़ी: ['नियम, उदाहरण और संदर्भ को साथ पढ़ें; उत्तर केवल अनुमान से न चुनें।','मुख्य grammar या vocabulary pattern और clue words पहचानें।','उदाहरण को अपने शब्दों में समझाएँ और explanation से मिलाएँ।','meaning, structure और context की तुलना करें।','नए sentence या passage पर rule लगाएँ।','common error और सही रूप याद करें।','उत्तर का प्रमाण passage से खोजें।','मुख्य points बिना notes recall करें।','practice से पहले concept और clue पहचानें।','गलत उत्तर का कारण समझें।','rule → example → error/exception दोहराएँ।','chapter के key ideas active recall से दोहराएँ।'],
@@ -53,6 +54,84 @@ const splitInto = <T,>(items: T[], count: number): T[][] => {
 };
 
 const pageTitle = (chapter: Chapter, pageNumber: number, topicTitle: string): ContentBlock => ({ type: 'heading', level: 2, text: `अध्ययन पृष्ठ ${pageNumber} — ${chapter.title} · ${topicTitle}` });
+
+const scienceStageNames = ['पहले यह समझें','मुख्य अवधारणाएँ','कैसे और क्यों?','उदाहरण, प्रयोग और सोच','तुलना और JNVST फोकस','60-सेकंड पुनरावृत्ति'];
+
+const blockWords = (block: ContentBlock) => textFor(block).split(/\s+/).filter(Boolean).length;
+
+const splitScienceStage = (blocks: ContentBlock[]): [ContentBlock[], ContentBlock[]] => {
+  if (!blocks.length) return [[], []];
+  if (blocks.length === 1) return [blocks, []];
+  const total = blocks.reduce((sum, block) => sum + blockWords(block), 0);
+  const target = total / 2;
+  let running = 0;
+  let splitAt = 1;
+  let best = Number.POSITIVE_INFINITY;
+  for (let i = 1; i < blocks.length; i += 1) {
+    running += blockWords(blocks[i - 1]);
+    const distance = Math.abs(target - running);
+    if (distance < best) {
+      best = distance;
+      splitAt = i;
+    }
+  }
+  return [blocks.slice(0, splitAt), blocks.slice(splitAt)];
+};
+
+export const getScienceChapterStudyPages = (chapter: Chapter): ContentBlock[][] => {
+  const topicId = chapter.topicIds[0];
+  const core = topicId ? (scienceLessonCore[topicId] ?? []) : [];
+  const lens = topicId ? scienceLessonLens[topicId] : undefined;
+  const stages: ContentBlock[][] = [];
+  let current: ContentBlock[] = [];
+
+  for (const block of core) {
+    if (block.type === 'heading' && block.level === 2 && current.length) {
+      stages.push(current);
+      current = [];
+    }
+    current.push(block);
+  }
+  if (current.length) stages.push(current);
+
+  const normalized = scienceStageNames.map((fallback, index) => {
+    const source = stages[index] ?? [];
+    return {
+      title: source.find((block) => block.type === 'heading' && block.level === 2)?.text.replace(/^\d+\.\s*/, '').trim() || fallback,
+      blocks: source.filter((block) => !(block.type === 'heading' && block.level === 2)),
+    };
+  });
+
+  return normalized.flatMap((stage, stageIndex) => {
+    const [first, second] = splitScienceStage(stage.blocks);
+    const pairs = [first, second];
+    return pairs.map((blocks, partIndex) => {
+      const pageNumber = stageIndex * 2 + partIndex + 1;
+      const page: ContentBlock[] = [
+        { type: 'heading', level: 2, text: `अध्ययन पृष्ठ ${pageNumber} — ${chapter.title} · ${stage.title} · भाग ${partIndex + 1}` },
+        { type: 'callout', style: 'info', title: 'इस पृष्ठ का अध्ययन फोकस', text: `${stage.title} को छोटे भाग में समझें; पहले विचार पकड़ें, फिर उदाहरण और प्रश्नों पर जाएँ।` },
+        ...blocks,
+      ];
+
+      if (pageNumber === 1 && lens) {
+        page.push({ type: 'callout', style: 'important', title: 'इस अध्याय का बड़ा सवाल', text: lens.bigQuestion });
+      }
+      if (pageNumber === 2 && lens) {
+        page.push({ type: 'table', headers: ['सोचने की श्रृंखला', 'क्या देखें'], rows: lens.flow.map((item) => [item.label, item.value]) });
+      }
+      if (pageNumber === 8 && lens) {
+        page.push({ type: 'callout', style: 'example', title: '30 सेकंड रुककर सोचें', text: lens.observe });
+      }
+      if (pageNumber === 10 && lens) {
+        page.push({ type: 'callout', style: 'warning', title: 'यह भ्रम न रखें', text: lens.misconception });
+      }
+      if (pageNumber === 12 && lens) {
+        page.push({ type: 'heading', level: 3, text: 'तीन तेज़ जाँच' }, { type: 'list', style: 'number', items: lens.checkpoints });
+      }
+      return page;
+    });
+  });
+};
 
 export const getChapterStudyPages = (chapter: Chapter, lessons: Lesson[], topicsOrMinimumPages: Topic[] | number = [], requestedMinimumPages = 12): ContentBlock[][] => {
   const topics = Array.isArray(topicsOrMinimumPages) ? topicsOrMinimumPages : [];
