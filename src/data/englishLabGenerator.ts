@@ -265,11 +265,11 @@ const pickExample = (word: string, subject: string, seed: number): string => {
 };
 
 export const generateVocabularyItem = (
-  level: VocabularyItem['level'],
+  level: VocabularyItem['level'] | 'all',
   seed: number,
   base: VocabularyItem[],
 ): VocabularyItem => {
-  const levelItems = base.filter((item) => item.level === level);
+  const levelItems = level === 'all' ? base : base.filter((item) => item.level === level);
   const fallback = levelItems.length ? levelItems : base;
   const item = fallback[Math.abs(seed) % Math.max(1, fallback.length)];
   const subject = exampleSubjects[Math.abs(hashSeed(seed, 88)) % exampleSubjects.length];
