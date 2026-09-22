@@ -185,13 +185,14 @@ const VocabularyLab = () => {
     const distractors = shuffle(candidates, 1000 + index * 37 + session * 11).slice(0, 3);
     if (mode === 'synonym') return shuffle([item.synonyms[0] ?? item.word, ...distractors.map((x) => x.synonyms[0] ?? x.word)], 44 + index);
     if (mode === 'antonym') return shuffle([item.antonyms[0] ?? item.word, ...distractors.map((x) => x.antonyms[0] ?? x.word)], 45 + index);
-    return shuffle([item.meaning, ...distractors.map((x) => x.meaning)], 46 + index);
+    if (mode === 'reverse') return shuffle([item.word, ...distractors.map((x) => x.word)], 46 + index);
+    return shuffle([item.meaning, ...distractors.map((x) => x.meaning)], 47 + index);
   }, [item, index, mode, session]);
 
   const attempted = Object.values(p.englishLabAttempts ?? {}).flat().filter((a) => a.mode === 'vocabulary').length;
   const correctCount = Object.values(p.englishLabAttempts ?? {}).flat().filter((a) => a.mode === 'vocabulary' && a.correct).length;
 
-  const targetAnswer = mode === 'meaning' || mode === 'context' ? item?.meaning ?? '' : mode === 'synonym' ? item?.synonyms[0] ?? '' : item?.antonyms[0] ?? '';
+  const targetAnswer = mode === 'meaning' || mode === 'context' ? item?.meaning ?? '' : mode === 'reverse' ? item?.word ?? '' : mode === 'synonym' ? item?.synonyms[0] ?? '' : item?.antonyms[0] ?? '';
   const prompt = !item ? '' : mode === 'meaning'
     ? item.word
     : mode === 'reverse'
