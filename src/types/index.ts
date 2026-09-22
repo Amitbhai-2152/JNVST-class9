@@ -36,7 +36,7 @@ export type ContentBlock =
   | { type: 'table'; headers: string[]; rows: string[][] }
   | { type: 'image'; src: string; alt: string; caption?: string }
   | { type: 'callout'; style: 'info' | 'warning' | 'important' | 'example'; title?: string; text: string }
-  | { type: 'step-by-step'; steps: string[] };
+  | { type: 'step-by-step'; title?: string; steps: string[] };
 
 export interface Lesson {
   id: ID;
