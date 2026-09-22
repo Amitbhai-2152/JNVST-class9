@@ -111,6 +111,44 @@ export const englishChapterChallengers: Question[] = [
   ],1,'challenge',['comprehension','main-idea','title']),
 ];
 
+
+  make('q_eng_ch_01_015','Which statement is best supported by the passage?',[
+    'The students improved the reading corner by combining their own work with help from others.',
+    'The school spent a very large amount of money on new furniture.',
+    'Teachers completed the project without student participation.',
+    'Students used the reading corner only for examinations.'
+  ],0,'challenge',['comprehension','evidence','inference']),
+  make('q_eng_ch_01_016','Why did the reading corner become one of the busiest places at lunchtime?',[
+    'The room offered a useful shared place to read and discuss stories.',
+    'The students were required to stay there during every lunch break.',
+    'The shopkeeper started selling books there.',
+    'The teachers cancelled all other lunchtime activities.'
+  ],0,'challenge',['comprehension','inference','main-idea']),
+  make('q_eng_ch_01_017','Which change happened because community members contributed materials?',[
+    'The corner gained resources such as a floor mat and wooden shelves.',
+    'The students stopped cleaning the room.',
+    'The school removed the twenty original books.',
+    'The project moved to a different town.'
+  ],0,'hard',['comprehension','details','cause-effect']),
+  make('q_eng_ch_01_018','What does the passage suggest about using resources wisely?',[
+    'Useful results can be achieved without buying everything new.',
+    'Only expensive materials are valuable in a school.',
+    'Old resources should always be discarded.',
+    'Students should wait for adults before starting any project.'
+  ],0,'challenge',['comprehension','inference','critical-reading']),
+  make('q_eng_ch_01_019','Which detail is least important to the main message of the passage?',[
+    'The corner began with twenty books and two old chairs.',
+    'Students collected books and prepared the room themselves.',
+    'Different people contributed useful materials.',
+    'The project became popular and encouraged discussion.'
+  ],0,'hard',['comprehension','main-idea','relevance']),
+  make('q_eng_ch_01_020','If the students had not cooperated with others, what would most likely have been different according to the passage?',[
+    'The project might have had fewer resources and less support.',
+    'The school would certainly have built a new library immediately.',
+    'The reading corner would automatically have become busier.',
+    'The students would have needed no books at all.'
+  ],0,'challenge',['comprehension','inference','cause-effect']),
+
 export const englishChapterChallengerAudit = {
   chapterId: 'chap_eng_01',
   questionCount: englishChapterChallengers.length,
