@@ -570,15 +570,21 @@ a { color: inherit; text-decoration: none; }
 .science-outline-head { display:grid; gap:3px; margin-bottom:11px; }
 .science-outline-head b { color:#214c43; font-size:17px; }
 .science-outline-head small { color:#718092; }
-.science-outline-list { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:7px; }
-.science-outline-list button { min-width:0; text-align:left; border:1px solid #e3eae7; background:#fff; border-radius:11px; padding:9px 10px; cursor:pointer; display:grid; gap:4px; transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease; }
+.science-outline-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; }
+.science-outline-list button { min-width:0; min-height:86px; text-align:left; border:1px solid #e3eae7; background:#fff; border-radius:13px; padding:11px 12px; cursor:pointer; display:grid; align-content:start; gap:5px; transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease,background .15s ease; }
 .science-outline-list button:hover { transform:translateY(-1px); border-color:#cbded7; }
 .science-outline-list button.active { border-color:#2f7562; box-shadow:0 0 0 3px #eaf5f1; background:#f7fcfa; }
-.science-outline-list button > span { font-size:10px; font-weight:900; letter-spacing:.08em; color:#7b8a98; }
+.science-outline-list button > span { font-size:10px; font-weight:900; letter-spacing:.04em; color:#7b8a98; }
 .science-outline-list button.active > span { color:#2f7562; }
-.science-outline-list button b { color:#42586a; font-size:12px; line-height:1.35; }
+.science-outline-list button b { color:#42586a; font-size:13px; line-height:1.35; }
 .science-outline-list button.active b { color:#214c43; }
+.science-outline-list button small { color:#82908e; font-size:11px; line-height:1.35; }
+.science-outline-list button.active small { color:#52766b; }
+.science-lesson-outline { position:sticky; top:72px; z-index:4; }
 .science-lesson-outline + .lesson-card { border-color:#dce8e3; }
+.science-lesson-outline .science-outline-head { padding-bottom:2px; }
+.science-lesson-outline .science-outline-head b { font-size:18px; }
+.science-lesson-outline .science-outline-head small { font-size:12px; }
 @media (max-width:1000px) {
   .science-outline-list { grid-template-columns:repeat(3,minmax(0,1fr)); }
 }
@@ -594,3 +600,10 @@ a { color: inherit; text-decoration: none; }
 
 /* Lesson reader anchor */
 .study-reader { scroll-margin-top: 88px; }
+.science-lesson-outline + .lesson-card .lesson-content { max-width:860px; margin:0 auto; }
+.science-lesson-outline + .lesson-card .lesson-content > h2 { margin-top:34px; padding-bottom:9px; border-bottom:1px solid #e8eeeb; }
+.science-lesson-outline + .lesson-card .lesson-content > h3 { margin-top:25px; }
+.science-lesson-outline + .lesson-card .lesson-content > p { font-size:16px; line-height:1.8; }
+.science-lesson-outline + .lesson-card .lesson-content > ul,
+.science-lesson-outline + .lesson-card .lesson-content > ol { line-height:1.7; }
+
