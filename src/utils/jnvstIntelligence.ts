@@ -213,7 +213,7 @@ export const getSmartPracticeQuestionsForSubject = (
 export const getSmartPracticeQuestions = (progress: ProgressState, limit = 10): Question[] =>
   buildDiversifiedPractice(progress, jnvstExamQuestions, limit, 'jnvst-smart-all');
 
-export const getMathSmartPracticeQuestions = (progress: ProgressState, limit = 12): Question[] => {
+export const getMathSmartPracticeQuestions = (progress: ProgressState, limit = 12, seed = 'jnvst-math-smart'): Question[] => {
   const mathTopics = topics
     .filter((topic) => chapterOrder.has(topic.chapterId))
     .filter((topic) => topic.chapterId.startsWith('chap_math_'))
@@ -224,7 +224,7 @@ export const getMathSmartPracticeQuestions = (progress: ProgressState, limit = 1
     const attempts = progress.questionAttempts?.[question.id] ?? [];
     const latest = attempts[attempts.length - 1];
     const daysSinceAttempt = latest ? (Date.now() - latest.timestamp) / (24 * 60 * 60 * 1000) : Infinity;
-    let score = stableHash('jnvst-math-smart:' + question.id) % 30;
+    let score = stableHash(seed + ':' + question.id) % 30;
 
     if (!attempts.length) score += 80;
     if (latest && !latest.isCorrect) score += 90;
