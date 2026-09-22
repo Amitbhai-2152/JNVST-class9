@@ -4,6 +4,7 @@ import { scienceQuestions } from './science';
 import { scienceLessonEnhancementStats } from '../scienceLessonEnhancements';
 import { scienceLessonCore } from '../scienceLessonCore';
 import { getScienceChapterStudyPages } from '../lessons/chapterStudy';
+import { scienceChapterChallengers } from './scienceChapterChallengers';
 
 const scienceSubjectId = 'sub_sci';
 const scienceChapters = chapters.filter((chapter) => chapter.subjectId === scienceSubjectId);
@@ -57,6 +58,32 @@ const questionMappingProblems = scienceQuestions
     };
   })
   .filter(Boolean);
+
+
+const challengerDuplicateIds = scienceChapterChallengers
+  .map((question) => question.id)
+  .filter((id, index, ids) => ids.indexOf(id) !== index);
+
+const challengerStructureProblems = scienceChapterChallengers
+  .filter((question) =>
+    question.type !== 'mcq' ||
+    question.options.length !== 4 ||
+    new Set(question.options.map((option) => option.text.trim().toLowerCase())).size !== 4 ||
+    question.correctOptionIds.length !== 1 ||
+    !question.options.some((option) => question.correctOptionIds.includes(option.id)),
+  )
+  .map((question) => question.id);
+
+const challengerWeakDistractors = scienceChapterChallengers
+  .filter((question) => question.options.some((option) =>
+    /वायु का रंग|पहियों का रंग|गुरुत्वाकर्षण समाप्त|अपने आप नई प्रजाति|फिलामेंट.*पानी|केवल कोशिका का रंग|केवल पानी का रंग|केवल कोशिका की गंध|केवल त्वचा का रंग|ईंधन अपने आप जल बन जाता|वस्तु का रंग हमेशा/i.test(option.text)
+  ))
+  .map((question) => question.id);
+
+const challengerChapterCounts = Object.fromEntries(scienceChapters.map((chapter) => [
+  chapter.id,
+  scienceChapterChallengers.filter((question) => question.chapterId === chapter.id).length,
+]));
 
 const scienceMcqCount = scienceQuestions.filter((question) => question.type === 'mcq').length;
 const scienceJnvstCount = scienceQuestions.filter((question) =>
@@ -122,10 +149,15 @@ export const jnvstScienceQualityAudit = {
   कम_सामग्री_वाले_पाठ: shortLessons,
   core_structure_problems: coreStructureProblems,
   guided_layers_missing: missingGuidedLayers,
+  challenger_count: scienceChapterChallengers.length,
+  challenger_duplicate_ids: challengerDuplicateIds,
+  challenger_structure_problems: challengerStructureProblems,
+  challenger_weak_distractors: challengerWeakDistractors,
+  challenger_chapter_counts: challengerChapterCounts,
 };
 
 export const jnvstScienceQualityStatus = {
-  स्थिति: missingLessons.length || emptyQuestionTopics.length || mappingProblems.length || questionMappingProblems.length || chapterOrderProblems.length || belowQuestionTarget.length || shortLessons.length || missingGuidedLayers.length || coreStructureProblems.length || scienceStudyPageProblems.length
+  स्थिति: missingLessons.length || emptyQuestionTopics.length || mappingProblems.length || questionMappingProblems.length || chapterOrderProblems.length || belowQuestionTarget.length || shortLessons.length || missingGuidedLayers.length || coreStructureProblems.length || scienceStudyPageProblems.length || challengerDuplicateIds.length || challengerStructureProblems.length || challengerWeakDistractors.length
     ? 'समीक्षा आवश्यक'
     : 'जाँच पूर्ण',
   टिप्पणी: 'Science syllabus, lesson mapping और topic-wise question coverage को 18 curriculum topics पर source-level checks से जाँचा जाता है।',
