@@ -461,6 +461,7 @@ const ScienceSubjectOverview = () => {
 
 const ScienceRevisionPage = () => (
   <Shell>
+    <div className="science-revision-page">
     <div className="page-head">
       <Link to="/subjects/sub_sci">← विज्ञान तैयारी केंद्र</Link>
       <span className="eyebrow">SCIENCE REVISION SHEET</span>
@@ -559,6 +560,7 @@ const ScienceMockTestPage = () => {
       .sort((a, b) => (a.correct / a.count) - (b.correct / b.count) || a.correct - b.correct)
       .slice(0, 3);
     return <Shell>
+      <div className="science-mock-page">
       <div className="page-head"><Link to="/subjects/sub_sci">← विज्ञान तैयारी केंद्र</Link><h1>विज्ञान Mock Test परिणाम</h1><p>यह 35-प्रश्न Science-only practice test था। परिणाम आपकी progress में सुरक्षित है।</p></div>
       <section className="science-result-hero"><span>आपका स्कोर</span><strong>{score} / {qs.length}</strong><b>{Math.round((score/qs.length)*100)}% accuracy</b></section>
       <div className="science-result-grid"><Card><b>{answeredCount}</b><span>attempted</span></Card><Card><b>{qs.length-answeredCount}</b><span>unanswered</span></Card><Card><b>{markedForReview.size}</b><span>review marked</span></Card><Card><b>{Math.round((score/qs.length)*100)}%</b><span>accuracy</span></Card></div>
@@ -568,14 +570,17 @@ const ScienceMockTestPage = () => {
       </Card>
       <AssessmentAnswerReview questions={qs} answers={answers} />
       <div className="actions"><button className="btn primary" onClick={() => {answersRef.current={};setMockNumber((n)=>n+1);setStarted(false);setFinished(false);setIndex(0);setAnswers({});setMarkedForReview(new Set());setTimeLeft(50*60);}}>नया विज्ञान Mock</button><Link className="btn" to="/science-smart-practice">गलतियों पर Smart Practice</Link><Link className="btn" to="/science-revision">त्वरित पुनरावृत्ति</Link></div>
+      </div>
     </Shell>;
   }
 
   return <Shell>
+    <div className="science-mock-page">
     <div className="page-head"><Link to="/subjects/sub_sci">← विज्ञान तैयारी केंद्र</Link><h1>⏱ विज्ञान Mock Test</h1><p>35 प्रश्न · 35 अंक · केवल विज्ञान · सभी 18 units की कम-से-कम 1-question coverage</p>{!started && <div className="actions"><button className="btn primary" onClick={() => {answersRef.current={};setAnswers({});setTimeLeft(50*60);setStarted(true);}}>टेस्ट शुरू करें</button></div>}</div>
     {!started ? <Card className="science-mock-intro"><h2>टेस्ट से पहले</h2><div className="pattern"><div><b>35</b><span>प्रश्न</span></div><div><b>35</b><span>अंक</span></div><div><b>50 min</b><span>recommended practice time</span></div><div><b>18</b><span>इकाइयाँ</span></div><div><b>1+</b><span>प्रश्न/इकाई</span></div><div><b>4</b><span>विकल्प/प्रश्न</span></div></div><ul><li>यह Science-only practice mock है; यह आधिकारिक अलग Science परीक्षा-समय नहीं है।</li><li>हर प्रश्न चार विकल्प और एक सही उत्तर वाले MCQ pool से आता है।</li><li>Paper में 18 chapters की coverage और project-level difficulty balance रखा जाता है; यह कोई official chapter-wise distribution नहीं है।</li><li>Question navigator से किसी भी प्रश्न पर जा सकते हैं; खाली प्रश्न बाद में कर सकते हैं।</li><li>50 मिनट recommended practice limit है; पूरा JNVST Selection Test आधिकारिक रूप से 150 मिनट का है।</li></ul></Card>
     : q && <div className="science-mock-layout"><Card className="question-card"><div className="progressline"><span>प्रश्न {index+1} / {qs.length}</span><span>{topics.find((topic) => topic.id === q.topicId)?.title ?? 'विज्ञान'} · {difficultyLabel[q.difficulty]}</span><span>{markedForReview.size} review</span><span className={timeLeft<=300 ? 'mock-timer danger' : 'mock-timer'}>⏱ {formatTime(timeLeft)}</span></div><div className="question-text">{questionTextBlocks(q).map((b,idx)=><ContentRenderer key={idx} blocks={[b]} />)}</div><div className="options">{q.options.map((o)=><button key={o.id} className={'option ' + (answers[q.id]?.includes(o.id) ? 'selected' : '')} onClick={()=>choose(o.id)}><InlineText text={o.text}/></button>)}</div><div className="science-mock-actions"><button className={'btn ' + (markedForReview.has(q.id) ? 'review-active' : '')} onClick={()=>toggleMarked(q.id)}>{markedForReview.has(q.id) ? '★ Review में चिन्हित' : '☆ Review के लिए रखें'}</button><div className="science-mock-nav-actions"><button className="btn" disabled={index===0} onClick={()=>setIndex(x=>x-1)}>← पिछला</button>{index===qs.length-1?<button className="btn primary" onClick={finish}>टेस्ट जमा करें</button>:<button className="btn primary" onClick={()=>setIndex(x=>x+1)}>अगला प्रश्न →</button>}</div></div></Card>
       <Card className="science-mock-palette"><h3>Question Navigator</h3><p>{answeredCount} / {qs.length} answered</p><div className="science-palette-legend"><span>● answered</span><span>★ review</span><span>○ unanswered</span></div><div className="science-palette-grid">{qs.map((question,qi)=><button key={question.id} className={(answers[question.id]?.length ? 'answered ' : '') + (markedForReview.has(question.id) ? 'marked ' : '') + (qi===index ? 'current' : '')} onClick={()=>setIndex(qi)}>{markedForReview.has(question.id) ? '★' : qi+1}</button>)}</div></Card></div>}
+    </div>
   </Shell>;
 };
 
@@ -948,6 +953,7 @@ const AssessmentRunner = ({
   const [timeLeft, setTimeLeft] = useState(initialTime);
   const [resultStartedAt, setResultStartedAt] = useState<number | null>(null);
 
+  const isScienceAssessment = questions.some((question) => question.chapterId?.startsWith('chap_sci_')) || backTo === '/subjects/sub_sci';
   const q = questions[index];
   const selected = q ? (answers[q.id] || []) : [];
   const answeredCount = Object.values(answers).filter((value) => value.length > 0).length;
@@ -1026,7 +1032,7 @@ const AssessmentRunner = ({
 
   if (finished) {
     return <Shell>
-      <div className="assessment-shell">
+      <div className={`assessment-shell${isScienceAssessment ? " science-assessment-shell" : ""}`}>
         <div className="assessment-breadcrumb"><Link to={backTo}>← {backLabel}</Link><span>{badge}</span></div>
         <section className="assessment-result-hero">
           <span>टेस्ट पूरा हुआ</span>
@@ -1095,7 +1101,7 @@ const AssessmentRunner = ({
   }
 
   return <Shell>
-    <div className="assessment-shell assessment-active">
+    <div className={`assessment-shell assessment-active${isScienceAssessment ? " science-assessment-shell" : ""}`}>
       <div className="assessment-topbar">
         <div>
           <Link to={backTo}>← {backLabel}</Link>
