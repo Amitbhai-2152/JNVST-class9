@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { HashRouter, Link, Route, Routes, useParams } from 'react-router-dom';
 import { allQuestions, allLessons, chapters, getLesson, getQuestionsBySubject, getQuestionsByTopic, getSubject, subjects, topics, jnvstExamQuestions } from './data';
-import { getChapterStudyPages } from './data/lessons/chapterStudy';
+import { getChapterStudyPages, getScienceChapterStudyPages } from './data/lessons/chapterStudy';
 import ChapterStudyPage from './pages/ChapterStudyPage';
 import MathFormulaSheet from './pages/MathFormulaSheetPage';
 import { MathAwareText, MathText } from './components/MathText';
@@ -354,7 +354,7 @@ const ScienceSubjectOverview = () => {
     </div>
 
     <div className="science-source-strip">
-      <div><span className="eyebrow">CONTENT BASIS</span><b>NCERT Class VIII Science + JNVST Class IX preparation</b><small>18 NCERT Science units · guided lessons · {questionCount} practice MCQs · adaptive practice · dedicated Science mock</small></div>
+      <div><span className="eyebrow">CONTENT BASIS</span><b>NCERT Class VIII Science + JNVST Class IX preparation</b><small>18 NCERT Science chapters · 12-पृष्ठ अध्याय अध्ययन · {questionCount} practice MCQs · adaptive practice · dedicated Science mock</small></div>
       <Link className="btn" to="/science-revision">18-unit revision map →</Link>
     </div>
 
@@ -410,7 +410,7 @@ const ScienceSubjectOverview = () => {
               <div>
                 <span className={`science-status ${mastered ? 'mastered' : attemptsForUnit ? 'active' : 'new'}`}>{status}</span>
                 <h4>{unit.title}</h4>
-                <small>{questionCountForUnit} प्रश्न · {lessonId ? '1 guided lesson' : 'पाठ उपलब्ध नहीं'}</small>
+                <small>{questionCountForUnit} प्रश्न · 12-पृष्ठ अध्याय अध्ययन</small>
               </div>
             </div>
             <p className="science-learning-focus">{unit.coreSkills.slice(0, 2).join(' · ')}</p>
@@ -606,9 +606,8 @@ const ChapterPage = () => {
     const accuracyForChapter = performance?.accuracy ?? 0;
     const previous = chapters.find((item) => item.subjectId === 'sub_sci' && item.order === c.order - 1);
     const next = chapters.find((item) => item.subjectId === 'sub_sci' && item.order === c.order + 1);
-    const coreBlocks = topic?.id ? (scienceLessonCore[topic.id] ?? []) : [];
-    const pageCount = coreBlocks.filter((block) => block.type === 'heading' && block.level === 2).length;
-    const contentBlockCount = coreBlocks.length;
+    const pageCount = getScienceChapterStudyPages(c).length;
+    const contentBlockCount = scienceLessonCore[topic?.id ?? '']?.length ?? 0;
 
     return <Shell>
       <section className="science-chapter-shell">
