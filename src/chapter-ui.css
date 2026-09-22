@@ -2755,6 +2755,54 @@
   min-width: 0;
 }
 
+.english-study-topic-list {
+  display: grid;
+  gap: 7px;
+  margin-top: 8px;
+  min-width: 0;
+}
+
+.english-study-topic-link {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20px;
+  gap: 8px;
+  align-items: center;
+  padding: 9px 10px;
+  border: 1px solid #e3e9f1;
+  border-radius: 10px;
+  background: #f9fbfd;
+  color: var(--chapter-ink);
+  text-decoration: none;
+  min-width: 0;
+  transition: border-color .16s ease, background .16s ease, transform .16s ease;
+}
+
+.english-study-topic-link:hover {
+  background: #f2f6fc;
+  border-color: #cfdbea;
+  transform: translateX(1px);
+}
+
+.english-study-topic-link span {
+  min-width: 0;
+}
+
+.english-study-topic-link b,
+.english-study-topic-link small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.english-study-topic-link small {
+  margin-top: 2px;
+  color: var(--chapter-muted);
+  font-size: 11px;
+}
+
+.english-study-topic-link > strong {
+  color: var(--chapter-blue);
+  text-align: center;
+}
 .english-study-stage-list button.active {
   background: #f1f5ff;
   border-color: #dce6fb;
