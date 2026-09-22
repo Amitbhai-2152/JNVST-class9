@@ -12,6 +12,7 @@ export interface TranslationItem {
   hint: string;
   explanation: string;
   grammarPoint: string;
+  buildSteps?: string[];
 }
 
 export interface VocabularyItem {
