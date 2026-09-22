@@ -69,7 +69,12 @@ const ScienceVisual = ({ topicId }: { topicId: ID }) => {
       { label: 'Source', value: 'कहाँ से निकला?' }, { label: 'Pollutant', value: 'क्या प्रदूषक है?' }, { label: 'Effect', value: 'क्या नुकसान?' },
     ]},
   };
-  const visual = visuals[topicId];
+  const fallback = scienceMasteryUnits.find((unit) => unit.topicId === topicId);
+  const visual = visuals[topicId] ?? (fallback ? {
+    title: fallback.title + ' — visual recall',
+    caption: 'Core skills को तीन छोटे संकेतों में तोड़कर पढ़ें और फिर lesson की detail पर जाएँ।',
+    items: fallback.coreSkills.slice(0, 3).map((value, index) => ({ label: 'Focus ' + (index + 1), value })),
+  } : undefined);
   if (!visual) return null;
   return <aside className="science-visual-card" aria-label={visual.title}>
     <div className="science-visual-head"><span className="science-panel-label">VISUAL THINKING</span><b>{visual.title}</b><p>{visual.caption}</p></div>
@@ -306,7 +311,7 @@ const ScienceSubjectOverview = () => {
       <div>
         <span className="eyebrow">JNVST SCIENCE • COMPLETE PREPARATION CENTER</span>
         <h2>विज्ञान तैयारी केंद्र</h2>
-        <p>कक्षा VIII स्तर की 18 NCERT-aligned Science units, concept lessons, deep-dive revision, 360 practice questions, adaptive practice और 35-प्रश्न Science mock एक ही जगह।</p>
+        <p>कक्षा VIII स्तर की 18 Science units, guided concept lessons, deep-dive revision, {questionCount} practice questions, adaptive practice और 35-प्रश्न Science mock एक ही जगह।</p>
         <div className="actions">
           <Link className="btn primary" to="/science-revision">🧠 त्वरित पुनरावृत्ति</Link>
           <Link className="btn" to="/science-smart-practice">🎯 स्मार्ट विज्ञान अभ्यास</Link>
@@ -317,7 +322,7 @@ const ScienceSubjectOverview = () => {
     </div>
 
     <div className="science-source-strip">
-      <div><span className="eyebrow">CONTENT BASIS</span><b>NCERT Class VIII Science + JNVST Class IX scope</b><small>18 NCERT Science units · guided lessons · {questionCount} practice MCQs · adaptive practice · dedicated Science mock</small></div>
+      <div><span className="eyebrow">CONTENT BASIS</span><b>NCERT Class VIII Science + JNVST Class IX preparation</b><small>18 NCERT Science units · guided lessons · {questionCount} practice MCQs · adaptive practice · dedicated Science mock</small></div>
       <Link className="btn" to="/science-revision">18-unit revision map →</Link>
     </div>
 
@@ -575,7 +580,7 @@ const LessonPage = () => {
 
   return <Shell>
     <div className="page-head">
-      <Link to={c ? `/chapters/${c.id}` : '/subjects'}>← अध्याय</Link>
+      <Link to={isScience ? '/subjects/sub_sci' : (c ? `/chapters/${c.id}` : '/subjects')}>← {isScience ? 'विज्ञान तैयारी केंद्र' : 'अध्याय'}</Link>
       {isScience && <span className="eyebrow">SCIENCE • NCERT-ALIGNED SELF-LEARNING</span>}
       <h1>{l.title}</h1>
       <div className="lesson-meta">
@@ -656,7 +661,7 @@ const LessonPage = () => {
   </Shell>;
 };
 
-const PracticePage = () => { const { topicId } = useParams(); const qs = useMemo(() => getQuestionsByTopic(topicId || ''), [topicId]); const [i,setI] = useState(0); const [selected,setSelected] = useState<ID[]>([]); const [checked,setChecked] = useState(false); const p = useProgressStore(); if (!qs.length) return <Shell><Card className="empty"><h1>इस टॉपिक में प्रश्न उपलब्ध नहीं हैं</h1></Card></Shell>; const q = qs[i]; const correct = sameAnswer(selected, q.correctOptionIds); const choose = (id: ID) => { if (checked) return; if (q.type === 'multiple-select') setSelected(v => v.includes(id) ? v.filter(x => x !== id) : [...v, id]); else setSelected([id]); }; const check = () => { if (!selected.length) return; setChecked(true); p.recordAttempt(q.id, { selectedOptionIds: selected, isCorrect: correct, timestamp: Date.now(), mode: 'practice' }); }; return <Shell><div className="page-head"><Link to={`/chapters/${q.chapterId}`}>← अध्याय</Link><div className="progressline"><span>प्रश्न {i + 1} / {qs.length}</span></div><h1>अभ्यास</h1></div><Card className="question-card"><div className="question-body"><div className="question-text">{questionTextBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div><div className="options">{q.options.map((o) => <button key={o.id} className={`option ${selected.includes(o.id) ? 'selected' : ''} ${checked && q.correctOptionIds.includes(o.id) ? 'correct' : ''}`} onClick={() => choose(o.id)}><InlineText text={o.text} /></button>)}</div>{checked && <div className={`answer ${correct ? 'correct' : 'wrong'}`}><b>{correct ? 'सही उत्तर ✅' : 'उत्तर की जाँच करें'}</b><div>{questionExplanationBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div></div>}<div className="study-reader-actions">{!checked ? <button className="btn primary" onClick={check}>उत्तर जाँचें</button> : <button className="btn primary" onClick={() => { setI((x) => (x + 1) % qs.length); setSelected([]); setChecked(false); }}>अगला प्रश्न →</button>}</div></div></Card></Shell>; };
+const PracticePage = () => { const { topicId } = useParams(); const qs = useMemo(() => getQuestionsByTopic(topicId || ''), [topicId]); const [i,setI] = useState(0); const [selected,setSelected] = useState<ID[]>([]); const [checked,setChecked] = useState(false); const p = useProgressStore(); if (!qs.length) return <Shell><Card className="empty"><h1>इस टॉपिक में प्रश्न उपलब्ध नहीं हैं</h1></Card></Shell>; const q = qs[i]; const correct = sameAnswer(selected, q.correctOptionIds); const choose = (id: ID) => { if (checked) return; if (q.type === 'multiple-select') setSelected(v => v.includes(id) ? v.filter(x => x !== id) : [...v, id]); else setSelected([id]); }; const check = () => { if (!selected.length) return; setChecked(true); p.recordAttempt(q.id, { selectedOptionIds: selected, isCorrect: correct, timestamp: Date.now(), mode: 'practice' }); }; return <Shell><div className="page-head"><Link to={q.chapterId.startsWith('chap_sci_') ? '/subjects/sub_sci' : `/chapters/${q.chapterId}`}>← {q.chapterId.startsWith('chap_sci_') ? 'विज्ञान तैयारी केंद्र' : 'अध्याय'}</Link><div className="progressline"><span>प्रश्न {i + 1} / {qs.length}</span></div><h1>अभ्यास</h1></div><Card className="question-card"><div className="question-body"><div className="question-text">{questionTextBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div><div className="options">{q.options.map((o) => <button key={o.id} className={`option ${selected.includes(o.id) ? 'selected' : ''} ${checked && q.correctOptionIds.includes(o.id) ? 'correct' : ''}`} onClick={() => choose(o.id)}><InlineText text={o.text} /></button>)}</div>{checked && <div className={`answer ${correct ? 'correct' : 'wrong'}`}><b>{correct ? 'सही उत्तर ✅' : 'उत्तर की जाँच करें'}</b><div>{questionExplanationBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div></div>}<div className="study-reader-actions">{!checked ? <button className="btn primary" onClick={check}>उत्तर जाँचें</button> : <button className="btn primary" onClick={() => { setI((x) => (x + 1) % qs.length); setSelected([]); setChecked(false); }}>अगला प्रश्न →</button>}</div></div></Card></Shell>; };
 
 const BookmarksPage = () => { const p = useProgressStore(); const bookmarked = allLessons.filter(l => p.bookmarks.lessonIds.includes(l.id)); return <Shell><div className="page-head"><h1>बुकमार्क</h1><p>सहेजे गए पाठ</p></div>{bookmarked.length ? <div className="grid">{bookmarked.map(l => <Card key={l.id}><h3>{l.title}</h3><Link className="btn" to={`/lessons/${l.id}`}>पाठ खोलें</Link></Card>)}</div> : <Card className="empty"><h2>अभी कोई बुकमार्क नहीं है</h2><p>पाठ पढ़ते समय बुकमार्क जोड़ें।</p></Card>}</Shell>; };
 
