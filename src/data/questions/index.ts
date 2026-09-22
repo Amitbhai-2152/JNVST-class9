@@ -118,13 +118,13 @@ const counts = {
   sub_sci: scienceQuestions.length,
 };
 
-const expectedCounts = { sub_eng: 100, sub_hin: 110, sub_math: 220, sub_sci: 270, total: 590 };
+const expectedCounts = { sub_eng: 100, sub_hin: 110, sub_math: 220, sub_sci: 270, total: 700 };
 
 // Never crash the entire app because of a content-count mismatch.
 // Keep the integrity check visible in the console so content issues can be fixed
 // without turning the UI into a blank screen.
-if (counts.sub_eng !== 100 || counts.sub_hin !== 110 || counts.sub_math !== 220 || counts.sub_sci !== 270 || allQuestions.length !== 590) {
-  console.error("Question bank integrity check failed", { counts, total: allQuestions.length });
+if (counts.sub_eng !== expectedCounts.sub_eng || counts.sub_hin !== expectedCounts.sub_hin || counts.sub_math !== expectedCounts.sub_math || counts.sub_sci !== expectedCounts.sub_sci || allQuestions.length !== expectedCounts.total) {
+  console.error("Question bank integrity check failed", { counts, total: allQuestions.length, expected: expectedCounts });
 }
 
 export const jnvstExamQuestions: Question[] = allQuestions.filter((question) => question.metadata?.jnvstCompatible);
