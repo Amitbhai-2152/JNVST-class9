@@ -633,7 +633,7 @@ const ChapterPage = () => {
             <span className="science-panel-label">WHAT YOU WILL LEARN</span>
             <h3>मुख्य कौशल</h3>
             <div className="science-chapter-skills">
-              {(mastery?.coreSkills ?? topic ? (mastery?.coreSkills ?? []) : []).map((item) => <span key={item}>{item}</span>)}
+              {(mastery?.coreSkills ?? []).map((item) => <span key={item}>{item}</span>)}
             </div>
             <h3>Must Know</h3>
             <ul>{(mastery?.mustKnow ?? []).map((item) => <li key={item}>{item}</li>)}</ul>
