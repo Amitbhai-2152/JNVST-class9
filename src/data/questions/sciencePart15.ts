@@ -1,5 +1,26 @@
 import type { Question } from '../../types';
 
+const scienceChapterByTopic: Record<string, string> = {
+  'top_sci_03_01': 'chap_sci_01',
+  'top_sci_03_02': 'chap_sci_02',
+  'top_sci_02_01': 'chap_sci_03',
+  'top_sci_02_02': 'chap_sci_04',
+  'top_sci_02_03': 'chap_sci_05',
+  'top_sci_02_04': 'chap_sci_06',
+  'top_sci_03_06': 'chap_sci_07',
+  'top_sci_03_03': 'chap_sci_08',
+  'top_sci_03_04': 'chap_sci_09',
+  'top_sci_03_05': 'chap_sci_10',
+  'top_sci_01_01': 'chap_sci_11',
+  'top_sci_01_02': 'chap_sci_12',
+  'top_sci_01_03': 'chap_sci_13',
+  'top_sci_01_04': 'chap_sci_14',
+  'top_sci_01_05': 'chap_sci_15',
+  'top_sci_01_06': 'chap_sci_16',
+  'top_sci_01_07': 'chap_sci_17',
+  'top_sci_02_05': 'chap_sci_18'
+};
+
 const make = (
   code: string,
   topicId: string,
@@ -13,7 +34,7 @@ const make = (
   id: `q_sci_b4_${code}`,
   type: 'mcq',
   subjectId: 'sub_sci',
-  chapterId: topicId.startsWith('top_sci_01') ? 'chap_sci_01' : topicId.startsWith('top_sci_02') ? 'chap_sci_02' : 'chap_sci_03',
+  chapterId: scienceChapterByTopic[topicId] ?? 'chap_sci_01',
   topicId,
   textPlain,
   options: options.map((text, index) => ({ id: `opt_${index + 1}`, text })),
