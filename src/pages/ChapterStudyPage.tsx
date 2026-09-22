@@ -59,9 +59,9 @@ const stageForPage = (page: number) => {
 };
 
 const cleanPageTitle = (page: ContentBlock[], fallback: string) => {
-  const first = page.find((b) => b.type === "heading" && b.level === 2);
+  const first = page.find((b) => b.type === "heading" && (b.level === 2 || b.level === 3));
   return first?.type === "heading"
-    ? first.text.replace(/^पृष्ठ\s+\d+\s+·\s*/, "").trim()
+    ? first.text.replace(/^(?:पृष्ठ|अध्ययन पृष्ठ)\s+\d+\s*[·—-]?\s*/, "").trim()
     : fallback;
 };
 
@@ -111,14 +111,18 @@ export default function ChapterStudyPage() {
 
   if (isEnglish) {
     const englishChapters = chapters.filter((x) => x.subjectId === "sub_eng");
+    const chapterTopics = chapter.topicIds
+      .map((id) => topics.find((item) => item.id === id))
+      .filter(Boolean) as typeof topics;
     const nextChapter = englishChapters.find((x) => x.order === chapter.order + 1);
     const prevChapter = englishChapters.find((x) => x.order === chapter.order - 1);
     const current = pages[page] ?? [];
     const progress = Math.round(((page + 1) / Math.max(1, pages.length)) * 100);
     const currentTitle = cleanPageTitle(current, "अध्याय अध्ययन");
+    const topicLabels = chapterTopics.map((item) => item.title).join(" · ");
     const englishStages = [
       { name: "समझें", pages: "1–2", icon: "🧭", hint: "meaning + context" },
-      { name: "Grammar/Words", pages: "3–4", icon: "🔎", hint: "rule + vocabulary" },
+      { name: "नियम / शब्द", pages: "3–4", icon: "🔎", hint: "rule + vocabulary" },
       { name: "उदाहरण", pages: "5–7", icon: "🗣️", hint: "English + हिन्दी अर्थ" },
       { name: "लगाएँ", pages: "8–9", icon: "🧪", hint: "guided application" },
       { name: "JNVST फोकस", pages: "10–11", icon: "🎯", hint: "exam patterns" },
@@ -141,20 +145,30 @@ export default function ChapterStudyPage() {
           <div className="english-study-breadcrumb"><Link to="/subjects/sub_eng">← अंग्रेज़ी तैयारी केंद्र</Link><span>अध्याय {String(chapter.order).padStart(2, "0")} / {englishChapters.length}</span><span className="english-study-keyhint">⌨️ ← → पृष्ठ</span></div>
           <section className="english-study-hero">
             <div><span className="eyebrow">ENGLISH • HINDI-FIRST CHAPTER STUDY</span><h1>{chapter.title}</h1><p>पहले हिन्दी में concept समझें, फिर English examples पढ़ें, फिर बिना मदद के वही rule लागू करें।</p></div>
-            <div className="english-study-hero-progress"><strong>{progress}%</strong><span>पृष्ठ पूरे</span></div>
+            <div className="english-study-hero-progress"><strong>{progress}%</strong><span>पृष्ठ पढ़े</span></div>
           </section>
           <div className="english-study-layout">
             <aside className="english-study-sidebar">
               <div className="english-study-side-card"><span className="science-panel-label">STUDY ROADMAP</span><div className="english-study-stage-list">{englishStages.map((item, index) => <button key={item.name} className={index === stageIndex ? "active" : ""} onClick={() => jumpStage(index)}><span className="english-study-stage-icon">{item.icon}</span><span><b>{item.name}</b><small>पृष्ठ {item.pages} · {item.hint}</small></span><em>{index < stageIndex ? "✓" : index === stageIndex ? "●" : String(index + 1)}</em></button>)}</div></div>
-              {topic && <div className="english-study-side-card"><span className="science-panel-label">आज का लक्ष्य</span><b>{englishMasteryUnits.find((unit) => unit.topicId === topic.id)?.hindiFocus ?? "Concept समझें और फिर practice करें।"}</b><Link className="btn primary full" to={"/practice/" + topic.id}>अभ्यास शुरू करें →</Link></div>}
+              <div className="english-study-side-card">
+                <span className="science-panel-label">इस अध्याय के TOPICS</span>
+                <div className="english-study-topic-list">
+                  {chapterTopics.map((item) => (
+                    <Link key={item.id} to={"/practice/" + item.id} className="english-study-topic-link">
+                      <span><b>{item.title}</b><small>{item.practiceQuestionIds.length} प्रश्न · अभ्यास</small></span>
+                      <strong>→</strong>
+                    </Link>
+                  ))}
+                </div>
+              </div>
               <div className="english-study-side-card english-study-vocab-card"><span className="science-panel-label">LANGUAGE TIP</span><b>अंग्रेज़ी sentence को छोटे हिस्सों में पढ़ें।</b><p>Subject → Verb → बाकी जानकारी पहचानें और कठिन शब्द का अर्थ context से निकालें।</p></div>
             </aside>
             <section className="english-study-main">
               <div className="english-study-pagebar"><div><span>{stage.icon} {stage.name}</span><strong>पृष्ठ {page + 1} / {pages.length}</strong></div><div className="english-study-progress-track"><span style={{ width: progress + "%" }} /></div></div>
               <article className="english-study-content-card">
-                <div className="english-study-content-head"><div><span className="science-panel-label">PAGE {String(page + 1).padStart(2, "0")} · {topic?.title}</span><h2>{currentTitle}</h2></div><span className="english-study-page-chip">{stageIndex < 2 ? "CONCEPT" : stageIndex < 4 ? "PRACTICE" : "EXAM"}</span></div>
+                <div className="english-study-content-head"><div><span className="science-panel-label">TOPICS · {topicLabels}</span><h2>{currentTitle}</h2></div><span className="english-study-page-chip">{stageIndex < 2 ? "CONCEPT" : stageIndex < 4 ? "PRACTICE" : "EXAM"}</span></div>
                 <Content className="english-chapter-content" blocks={current.filter((b, index) => !(index === 0 && b.type === "heading"))} />
-                <div className="english-study-page-actions"><button className="btn" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>← पिछला</button><div className="english-study-dots" aria-label="पृष्ठ चयन">{pages.map((_, index) => <button key={index} className={index === page ? "active" : ""} onClick={() => setPage(index)} aria-label={"पृष्ठ " + (index + 1)}><span /></button>)}</div>{page < pages.length - 1 ? <button className="btn primary" onClick={() => setPage((p) => p + 1)}>अगला पृष्ठ →</button> : <Link className="btn primary" to={"/practice/" + topic?.id}>अब प्रश्न हल करें →</Link>}</div>
+                <div className="english-study-page-actions"><button className="btn" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>← पिछला</button><div className="english-study-dots" aria-label="पृष्ठ चयन">{pages.map((_, index) => <button key={index} className={index === page ? "active" : ""} onClick={() => setPage(index)} aria-label={"पृष्ठ " + (index + 1)}><span /></button>)}</div>{page < pages.length - 1 ? <button className="btn primary" onClick={() => setPage((p) => p + 1)}>अगला पृष्ठ →</button> : <Link className="btn primary" to={"/chapters/" + chapter.id}>अध्याय अभ्यास देखें →</Link>}</div>
               </article>
               <div className="english-study-bottom-nav">{prevChapter ? <Link to={"/chapters/" + prevChapter.id} className="english-study-chapter-link">← {String(prevChapter.order).padStart(2, "0")} · {prevChapter.title}</Link> : <span />}{nextChapter ? <Link to={"/chapters/" + nextChapter.id} className="english-study-chapter-link next">{String(nextChapter.order).padStart(2, "0")} · {nextChapter.title} →</Link> : <span />}</div>
             </section>
@@ -163,6 +177,7 @@ export default function ChapterStudyPage() {
       </div>
     );
   }
+
   if (!isScience && !isMath && !isEnglish) {
     const current = pages[page] ?? [];
     return (
