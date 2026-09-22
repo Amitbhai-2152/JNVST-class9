@@ -494,6 +494,7 @@ const MockTestsPage = () => {
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, ID[]>>({});
   const [finished, setFinished] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(150 * 60);
   const q = qs[index];
 
   const selected = q ? (answers[q.id] || []) : [];
@@ -529,6 +530,27 @@ const MockTestsPage = () => {
     setFinished(true);
   };
 
+  useEffect(() => {
+    if (!started || finished) return;
+    const timerId = window.setInterval(() => {
+      setTimeLeft((value) => {
+        if (value <= 1) {
+          window.clearInterval(timerId);
+          finish();
+          return 0;
+        }
+        return value - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(timerId);
+  }, [started, finished]);
+
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return String(minutes).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+  };
+
   if (finished) {
     const latest = p.mockTestResults[0];
     return <Shell><div className="page-head"><h1>मॉक टेस्ट परिणाम</h1><p>इस परीक्षा का परिणाम आपकी progress में सुरक्षित कर दिया गया है।</p></div>
@@ -540,9 +562,10 @@ const MockTestsPage = () => {
   }
 
   return <Shell>
-    <div className="page-head"><h1>JNVST मॉक टेस्ट</h1><p>100 प्रश्न · 150 मिनट · हिंदी 15 · अंग्रेज़ी 15 · गणित 35 · विज्ञान 35</p><div className="actions">{!started && <button className="btn primary" onClick={() => setStarted(true)}>टेस्ट शुरू करें</button>}</div></div>
-    {!started ? <Card><h2>परीक्षा-पूर्व निर्देश</h2><ul><li>केवल चार-विकल्प, एक-सही-उत्तर वाले MCQ इस परीक्षा में लिए गए हैं।</li><li>प्रश्नों का subject-wise वितरण JNVST pattern के अनुसार रखा गया है।</li><li>हर उत्तर चुनकर अगले प्रश्न पर जाएँ; अंत में आपका score और section-wise परिणाम सुरक्षित होगा।</li></ul></Card> : q && <Card className="question-card"><div className="question-body">
-      <div className="progressline"><span>प्रश्न {index + 1} / {qs.length}</span><span>{examSections.find((section) => section.id === q.subjectId)?.title ?? 'विषय'}</span></div>
+    <div className="page-head"><h1>JNVST मॉक टेस्ट</h1><p>100 प्रश्न · 150 मिनट · हिंदी 15 · अंग्रेज़ी 15 · गणित 35 · विज्ञान 35</p><div className="actions">{!started && <button className="btn primary" onClick={() => { setTimeLeft(150 * 60); setStarted(true); }}>टेस्ट शुरू करें</button>}</div></div>
+    {!started ? <Card><h2>परीक्षा-पूर्व निर्देश</h2><ul><li>केवल चार-विकल्प, एक-सही-उत्तर वाले MCQ इस परीक्षा में लिए गए हैं।</li><li>प्रश्नों का subject-wise वितरण JNVST pattern के अनुसार रखा गया है।</li><li>हर उत्तर चुनकर अगले प्रश्न पर जाएँ; अंत में आपका score और section-wise परिणाम सुरक्षित होगा।</li>
+        <li>150 मिनट का timer आधिकारिक पूरे Selection Test की अवधि को दर्शाता है।</li></ul></Card> : q && <Card className="question-card"><div className="question-body">
+      <div className="progressline"><span>प्रश्न {index + 1} / {qs.length}</span><span>{examSections.find((section) => section.id === q.subjectId)?.title ?? 'विषय'}</span><span className={timeLeft <= 300 ? 'mock-timer danger' : 'mock-timer'}>⏱ {formatTime(timeLeft)}</span></div>
       <div className="question-text">{questionTextBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div>
       <div className="options">{q.options.map(o => <button key={o.id} className={'option ' + (selected.includes(o.id) ? 'selected' : '')} onClick={() => choose(o.id)}><InlineText text={o.text} /></button>)}</div>
       <div className="study-reader-actions"><button className="btn primary" onClick={() => index === qs.length - 1 ? finish() : setIndex(x => x + 1)}>{index === qs.length - 1 ? 'टेस्ट जमा करें' : 'अगला प्रश्न →'}</button></div>
