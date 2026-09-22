@@ -109,8 +109,6 @@ export const englishChapterChallengers: Question[] = [
     'Why Lunch Breaks Should Be Longer',
     'The Problems Caused by Old Chairs'
   ],1,'challenge',['comprehension','main-idea','title']),
-];
-
 
   make('q_eng_ch_01_015','Which statement is best supported by the passage?',[
     'The students improved the reading corner by combining their own work with help from others.',
