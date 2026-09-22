@@ -99,7 +99,36 @@ const getStudyPages = (blocks: ContentBlock[]): ContentBlock[][] => {
   }
   if (current.length) pages.push(current);
   return pages.length ? pages : [blocks];
+};const getStudyPages = (blocks: ContentBlock[]): ContentBlock[][] => {
+  const pages: ContentBlock[][] = [];
+  let current: ContentBlock[] = [];
+  for (const block of blocks) {
+    const marker = block.type === 'heading' && /^अध्ययन पृष्ठ\s+\d+/.test(block.text);
+    if (marker && current.length) { pages.push(current); current = []; }
+    current.push(block);
+  }
+  if (current.length) pages.push(current);
+  return pages.length ? pages : [blocks];
 };
+const getScienceStudyPages = (blocks: ContentBlock[]): ContentBlock[][] => {
+  const pages: ContentBlock[][] = [];
+  let current: ContentBlock[] = [];
+  for (const block of blocks) {
+    const shouldSplit = current.length >= 7 && (block.type === 'heading' || block.type === 'table' || block.type === 'callout');
+    if (shouldSplit) {
+      pages.push(current);
+      current = [];
+    }
+    current.push(block);
+    if (current.length >= 9 && block.type !== 'heading') {
+      pages.push(current);
+      current = [];
+    }
+  }
+  if (current.length) pages.push(current);
+  return pages.length ? pages : [blocks];
+};
+
 
 const Shell = ({ children }: { children: React.ReactNode }) => <div className="app-shell"><header className="topbar"><Link to="/" className="brand">JNVST कक्षा 9</Link><nav><Link to="/">डैशबोर्ड</Link><Link to="/subjects">विषय</Link><Link to="/bookmarks">बुकमार्क</Link><Link to="/smart-practice">स्मार्ट अभ्यास</Link><Link to="/mock-tests">मॉक टेस्ट</Link></nav></header><main className="shell">{children}</main></div>;
 const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => <div className={`card ${className}`}>{children}</div>;
@@ -564,7 +593,8 @@ const LessonPage = () => {
   const { lessonId } = useParams();
   const l = getLesson(lessonId || '');
   const p = useProgressStore();
-  const pages = useMemo(() => l ? getStudyPages(l.content) : [], [l]);
+  const isScience = l?.topicId.startsWith('top_sci_') ?? false;
+  const pages = useMemo(() => l ? (isScience ? getScienceStudyPages(l.content) : getStudyPages(l.content)) : [], [l, isScience]);
   const [page, setPage] = useState(0);
 
   useEffect(() => setPage(0), [lessonId]);
@@ -574,7 +604,6 @@ const LessonPage = () => {
   const t = topics.find((x) => x.id === l.topicId);
   const c = t ? chapters.find((x) => x.id === t.chapterId) : undefined;
   const done = p.lessonActivity[l.id]?.status === 'completed';
-  const isScience = l.topicId.startsWith('top_sci_');
   const mastery = isScience ? scienceMasteryUnits.find((unit) => unit.topicId === l.topicId) : undefined;
   const progressPercent = ((page + 1) / Math.max(1, pages.length)) * 100;
 
@@ -593,7 +622,7 @@ const LessonPage = () => {
     {isScience && mastery && <section className="science-lesson-companion">
       <div className="science-source-note">
         <b>अध्ययन आधार</b>
-        <span>कक्षा VIII Science concepts + JNVST Class IX lateral-entry scope. यह पाठ समझ, अभ्यास और exam recall के लिए बनाया गया है।</span>
+        <span>कक्षा VIII Science concepts के आधार पर यह self-learning content JNVST Class IX preparation के लिए structured है। आधिकारिक exam rules के लिए current NVS prospectus देखें।</span>
       </div>
       <div className="science-lesson-companion-grid">
         <div className="science-lesson-companion-panel">
