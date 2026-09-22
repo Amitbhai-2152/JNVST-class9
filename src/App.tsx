@@ -549,6 +549,7 @@ const ScienceMockTestPage = () => {
       <Card><div className="science-section-head"><h2>इकाई-वार प्रदर्शन</h2><p>सभी 18 Science units से कम-से-कम 1 प्रश्न इस paper में है; बाकी प्रश्न seeded variety के लिए चुने जाते हैं।</p></div>
         <div className="science-result-topics">{topicStats.map((topic) => <div className="science-result-topic" key={topic.id}><div><b>{topic.title}</b><span>{topic.correct} / {topic.count} सही</span></div><span>{topic.count ? Math.round((topic.correct/topic.count)*100) + '%' : '—'}</span></div>)}</div>
       </Card>
+      <AssessmentAnswerReview questions={qs} answers={answers} />
       <div className="actions"><button className="btn primary" onClick={() => {answersRef.current={};setMockNumber((n)=>n+1);setStarted(false);setFinished(false);setIndex(0);setAnswers({});setMarkedForReview(new Set());setTimeLeft(50*60);}}>नया विज्ञान Mock</button><Link className="btn" to="/science-smart-practice">गलतियों पर Smart Practice</Link><Link className="btn" to="/science-revision">त्वरित पुनरावृत्ति</Link></div>
     </Shell>;
   }
@@ -1091,7 +1092,7 @@ const BookmarksPage = () => { const p = useProgressStore(); const bookmarked = a
 
 const SmartPracticePage = () => {
   const p = useProgressStore();
-  const qs = useMemo(() => getSmartPracticeQuestions(useProgressStore.getState(), 10), [p.totalAttempts, p.topicPerformances]);
+  const qs = useMemo(() => getSmartPracticeQuestions(useProgressStore.getState(), 10), []);
   return <AssessmentRunner
     questions={qs}
     title="स्मार्ट अभ्यास"
@@ -1213,6 +1214,7 @@ const MathMockTestPage = () => {
           {topicStats.map((topic) => <div className="math-result-topic" key={topic.id}><div><b>{topic.title}</b><span>{topic.correct} / {topic.count} सही</span></div><span className="count">{topic.count ? Math.round((topic.correct / topic.count) * 100) + '%' : '—'}</span></div>)}
         </div>
       </Card>
+      <AssessmentAnswerReview questions={qs} answers={answers} />
       <div className="actions"><button className="btn primary" onClick={() => { setMockNumber((value) => value + 1); setStarted(false); setFinished(false); setIndex(0); answersRef.current = {}; setAnswers({}); setMarkedForReview(new Set()); setTimeLeft(53 * 60); }}>नया गणित Mock</button><Link className="btn" to="/math-smart-practice">गलतियों पर स्मार्ट अभ्यास</Link><Link className="btn" to="/math-formulas">सूत्र-पत्र</Link></div>
     </Shell>;
   }
@@ -1301,7 +1303,7 @@ const MockTestsPage = () => {
     const currentAnswers = answersRef.current;
     const score = qs.reduce((sum, question) => sum + (sameAnswer(currentAnswers[question.id] || [], question.correctOptionIds) ? 1 : 0), 0);
     const sectionScores = qs.reduce<Record<string, number>>((scores, question) => {
-      scores[question.subjectId] = (scores[question.subjectId] ?? 0) + (sameAnswer(answers[question.id] || [], question.correctOptionIds) ? 1 : 0);
+      scores[question.subjectId] = (scores[question.subjectId] ?? 0) + (sameAnswer(currentAnswers[question.id] || [], question.correctOptionIds) ? 1 : 0);
       return scores;
     }, {});
     const result: MockTestResult = {
@@ -1351,6 +1353,7 @@ const MockTestsPage = () => {
     return <Shell><div className="page-head"><h1>मॉक टेस्ट परिणाम</h1><p>इस परीक्षा का परिणाम आपकी progress में सुरक्षित कर दिया गया है।</p></div>
       <Card><h2>{latest?.score ?? 0} / {latest?.totalMarks ?? qs.length}</h2><p>सटीकता: {latest?.totalMarks ? Math.round((latest.score / latest.totalMarks) * 100) : 0}%</p>
         <div className="grid">{examSections.map(section => <Card key={section.id}><h3>{section.title}</h3><p>{latest?.sectionScores?.[section.id] ?? 0} / {section.questions}</p></Card>)}</div>
+        <AssessmentAnswerReview questions={qs} answers={answers} />
         <div className="actions"><button className="btn primary" onClick={() => { answersRef.current = {}; setStarted(false); setFinished(false); setIndex(0); setAnswers({}); setMarkedForReview(new Set()); setTimeLeft(150 * 60); }}>नया मॉक टेस्ट</button><Link className="btn" to="/smart-practice">गलतियों पर अभ्यास</Link></div>
       </Card>
     </Shell>;
