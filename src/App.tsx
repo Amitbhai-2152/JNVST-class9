@@ -359,12 +359,33 @@ const MathMockTestPage = () => {
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, ID[]>>({});
   const [finished, setFinished] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(53 * 60);
 
   const q = qs[index];
   const selected = q ? (answers[q.id] || []) : [];
   const answeredCount = Object.values(answers).filter((value) => value.length > 0).length;
   const score = qs.reduce((sum, question) => sum + (sameAnswer(answers[question.id] || [], question.correctOptionIds) ? 1 : 0), 0);
   const choose = (id: ID) => { if (q) setAnswers((current) => ({ ...current, [q.id]: [id] })); };
+
+  useEffect(() => {
+    if (!started || finished) return;
+    const timer = window.setInterval(() => {
+      setTimeLeft((value) => {
+        if (value <= 1) {
+          window.clearInterval(timer);
+          return 0;
+        }
+        return value - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [started, finished]);
+
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return String(minutes).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+  };
 
   const finish = () => {
     const now = Date.now();
@@ -414,13 +435,14 @@ const MathMockTestPage = () => {
       <Link to="/subjects/sub_math">← गणित तैयारी केंद्र</Link>
       <h1>⏱ गणित Mock Test</h1>
       <p>35 प्रश्न · 35 अंक · केवल गणित · सभी 11 आधिकारिक इकाइयों से balanced coverage</p>
-      {!started && <div className="actions"><button className="btn primary" onClick={() => setStarted(true)}>टेस्ट शुरू करें</button></div>}
+      {!started && <div className="actions"><button className="btn primary" onClick={() => { setTimeLeft(53 * 60); setStarted(true); }}>टेस्ट शुरू करें</button></div>}
     </div>
     {!started ? <Card className="math-mock-intro">
       <h2>टेस्ट से पहले</h2>
       <div className="pattern">
         <div><b>35</b><span>प्रश्न</span></div>
         <div><b>35</b><span>अंक</span></div>
+        <div><b>53 min</b><span>recommended practice time</span></div>
         <div><b>11</b><span>इकाइयाँ</span></div>
         <div><b>3+</b><span>प्रश्न/इकाई</span></div>
         <div><b>4</b><span>विकल्प/प्रश्न</span></div>
@@ -428,11 +450,12 @@ const MathMockTestPage = () => {
       <ul>
         <li>यह केवल गणित का अभ्यास mock है; इसमें हिंदी, अंग्रेज़ी या विज्ञान का प्रश्न नहीं आएगा।</li>
         <li>हर प्रश्न में चार विकल्प हैं और एक सही उत्तर है।</li>
-        <li>किसी प्रश्न को खाली छोड़ सकते हैं और बाद में वापस आ सकते हैं।</li>
+        <li>किसी प्रश्न को खाली छोड़ सकते हैं और navigator से बाद में वापस आ सकते हैं।</li>
+        <li>53 मिनट का timer एक recommended Math-only practice limit है, आधिकारिक अलग Math परीक्षा-समय नहीं।</li>
       </ul>
     </Card> : q && <div className="math-mock-layout">
       <Card className="question-card">
-        <div className="progressline"><span>प्रश्न {index + 1} / {qs.length}</span><span>हल किए: {answeredCount}</span></div>
+        <div className="progressline"><span>प्रश्न {index + 1} / {qs.length}</span><span>हल किए: {answeredCount}</span><span className={timeLeft <= 300 ? 'mock-timer danger' : 'mock-timer'}>⏱ {formatTime(timeLeft)}</span></div>
         <div className="question-text">{questionTextBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div>
         <div className="options">{q.options.map(o => <button key={o.id} className={'option ' + (selected.includes(o.id) ? 'selected' : '')} onClick={() => choose(o.id)}><InlineText text={o.text} /></button>)}</div>
         <div className="study-reader-actions">
