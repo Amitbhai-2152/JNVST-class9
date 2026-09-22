@@ -283,6 +283,32 @@ const MathSubjectOverview = () => {
       </Card>
     </div>
 
+    <section className="math-challenger-map">
+      <div className="math-mastery-head">
+        <div>
+          <span className="eyebrow">5 CHAPTERS • 20 QUESTIONS EACH</span>
+          <h3>Math Challenger</h3>
+          <p>हर chapter के लिए अलग 20-प्रश्न challenge set। पहले अध्याय पढ़ें, फिर अभ्यास और Challenger से अपनी पकड़ जाँचें।</p>
+        </div>
+      </div>
+      <div className="math-challenger-grid">
+        {chapters.filter((chapter) => chapter.subjectId === 'sub_math').sort((a, b) => a.order - b.order).map((chapter) => {
+          const challengerCount = getChapterChallengerQuestions(chapter.id, 20).length;
+          return <Card className="math-challenger-card" key={chapter.id}>
+            <div className="math-challenger-card-top">
+              <span className="math-unit-number">{String(chapter.order).padStart(2, '0')}</span>
+              <div><span className="count">{challengerCount} प्रश्न</span><h4>{chapter.title}</h4></div>
+            </div>
+            <p>Concept → method → application को challenge level पर जाँचें।</p>
+            <div className="actions">
+              <Link className="btn" to={`/chapters/${chapter.id}/study`}>अध्याय पढ़ें</Link>
+              <Link className="btn challenger" to={`/chapters/${chapter.id}/challenger`}>⚡ Challenger शुरू करें</Link>
+            </div>
+          </Card>;
+        })}
+      </div>
+    </section>
+
     <section className="math-mastery">
       <div className="math-mastery-head">
         <div>
