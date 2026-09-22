@@ -1250,6 +1250,9 @@ function buildPages(b: Blueprint): ContentBlock[][] {
       heading("पृष्ठ 07 · वास्तविक उदाहरण", 2),
       ...b.examples.flatMap((x) => [heading(x.title, 3), paragraph(x.text)]),
       callout("example", "एक नया उदाहरण खुद बनाएँ", "अपने आसपास की किसी वस्तु/घटना को इस अध्याय की अवधारणा से जोड़कर एक वाक्य लिखें।"),
+      heading("थोड़ा आगे सोचें", 3),
+      paragraph("अब यही concept किसी बदली हुई स्थिति में लागू करें। उदाहरण बदल सकता है, लेकिन वैज्ञानिक कारण वही रहना चाहिए।"),
+      list(b.practice.map((question) => "प्रश्न-पैटर्न: " + question)),
     ],
     [
       heading("पृष्ठ 08 · प्रयोग और अवलोकन", 2),
@@ -1272,9 +1275,9 @@ function buildPages(b: Blueprint): ContentBlock[][] {
       heading("आम गलतियाँ", 3),
       list(b.traps),
       callout("warning", "Misconception check", b.lens.misconception),
-      heading("एक प्रश्न बनाकर देखें", 3),
-      paragraph(b.practice[0]),
-      paragraph("अब उसी concept पर एक नया MCQ खुद लिखिए और गलत विकल्प भी सोचिए।"),
+      heading("प्रश्न-पैटर्न पहचानें", 3),
+      list(b.practice.map((question) => question)),
+      callout("info", "MCQ रणनीति", "पहले concept पहचानें, फिर definition, condition और cause से मेल न खाने वाले विकल्प हटाएँ।"),
     ],
     [
       heading("पृष्ठ 11 · 60-सेकंड recall", 2),
