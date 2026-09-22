@@ -15,8 +15,8 @@ const questionCounts = Object.fromEntries(scienceTopics.map((topic) => [
   topic.id, scienceQuestions.filter((question) => question.topicId === topic.id).length,
 ]));
 const targetQuestionsPerTopic = 20;
-const minimumLessonBlocks = 12;
-const expectedCoreSections = 6;
+const minimumLessonBlocks = 30;
+const expectedCoreSections = 8;
 
 const missingLessons = scienceTopics.filter((topic) => (lessonCounts[topic.id] ?? 0) < 1).map((topic) => topic.id);
 const coreStructureProblems = scienceTopics
@@ -97,6 +97,7 @@ export const jnvstScienceQualityAudit = {
   विषयांश_वार_प्रश्न: questionCounts,
   विषयांश_वार_पाठ: lessonCounts,
   content_coverage: contentCoverage,
+  न्यूनतम_समृद्ध_पाठ_ब्लॉक: minimumLessonBlocks,
   guided_enhancement_blocks: scienceLessonEnhancementStats.totalBlocks,
   अनुपलब्ध_पाठ_विषयांश: missingLessons,
   शून्य_प्रश्न_विषयांश: emptyQuestionTopics,
