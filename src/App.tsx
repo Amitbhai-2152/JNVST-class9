@@ -370,6 +370,14 @@ const MathMockTestPage = () => {
 
   const finish = () => {
     const now = Date.now();
+    const result: MockTestResult = {
+      id: 'math-mock-' + now,
+      score,
+      totalMarks: qs.length,
+      timestamp: now,
+      answers,
+      sectionScores: { sub_math: score },
+    };
     p.recordAttempts(qs.map((question) => ({
       id: question.id,
       attempt: {
@@ -379,6 +387,7 @@ const MathMockTestPage = () => {
         mode: 'mock-test',
       },
     })));
+    p.saveMockResult(result);
     setFinished(true);
   };
 
