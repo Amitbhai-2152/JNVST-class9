@@ -42,6 +42,199 @@ const LabHeader = ({ title, subtitle, backTo = '/subjects/sub_eng' }: { title: s
   </div>
 );
 
+
+const LabModeToggle = ({ mode, onChange }: { mode: 'learn' | 'practice'; onChange: (value: 'learn' | 'practice') => void }) => (
+  <div className="english-lab-mode-switch" role="tablist" aria-label="Learning mode">
+    <button className={mode === 'learn' ? 'active' : ''} onClick={() => onChange('learn')} role="tab" aria-selected={mode === 'learn'}>
+      📖 Learn & Examples
+    </button>
+    <button className={mode === 'practice' ? 'active' : ''} onClick={() => onChange('practice')} role="tab" aria-selected={mode === 'practice'}>
+      🎯 Practice
+    </button>
+  </div>
+);
+
+const TranslationLearn = ({
+  level,
+  setLevel,
+  direction,
+}: {
+  level: number;
+  setLevel: (value: number) => void;
+  direction: TranslationDirection;
+}) => {
+  const [exampleIndex, setExampleIndex] = useState(0);
+  const [showAnswer, setShowAnswer] = useState(true);
+
+  const example = useMemo(
+    () => generateTranslationItem(level, direction, 7200 + level * 1009 + exampleIndex * 131),
+    [direction, level, exampleIndex],
+  );
+
+  const nextExample = () => {
+    setExampleIndex((value) => value + 1);
+    setShowAnswer(true);
+  };
+
+  return (
+    <section className="english-learn-panel">
+      <div className="english-learn-intro">
+        <div>
+          <span className="eyebrow">TRANSLATION EXAMPLE STREAM</span>
+          <h2>पहले examples समझें, फिर translation practice करें</h2>
+          <p>हर example में source sentence, natural translation, grammar structure और sentence बनाने के steps देखें। Next दबाते रहें—यह learning stream खत्म नहीं होती।</p>
+        </div>
+        <div className="english-learn-progress">
+          <b>Example {exampleIndex + 1}</b>
+          <span>ENDLESS</span>
+        </div>
+      </div>
+
+      <div className="english-learn-controls">
+        <div className="english-lab-toggle">
+          <button className={direction === 'hi-en' ? 'active' : ''} disabled>Hindi → English</button>
+          <button className={direction === 'en-hi' ? 'active' : ''} disabled>English → Hindi</button>
+        </div>
+        <div className="english-lab-levels compact">
+          {translationLevels.map((entry) => (
+            <button
+              key={entry.level}
+              className={level === entry.level ? 'active' : ''}
+              onClick={() => { setLevel(entry.level); setExampleIndex(0); setShowAnswer(true); }}
+            >
+              <b>Level {entry.level}</b><span>{entry.title}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {!example ? <p>इस level के लिए example उपलब्ध नहीं है।</p> : (
+        <div className="english-example-card">
+          <div className="english-example-label">Example {exampleIndex + 1} · Level {level}</div>
+          <div className="english-example-source">
+            <small>{direction === 'hi-en' ? 'Hindi sentence' : 'English sentence'}</small>
+            <h3>{example.prompt}</h3>
+          </div>
+
+          {showAnswer ? (
+            <div className="english-example-answer">
+              <small>{direction === 'hi-en' ? 'Natural English' : 'Natural Hindi'}</small>
+              <h3>{example.displayAnswer}</h3>
+              <div className="english-example-grid">
+                <div><b>Grammar structure</b><p>{example.grammarPoint}</p></div>
+                <div><b>क्यों सही है?</b><p>{example.explanation}</p></div>
+              </div>
+              {example.buildSteps && (
+                <div className="english-lab-build">
+                  <b>Sentence बनाने के steps</b>
+                  <ol>{example.buildSteps.map((step) => <li key={step}>{step}</li>)}</ol>
+                </div>
+              )}
+              <div className="english-example-hint"><b>Study habit:</b> example को एक बार पढ़ें, फिर बिना देखे उसकी structure बोलने की कोशिश करें।</div>
+            </div>
+          ) : (
+            <div className="english-example-hidden">
+              पहले खुद translation बोलें/लिखें, फिर नीचे answer खोलें।
+            </div>
+          )}
+
+          <div className="english-lab-actions">
+            <button className="btn" onClick={() => setShowAnswer((value) => !value)}>
+              {showAnswer ? '🙈 Answer छिपाएँ' : '👀 Answer दिखाएँ'}
+            </button>
+            <button className="btn primary" onClick={nextExample}>अगला example →</button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+};
+
+const VocabularyLearn = ({
+  level,
+  setLevel,
+}: {
+  level: typeof vocabularyLevels[number]['id'];
+  setLevel: (value: typeof vocabularyLevels[number]['id']) => void;
+}) => {
+  const [exampleIndex, setExampleIndex] = useState(0);
+  const [showMeaning, setShowMeaning] = useState(true);
+
+  const word = useMemo(
+    () => generateVocabularyItem(level, 15000 + exampleIndex * 97, vocabularyLabItems),
+    [level, exampleIndex],
+  );
+
+  const nextWord = () => {
+    setExampleIndex((value) => value + 1);
+    setShowMeaning(true);
+  };
+
+  return (
+    <section className="english-learn-panel vocab-learn-panel">
+      <div className="english-learn-intro">
+        <div>
+          <span className="eyebrow">VOCABULARY MEMORY STREAM</span>
+          <h2>Word → Meaning → Example → Revision</h2>
+          <p>हर word को हिन्दी meaning, synonyms, antonyms और एक fresh context sentence के साथ याद करें। Next दबाकर लगातार नए revision cards देखें।</p>
+        </div>
+        <div className="english-learn-progress">
+          <b>Word {exampleIndex + 1}</b>
+          <span>ENDLESS</span>
+        </div>
+      </div>
+
+      <div className="english-lab-levels vocabulary compact">
+        {vocabularyLevels.map((entry) => (
+          <button
+            key={entry.id}
+            className={level === entry.id ? 'active' : ''}
+            onClick={() => { setLevel(entry.id); setExampleIndex(0); setShowMeaning(true); }}
+          >
+            <b>{entry.title}</b><small>{entry.hindi}</small>
+          </button>
+        ))}
+      </div>
+
+      {!word ? <p>इस level के लिए word उपलब्ध नहीं है।</p> : (
+        <div className="english-memory-card">
+          <div className="english-example-label">{level.toUpperCase()} · Word {exampleIndex + 1}</div>
+          <div className="english-memory-word">{word.word}</div>
+          {showMeaning ? (
+            <>
+              <div className="english-memory-meaning">
+                <small>हिन्दी meaning</small>
+                <strong>{word.meaning}</strong>
+              </div>
+              <div className="english-memory-grid">
+                <div><b>Synonyms</b><p>{word.synonyms.length ? word.synonyms.join(', ') : '—'}</p></div>
+                <div><b>Antonyms</b><p>{word.antonyms.length ? word.antonyms.join(', ') : '—'}</p></div>
+              </div>
+              <div className="english-memory-example">
+                <small>Example sentence</small>
+                <p>{word.sentence}</p>
+                <span>{word.contextMeaning}</span>
+              </div>
+              <div className="english-memory-tip">
+                <b>याद रखने का तरीका</b>
+                <p>Word को हिन्दी meaning से जोड़ें → sentence में बोलें → आँखें बंद करके meaning recall करें → फिर अगला word लें।</p>
+              </div>
+            </>
+          ) : (
+            <div className="english-example-hidden">पहले “meaning दिखाएँ” से पहले word का अर्थ खुद याद करें।</div>
+          )}
+          <div className="english-lab-actions">
+            <button className="btn" onClick={() => setShowMeaning((value) => !value)}>
+              {showMeaning ? '🙈 Meaning छिपाएँ' : '🧠 Meaning दिखाएँ'}
+            </button>
+            <button className="btn primary" onClick={nextWord}>अगला word →</button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+};
+
 const TranslationLab = () => {
   const p = useProgressStore();
   const [direction, setDirection] = useState<TranslationDirection>('hi-en');
@@ -51,7 +244,7 @@ const TranslationLab = () => {
   const [answer, setAnswer] = useState('');
   const [checked, setChecked] = useState(false);
   const [correct, setCorrect] = useState(false);
-  const [showHint, setShowHint] = useState(false);
+  const [showHint, setShowHint] = useState(false);\n  const [labMode, setLabMode] = useState<'learn' | 'practice'>('learn');
 
   const item = useMemo(
     () => generateTranslationItem(level, direction, 4100 + session * 100000 + index * 97),
@@ -66,6 +259,8 @@ const TranslationLab = () => {
     setCorrect(false);
     setShowHint(false);
   };
+
+  const setLevelCompat = (value: number) => setLevel(value as typeof level[number]);
 
   const next = () => {
     setIndex((value) => value + 1);
@@ -89,8 +284,13 @@ const TranslationLab = () => {
     <Shell>
       <LabHeader
         title="Endless Translation Lab"
-        subtitle="Hindi → English से शुरुआत करें, फिर English → Hindi और कठिन levels की ओर बढ़ें। हर answer के बाद कारण और grammar point देखें।"
+        subtitle="पहले examples में sentence construction सीखें, फिर Practice tab में खुद translation लिखकर जाँचें।"
       />
+      {labMode === 'learn' ? (
+        <TranslationLearn level={level} setLevel={setLevelCompat} direction={direction} />
+      ) : (
+              <LabModeToggle mode={labMode} onChange={setLabMode} />
+
       <div className="english-lab-toolbar">
         <div className="english-lab-toggle">
           <button className={direction === 'hi-en' ? 'active' : ''} onClick={() => { setDirection('hi-en'); setIndex(0); setSession((x) => x + 1); resetQuestion(); }}>Hindi → English</button>
@@ -151,6 +351,9 @@ const TranslationLab = () => {
         </section>
       </div>
 
+
+      )}
+
       <div className="english-lab-next">
         <Link className="btn" to="/english-vocabulary-lab">📚 Vocabulary Lab →</Link>
         <Link className="btn" to="/english-smart-practice">🎯 Smart Practice →</Link>
@@ -167,6 +370,7 @@ const VocabularyLab = () => {
   const [session, setSession] = useState(0);
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState('');
+  const [labMode, setLabMode] = useState<'learn' | 'practice'>('learn');
   const [checked, setChecked] = useState(false);
 
   const item = useMemo(
@@ -218,8 +422,13 @@ const VocabularyLab = () => {
     <Shell>
       <LabHeader
         title="Vocabulary Lab"
-        subtitle="शब्दों को केवल याद नहीं करना है—meaning, synonym, antonym और context में पहचानना है। हर Next पर नया context example generate होता है, इसलिए practice की कोई अंतिम सीमा नहीं है।"
+        subtitle="पहले Learn & Examples में word meanings याद करें, फिर Practice tab में meaning, synonym, antonym और context पहचानें।"
       />
+      {labMode === 'learn' ? (
+        <VocabularyLearn level={level} setLevel={setLevel} />
+      ) : (
+              <LabModeToggle mode={labMode} onChange={setLabMode} />
+
       <div className="english-lab-toolbar">
         <div className="english-lab-toggle">
           {(['meaning','reverse','synonym','antonym','context'] as const).map((value) => (
@@ -259,6 +468,9 @@ const VocabularyLab = () => {
           </div>}
         </>}
       </section>
+
+
+      )}
 
       <div className="english-lab-next">
         <Link className="btn" to="/english-translation-lab">↔ Translation Lab</Link>
