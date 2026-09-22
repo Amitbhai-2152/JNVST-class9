@@ -98,6 +98,6 @@ export const englishLessonsData: Lesson[] = [
       { type: 'paragraph', text: 'विशेषण की तीन अवस्थाएँ होती हैं। Positive सामान्य गुण बताता है; Comparative सामान्यतः दो के बीच तुलना करता है; Superlative सामान्यतः तीन या अधिक में सर्वोच्च गुण बताता है।' },
       { type: 'list', style: 'bullet', items: ['Positive Degree: tall, good', 'Comparative Degree: taller, better — सामान्यतः than के साथ', 'Superlative Degree: the tallest, the best — सामान्यतः the के साथ', 'Irregular Forms: good → better → best; bad → worse → worst; little → less → least'] },
       { type: 'callout', style: 'info', title: 'स्वयं जाँचें', text: "प्रश्न: 'Good' का Superlative रूप क्या होगा?\nउत्तर: Best." }
-
+    ],
   }
 ];
