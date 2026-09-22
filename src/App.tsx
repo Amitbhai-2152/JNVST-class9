@@ -367,26 +367,6 @@ const MathMockTestPage = () => {
   const score = qs.reduce((sum, question) => sum + (sameAnswer(answers[question.id] || [], question.correctOptionIds) ? 1 : 0), 0);
   const choose = (id: ID) => { if (q) setAnswers((current) => ({ ...current, [q.id]: [id] })); };
 
-  useEffect(() => {
-    if (!started || finished) return;
-    const timer = window.setInterval(() => {
-      setTimeLeft((value) => {
-        if (value <= 1) {
-          window.clearInterval(timer);
-          return 0;
-        }
-        return value - 1;
-      });
-    }, 1000);
-    return () => window.clearInterval(timer);
-  }, [started, finished]);
-
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return String(minutes).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
-  };
-
   const finish = () => {
     const now = Date.now();
     p.recordAttempts(qs.map((question) => ({
@@ -399,6 +379,27 @@ const MathMockTestPage = () => {
       },
     })));
     setFinished(true);
+  };
+
+  useEffect(() => {
+    if (!started || finished) return;
+    const timer = window.setInterval(() => {
+      setTimeLeft((value) => {
+        if (value <= 1) {
+          window.clearInterval(timer);
+          finish();
+          return 0;
+        }
+        return value - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [started, finished]);
+
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return String(minutes).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
   };
 
   if (finished) {
