@@ -579,6 +579,51 @@ const ScienceSubjectOverview = () => {
   </section>;
 };
 
+const EnglishRevisionPage = () => (
+  <Shell>
+    <div className="english-revision-page">
+      <div className="page-head"><Link to="/subjects/sub_eng">← अंग्रेज़ी तैयारी केंद्र</Link><span className="eyebrow">ENGLISH REVISION • HINDI-FIRST</span><h1>अंग्रेज़ी त्वरित पुनरावृत्ति</h1><p>हर skill के core rules, quick recall और common exam traps को आखिरी revision में दोहराएँ।</p></div>
+      <div className="english-revision-grid">
+        {englishMasteryUnits.map((unit, index) => <Card className="english-revision-card" key={unit.topicId}>
+          <div className="english-revision-head"><span className="english-unit-number">{String(index + 1).padStart(2,'0')}</span><div><h3>{unit.title}</h3><small>Hindi-first learning guide</small></div></div>
+          <div className="english-hindi-focus"><b>पहले यह समझें</b><p>{unit.hindiFocus}</p></div>
+          <h4>Quick Recall</h4><div className="english-chip-list">{unit.quickFacts.map((fact) => <span key={fact}>{fact}</span>)}</div>
+          <h4>Exam Traps</h4><ul>{unit.examTraps.map((trap) => <li key={trap}>{trap}</li>)}</ul>
+          <div className="actions"><Link className="btn" to={'/chapters/' + (topics.find((topic) => topic.id === unit.topicId)?.chapterId ?? '') + '/study'}>📖 पढ़ें</Link><Link className="btn primary" to={'/practice/' + unit.topicId}>🎯 अभ्यास</Link></div>
+        </Card>)}
+      </div>
+    </div>
+  </Shell>
+);
+
+const EnglishSmartPracticePage = () => {
+  const qs = useMemo(() => getEnglishSmartPracticeQuestions(useProgressStore.getState(), 12, 'jnvst-english-smart-0'), []);
+  return <AssessmentRunner
+    questions={qs}
+    title="🎯 स्मार्ट English अभ्यास"
+    backTo="/subjects/sub_eng"
+    backLabel="अंग्रेज़ी तैयारी केंद्र"
+    description="Weak, wrong और unseen English questions को priority मिलेगी। पहले meaning समझें, फिर rule लागू करें और धीरे-धीरे independent solving की ओर जाएँ।"
+    badge="ENGLISH SMART PRACTICE"
+    bannerLink={{ to: "/english-mock-test", label: "15 प्रश्न का English Mock →" }}
+  />;
+};
+
+const EnglishMockTestPage = () => {
+  const [mockNumber, setMockNumber] = useState(0);
+  const qs = useMemo(() => buildEnglishMockPaper('jnvst-english-' + mockNumber + '-' + Date.now()), [mockNumber]);
+  return <AssessmentRunner
+    questions={qs}
+    title="⏱ English Mock Test"
+    backTo="/subjects/sub_eng"
+    backLabel="अंग्रेज़ी तैयारी केंद्र"
+    description="15-प्रश्न English-only practice paper। पहले chapter learning और Smart Practice करें; फिर समयबद्ध paper में बिना सहायता के solve करने की कोशिश करें।"
+    timerSeconds={25 * 60}
+    badge="ENGLISH MOCK TEST"
+    mode="mock-test"
+    bannerLink={{ to: "/english-smart-practice", label: "गलतियों पर Smart Practice →" }}
+  />;
+};
 const ScienceRevisionPage = () => (
   <Shell>
     <div className="science-revision-page">
@@ -1716,4 +1761,4 @@ const MockTestsPage = () => {
   </Shell>;
 };
 
-export default function App() { return <HashRouter><Routes><Route path="/" element={<Dashboard />} /><Route path="/subjects" element={<SubjectsPage />} /><Route path="/subjects/:subjectId" element={<SubjectPage />} /><Route path="/chapters/:chapterId" element={<ChapterPage />} /><Route path="/chapters/:chapterId/study" element={<ChapterStudyPage />} /><Route path="/chapters/:chapterId/challenger" element={<ChapterChallengerPage />} /><Route path="/topics/:topicId/challenger" element={<TopicChallengerPage />} /><Route path="/lessons/:lessonId" element={<LessonPage />} /><Route path="/math-formulas" element={<Shell><MathFormulaSheet /></Shell>} /><Route path="/science-revision" element={<ScienceRevisionPage />} /><Route path="/science-smart-practice" element={<ScienceSmartPracticePage />} /><Route path="/science-mock-test" element={<ScienceMockTestPage />} /><Route path="/practice/:topicId" element={<PracticePage />} /><Route path="/smart-practice" element={<SmartPracticePage />} /><Route path="/math-smart-practice" element={<MathSmartPracticePage />} /><Route path="/bookmarks" element={<BookmarksPage />} /><Route path="/mock-tests" element={<MockTestsPage />} /><Route path="/math-mock-test" element={<MathMockTestPage />} /><Route path="*" element={<Dashboard />} /></Routes></HashRouter>; }
+export default function App() { return <HashRouter><Routes><Route path="/" element={<Dashboard />} /><Route path="/subjects" element={<SubjectsPage />} /><Route path="/subjects/:subjectId" element={<SubjectPage />} /><Route path="/chapters/:chapterId" element={<ChapterPage />} /><Route path="/chapters/:chapterId/study" element={<ChapterStudyPage />} /><Route path="/chapters/:chapterId/challenger" element={<ChapterChallengerPage />} /><Route path="/topics/:topicId/challenger" element={<TopicChallengerPage />} /><Route path="/lessons/:lessonId" element={<LessonPage />} /><Route path="/math-formulas" element={<Shell><MathFormulaSheet /></Shell>} /><Route path="/english-revision" element={<EnglishRevisionPage />} /><Route path="/english-smart-practice" element={<EnglishSmartPracticePage />} /><Route path="/english-mock-test" element={<EnglishMockTestPage />} /><Route path="/science-revision" element={<ScienceRevisionPage />} /><Route path="/science-smart-practice" element={<ScienceSmartPracticePage />} /><Route path="/science-mock-test" element={<ScienceMockTestPage />} /><Route path="/practice/:topicId" element={<PracticePage />} /><Route path="/smart-practice" element={<SmartPracticePage />} /><Route path="/math-smart-practice" element={<MathSmartPracticePage />} /><Route path="/bookmarks" element={<BookmarksPage />} /><Route path="/mock-tests" element={<MockTestsPage />} /><Route path="/math-mock-test" element={<MathMockTestPage />} /><Route path="*" element={<Dashboard />} /></Routes></HashRouter>; }
