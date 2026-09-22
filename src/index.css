@@ -857,3 +857,164 @@ a { color: inherit; text-decoration: none; }
   .science-mock-nav-actions { justify-content:space-between; }
   .science-focus-grid { grid-template-columns:1fr; }
 }
+
+
+/* Unified mock-test UX */
+.test-progressline {
+  position:sticky;
+  top:72px;
+  z-index:12;
+  padding:10px 12px;
+  margin:-8px 0 4px;
+  border:1px solid #e1e7ee;
+  border-radius:13px;
+  background:rgba(255,255,255,.97);
+  box-shadow:0 8px 22px rgba(25,43,67,.07);
+  backdrop-filter:blur(10px);
+}
+.test-progressline > span { color:#657387; font-size:12px; font-weight:700; }
+.mock-timer {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:96px;
+  padding:8px 12px;
+  border:1px solid #cfd9ec;
+  border-radius:11px;
+  background:#edf3ff;
+  color:#294bb4;
+  font-variant-numeric:tabular-nums;
+  font-size:15px;
+  font-weight:900;
+  letter-spacing:.02em;
+  box-shadow:0 3px 10px rgba(41,75,180,.09);
+}
+.mock-timer.danger {
+  background:#fff0f0;
+  border-color:#f0bcbc;
+  color:#bd2d2d;
+  box-shadow:0 3px 10px rgba(189,45,45,.08);
+  animation:mockTimerPulse 1.3s ease-in-out infinite;
+}
+@keyframes mockTimerPulse {
+  50% { transform:scale(1.03); }
+}
+
+.full-mock-layout {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 270px;
+  gap:16px;
+  align-items:start;
+}
+.full-mock-layout .question-card { min-width:0; }
+.full-mock-palette {
+  position:sticky;
+  top:86px;
+  min-width:0;
+}
+.full-mock-palette-head {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:11px;
+}
+.full-mock-palette-head > div {
+  min-width:0;
+  display:grid;
+  gap:3px;
+}
+.full-mock-palette-head b { color:#2d4059; }
+.full-mock-palette-head span { color:#7a8798; font-size:11px; }
+.full-mock-palette-head strong {
+  flex:0 0 auto;
+  padding:7px 9px;
+  border-radius:9px;
+  background:#edf3ff;
+  color:#294bb4;
+  font-size:13px;
+  font-variant-numeric:tabular-nums;
+}
+.full-mock-palette-grid {
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:7px;
+  max-height:58vh;
+  overflow:auto;
+  padding-right:2px;
+}
+.full-mock-palette-grid button {
+  min-width:0;
+  height:36px;
+  border:1px solid #d7dfe9;
+  border-radius:8px;
+  background:#fff;
+  color:#4b5b70;
+  cursor:pointer;
+  font-weight:800;
+}
+.full-mock-palette-grid button.answered {
+  background:#3554d1;
+  border-color:#3554d1;
+  color:#fff;
+}
+.full-mock-palette-grid button.marked {
+  background:#fff4d6;
+  border-color:#e6cf84;
+  color:#7d621c;
+}
+.full-mock-palette-grid button.answered.marked {
+  background:linear-gradient(135deg,#3554d1 0 72%,#e9ca70 72%);
+  border-color:#3554d1;
+  color:#fff;
+}
+.full-mock-palette-grid button.current {
+  box-shadow:0 0 0 3px #c8d2f7;
+}
+.science-result-grid {
+  grid-template-columns:repeat(4,minmax(0,1fr));
+}
+
+@media (max-width:920px) {
+  .full-mock-layout { grid-template-columns:1fr; }
+  .full-mock-palette { position:static; }
+  .full-mock-palette-grid { max-height:none; }
+}
+
+@media (max-width:700px) {
+  .test-progressline {
+    top:62px;
+    gap:7px;
+    padding:9px;
+    margin:-4px 0 2px;
+  }
+  .test-progressline > span { font-size:11px; }
+  .test-progressline .mock-timer {
+    margin-left:auto;
+    min-width:82px;
+    padding:7px 9px;
+    font-size:13px;
+  }
+  .full-mock-palette-head strong { font-size:12px; }
+  .full-mock-palette-grid { grid-template-columns:repeat(6,minmax(0,1fr)); }
+  .science-mock-actions .btn,
+  .science-mock-nav-actions .btn { min-height:42px; }
+}
+
+@media (max-width:520px) {
+  .test-progressline {
+    display:grid;
+    grid-template-columns:1fr auto;
+    align-items:center;
+  }
+  .test-progressline > span:nth-child(1) { grid-column:1; }
+  .test-progressline .mock-timer { grid-column:2; grid-row:1 / span 2; }
+  .test-progressline > span:nth-child(2),
+  .test-progressline > span:nth-child(3),
+  .test-progressline > span:nth-child(4) {
+    font-size:10px;
+  }
+  .full-mock-palette-grid,
+  .math-palette-grid,
+  .science-palette-grid { grid-template-columns:repeat(5,minmax(0,1fr)); }
+}
