@@ -806,6 +806,75 @@ const ChapterPage = () => {
     </Shell>;
   }
 
+  if (c.subjectId === 'sub_eng') {
+    const chapterTopics = c.topicIds.map((id) => topics.find((topic) => topic.id === id)).filter(Boolean) as typeof topics;
+    const performances = getTopicPerformances(p);
+    const questionCount = chapterTopics.reduce((sum, topic) => sum + getQuestionsByTopic(topic.id).length, 0);
+    const attempts = chapterTopics.reduce((sum, topic) => sum + (performances.find((item) => item.topicId === topic.id)?.attempts ?? 0), 0);
+    const correct = chapterTopics.reduce((sum, topic) => sum + (performances.find((item) => item.topicId === topic.id)?.correct ?? 0), 0);
+    const accuracy = attempts ? Math.round((correct / attempts) * 100) : 0;
+    const pageCount = getChapterStudyPages(c, allLessons, 12).length;
+    const challengerCount = getChapterChallengerQuestions(c.id, 20).length;
+    const previous = chapters.find((item) => item.subjectId === 'sub_eng' && item.order === c.order - 1);
+    const next = chapters.find((item) => item.subjectId === 'sub_eng' && item.order === c.order + 1);
+
+    return <Shell>
+      <section className="english-chapter-page">
+        <div className="english-chapter-topbar"><Link to="/subjects/sub_eng">← अंग्रेज़ी तैयारी केंद्र</Link><span>अध्याय {String(c.order).padStart(2, '0')} / 4</span></div>
+        <div className="english-chapter-hero">
+          <div>
+            <span className="eyebrow">ENGLISH CHAPTER • HINDI-FIRST LEARNING</span>
+            <h1>{c.title}</h1>
+            <p>{chapterTopics.map((topic) => englishMasteryUnitMap.get(topic.id)?.hindiFocus).filter(Boolean).join(' ')}</p>
+            <div className="actions">
+              <Link className="btn primary" to={'/chapters/' + c.id + '/study'}>📖 अध्याय पढ़ें</Link>
+              <Link className="btn" to={'/practice/' + (chapterTopics[0]?.id ?? '')}>🎯 अभ्यास करें</Link>
+              <Link className="btn challenger" to={'/chapters/' + c.id + '/challenger'}>⚡ Challenger · {challengerCount}</Link>
+            </div>
+          </div>
+          <div className="english-chapter-index"><span>CHAPTER</span><strong>{String(c.order).padStart(2, '0')}</strong><small>{pageCount} अध्ययन पृष्ठ</small></div>
+        </div>
+
+        <div className="english-chapter-stats">
+          <Card><b>{questionCount}</b><span>अभ्यास प्रश्न</span></Card>
+          <Card><b>{pageCount}</b><span>अध्ययन पृष्ठ</span></Card>
+          <Card><b>{attempts}</b><span>आपके प्रयास</span></Card>
+          <Card><b>{attempts ? accuracy + '%' : '—'}</b><span>आपकी सटीकता</span></Card>
+        </div>
+
+        <div className="english-chapter-focus-grid">
+          <Card><span className="science-panel-label">HINDI-FIRST METHOD</span><h3>कैसे पढ़ें</h3><ul className="english-chapter-list"><li>पहले हिन्दी में concept समझें।</li><li>English example को पढ़ें और उसका अर्थ जोड़ें।</li><li>फिर उसी rule को बिना मदद के नए sentence पर लगाएँ।</li></ul></Card>
+          <Card><span className="science-panel-label">EXAM FOCUS</span><h3>क्या याद रखें</h3><ul className="english-chapter-list">{chapterTopics.flatMap((topic) => englishMasteryUnitMap.get(topic.id)?.quickFacts.slice(0, 2) ?? []).slice(0, 5).map((item) => <li key={item}>{item}</li>)}</ul></Card>
+          <Card><span className="science-panel-label">COMMON TRAPS</span><h3>गलती से बचें</h3><ul className="english-chapter-list">{chapterTopics.flatMap((topic) => englishMasteryUnitMap.get(topic.id)?.examTraps.slice(0, 2) ?? []).slice(0, 5).map((item) => <li key={item}>{item}</li>)}</ul></Card>
+        </div>
+
+        <section className="english-chapter-topics">
+          <div className="english-section-head"><span className="eyebrow">TOPIC-BY-TOPIC PRACTICE</span><h2>Topics</h2><p>हर topic को पहले समझें, फिर practice करें।</p></div>
+          <div className="english-chapter-topic-grid">
+            {chapterTopics.map((topic) => {
+              const mastery = englishMasteryUnitMap.get(topic.id);
+              const performance = performances.find((item) => item.topicId === topic.id);
+              return <Card className="english-chapter-topic" key={topic.id}>
+                <div className="english-chapter-topic-top"><span>{String(topic.order).padStart(2, '0')}</span><div><h3>{topic.title}</h3><small>{getQuestionsByTopic(topic.id).length} प्रश्न · {performance?.attempts ? performance.accuracy + '% accuracy' : 'अभी अभ्यास नहीं'}</small></div></div>
+                <p>{mastery?.hindiFocus ?? 'पहले concept समझें और फिर practice करें।'}</p>
+                <div className="actions"><Link className="btn primary" to={'/chapters/' + c.id + '/study'}>📖 पढ़ें</Link><Link className="btn" to={'/practice/' + topic.id}>🎯 अभ्यास</Link></div>
+              </Card>;
+            })}
+          </div>
+        </section>
+
+        <section className="english-chapter-challenger">
+          <div><span className="eyebrow">20-QUESTION CHALLENGER</span><h2>English Challenger</h2><p>Chapter के concept को कठिन, mixed और exam-style questions में apply करें। पहले study path पूरा करना recommended है।</p></div>
+          <Link className="btn challenger" to={'/chapters/' + c.id + '/challenger'}>⚡ Challenger शुरू करें</Link>
+        </section>
+
+        <div className="english-chapter-footer">
+          {previous ? <Link className="english-chapter-nav" to={'/chapters/' + previous.id}>← {String(previous.order).padStart(2,'0')} · {previous.title}</Link> : <span/>}
+          {next ? <Link className="english-chapter-nav next" to={'/chapters/' + next.id}>{String(next.order).padStart(2,'0')} · {next.title} →</Link> : <span/>}
+        </div>
+      </section>
+    </Shell>;
+  }
   if (c.subjectId === 'sub_math') {
     const chapterTopics = c.topicIds.map((id) => topics.find((topic) => topic.id === id)).filter(Boolean) as typeof topics;
     const masteryUnits = chapterTopics.map((topic) => mathMasteryUnitMap.get(topic.id)).filter(Boolean) as typeof mathMasteryUnits;
