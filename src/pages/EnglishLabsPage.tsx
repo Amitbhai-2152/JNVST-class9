@@ -58,10 +58,12 @@ const TranslationLearn = ({
   level,
   setLevel,
   direction,
+  setDirection,
 }: {
   level: number;
   setLevel: (value: number) => void;
   direction: TranslationDirection;
+  setDirection: (value: TranslationDirection) => void;
 }) => {
   const [exampleIndex, setExampleIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(true);
@@ -92,8 +94,8 @@ const TranslationLearn = ({
 
       <div className="english-learn-controls">
         <div className="english-lab-toggle">
-          <button className={direction === 'hi-en' ? 'active' : ''} disabled>Hindi → English</button>
-          <button className={direction === 'en-hi' ? 'active' : ''} disabled>English → Hindi</button>
+          <button className={direction === 'hi-en' ? 'active' : ''} onClick={() => { setDirection('hi-en'); setExampleIndex(0); setShowAnswer(true); }}>Hindi → English</button>
+          <button className={direction === 'en-hi' ? 'active' : ''} onClick={() => { setDirection('en-hi'); setExampleIndex(0); setShowAnswer(true); }}>English → Hindi</button>
         </div>
         <div className="english-lab-levels compact">
           {translationLevels.map((entry) => (
@@ -244,7 +246,8 @@ const TranslationLab = () => {
   const [answer, setAnswer] = useState('');
   const [checked, setChecked] = useState(false);
   const [correct, setCorrect] = useState(false);
-  const [showHint, setShowHint] = useState(false);\n  const [labMode, setLabMode] = useState<'learn' | 'practice'>('learn');
+  const [showHint, setShowHint] = useState(false);
+  const [labMode, setLabMode] = useState<'learn' | 'practice'>('learn');
 
   const item = useMemo(
     () => generateTranslationItem(level, direction, 4100 + session * 100000 + index * 97),
@@ -260,7 +263,19 @@ const TranslationLab = () => {
     setShowHint(false);
   };
 
-  const setLevelCompat = (value: number) => setLevel(value as typeof level[number]);
+  const changeDirection = (value: TranslationDirection) => {
+    setDirection(value);
+    setIndex(0);
+    setSession((x) => x + 1);
+    resetQuestion();
+  };
+
+  const changeLevel = (value: number) => {
+    setLevel(value);
+    setIndex(0);
+    setSession((x) => x + 1);
+    resetQuestion();
+  };
 
   const next = () => {
     setIndex((value) => value + 1);
@@ -286,72 +301,78 @@ const TranslationLab = () => {
         title="Endless Translation Lab"
         subtitle="पहले examples में sentence construction सीखें, फिर Practice tab में खुद translation लिखकर जाँचें।"
       />
+
+      <LabModeToggle mode={labMode} onChange={setLabMode} />
+
       {labMode === 'learn' ? (
-        <TranslationLearn level={level} setLevel={setLevelCompat} direction={direction} />
+        <TranslationLearn
+          level={level}
+          setLevel={changeLevel}
+          direction={direction}
+          setDirection={changeDirection}
+        />
       ) : (
-              <LabModeToggle mode={labMode} onChange={setLabMode} />
-
-      <div className="english-lab-toolbar">
-        <div className="english-lab-toggle">
-          <button className={direction === 'hi-en' ? 'active' : ''} onClick={() => { setDirection('hi-en'); setIndex(0); setSession((x) => x + 1); resetQuestion(); }}>Hindi → English</button>
-          <button className={direction === 'en-hi' ? 'active' : ''} onClick={() => { setDirection('en-hi'); setIndex(0); setSession((x) => x + 1); resetQuestion(); }}>English → Hindi</button>
-        </div>
-        <div className="english-lab-stats"><span>{attempted} attempts</span><span>{attempted ? Math.round((correctCount / attempted) * 100) : 0}% accuracy</span></div>
-      </div>
-
-      <div className="english-lab-levels">
-        {translationLevels.map((entry) => (
-          <button key={entry.level} className={level === entry.level ? 'active' : ''} onClick={() => { setLevel(entry.level); setIndex(0); setSession((x) => x + 1); resetQuestion(); }}>
-            <b>Level {entry.level}</b><span>{entry.title}</span><small>{entry.hindi}</small>
-          </button>
-        ))}
-      </div>
-
-      <div className="english-lab-layout">
-        <aside className="english-lab-side card">
-          <b>इस lab में कैसे सीखें</b>
-          <ol>
-            <li>पहले अपना उत्तर खुद लिखें।</li>
-            <li>जरूरत हो तो hint लें।</li>
-            <li>Check करके सही answer और कारण पढ़ें।</li>
-            <li>गलत item को दोबारा practice करें।</li>
-          </ol>
-          <div className="english-lab-rule"><b>Mastery rule</b><span>पहले meaning → फिर grammar → फिर natural English.</span></div>
-        </aside>
-
-        <section className="english-lab-card card">
-          {!item ? <p>इस level के लिए अभी items उपलब्ध नहीं हैं।</p> : <>
-            <div className="english-lab-question-head"><span>Level {level}</span><span>Question {index + 1} · ENDLESS</span></div>
-            <div className="english-translation-prompt">
-              <small>{direction === 'hi-en' ? 'इसका English translation लिखें' : 'इसका Hindi अर्थ लिखें'}</small>
-              <h2>{item.prompt}</h2>
+        <>
+          <div className="english-lab-toolbar">
+            <div className="english-lab-toggle">
+              <button className={direction === 'hi-en' ? 'active' : ''} onClick={() => changeDirection('hi-en')}>Hindi → English</button>
+              <button className={direction === 'en-hi' ? 'active' : ''} onClick={() => changeDirection('en-hi')}>English → Hindi</button>
             </div>
-            <textarea
-              className="english-lab-answer"
-              value={answer}
-              onChange={(event) => setAnswer(event.target.value)}
-              placeholder={direction === 'hi-en' ? 'अपना English sentence यहाँ लिखें…' : 'अपना हिन्दी अर्थ यहाँ लिखें…'}
-              disabled={checked}
-              rows={4}
-            />
-            <div className="english-lab-actions">
-              <button className="btn" onClick={() => setShowHint((value) => !value)}>{showHint ? 'Hint छिपाएँ' : '💡 Hint'}</button>
-              {!checked ? <button className="btn primary" disabled={!answer.trim()} onClick={check}>उत्तर जाँचें</button> : <button className="btn primary" onClick={next}>अगला प्रश्न →</button>}
-            </div>
-            {showHint && !checked && <div className="english-lab-feedback hint"><b>Hint</b><p>{item.hint}</p></div>}
-            {checked && <div className={'english-lab-feedback ' + (correct ? 'correct' : 'wrong')}>
-              <strong>{correct ? '✓ सही' : 'अभी सही नहीं'}</strong>
-              <div><b>सही उत्तर</b><p>{item.displayAnswer}</p></div>
-              <div><b>क्यों?</b><p>{item.explanation}</p></div>
-              <div><b>Grammar point</b><p>{item.grammarPoint}</p></div>
-              {item.buildSteps && <div className="english-lab-build"><b>यह translation कैसे बनता है?</b><ol>{item.buildSteps.map((step) => <li key={step}>{step}</li>)}</ol></div>}
-              {!correct && <button className="btn" onClick={() => { setAnswer(''); setChecked(false); setShowHint(false); }}>फिर से प्रयास करें</button>}
-            </div>}
-          </>}
-        </section>
-      </div>
+            <div className="english-lab-stats"><span>{attempted} attempts</span><span>{attempted ? Math.round((correctCount / attempted) * 100) : 0}% accuracy</span></div>
+          </div>
 
+          <div className="english-lab-levels">
+            {translationLevels.map((entry) => (
+              <button key={entry.level} className={level === entry.level ? 'active' : ''} onClick={() => changeLevel(entry.level)}>
+                <b>Level {entry.level}</b><span>{entry.title}</span><small>{entry.hindi}</small>
+              </button>
+            ))}
+          </div>
 
+          <div className="english-lab-layout">
+            <aside className="english-lab-side card">
+              <b>Practice कैसे करें</b>
+              <ol>
+                <li>पहले answer खुद लिखें।</li>
+                <li>जरूरत हो तो hint लें।</li>
+                <li>Check करके answer और कारण पढ़ें।</li>
+                <li>गलत item को फिर से बनाकर देखें।</li>
+              </ol>
+              <div className="english-lab-rule"><b>Mastery rule</b><span>पहले meaning → फिर grammar → फिर natural English.</span></div>
+            </aside>
+
+            <section className="english-lab-card card">
+              {!item ? <p>इस level के लिए अभी items उपलब्ध नहीं हैं।</p> : <>
+                <div className="english-lab-question-head"><span>Level {level}</span><span>Question {index + 1} · ENDLESS</span></div>
+                <div className="english-translation-prompt">
+                  <small>{direction === 'hi-en' ? 'इसका English translation लिखें' : 'इसका Hindi अर्थ लिखें'}</small>
+                  <h2>{item.prompt}</h2>
+                </div>
+                <textarea
+                  className="english-lab-answer"
+                  value={answer}
+                  onChange={(event) => setAnswer(event.target.value)}
+                  placeholder={direction === 'hi-en' ? 'अपना English sentence यहाँ लिखें…' : 'अपना हिन्दी अर्थ यहाँ लिखें…'}
+                  disabled={checked}
+                  rows={4}
+                />
+                <div className="english-lab-actions">
+                  <button className="btn" onClick={() => setShowHint((value) => !value)}>{showHint ? 'Hint छिपाएँ' : '💡 Hint'}</button>
+                  {!checked ? <button className="btn primary" disabled={!answer.trim()} onClick={check}>उत्तर जाँचें</button> : <button className="btn primary" onClick={next}>अगला प्रश्न →</button>}
+                </div>
+                {showHint && !checked && <div className="english-lab-feedback hint"><b>Hint</b><p>{item.hint}</p></div>}
+                {checked && <div className={'english-lab-feedback ' + (correct ? 'correct' : 'wrong')}>
+                  <strong>{correct ? '✓ सही' : 'अभी सही नहीं'}</strong>
+                  <div><b>सही उत्तर</b><p>{item.displayAnswer}</p></div>
+                  <div><b>क्यों?</b><p>{item.explanation}</p></div>
+                  <div><b>Grammar point</b><p>{item.grammarPoint}</p></div>
+                  {item.buildSteps && <div className="english-lab-build"><b>यह translation कैसे बनता है?</b><ol>{item.buildSteps.map((step) => <li key={step}>{step}</li>)}</ol></div>}
+                  {!correct && <button className="btn" onClick={() => { setAnswer(''); setChecked(false); setShowHint(false); }}>फिर से प्रयास करें</button>}
+                </div>}
+              </>}
+            </section>
+          </div>
+        </>
       )}
 
       <div className="english-lab-next">
@@ -370,8 +391,8 @@ const VocabularyLab = () => {
   const [session, setSession] = useState(0);
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState('');
-  const [labMode, setLabMode] = useState<'learn' | 'practice'>('learn');
   const [checked, setChecked] = useState(false);
+  const [labMode, setLabMode] = useState<'learn' | 'practice'>('learn');
 
   const item = useMemo(
     () => generateVocabularyItem(level, 9100 + session * 100000 + index * 71, vocabularyLabItems),
@@ -405,6 +426,22 @@ const VocabularyLab = () => {
           ? item.word
           : item.sentence;
 
+  const changeLevel = (value: typeof vocabularyLevels[number]['id']) => {
+    setLevel(value);
+    setIndex(0);
+    setSession((x) => x + 1);
+    setSelected('');
+    setChecked(false);
+  };
+
+  const changeMode = (value: 'meaning' | 'reverse' | 'synonym' | 'antonym' | 'context') => {
+    setMode(value);
+    setIndex(0);
+    setSession((x) => x + 1);
+    setSelected('');
+    setChecked(false);
+  };
+
   const next = () => {
     setIndex((value) => value + 1);
     setSelected('');
@@ -424,52 +461,53 @@ const VocabularyLab = () => {
         title="Vocabulary Lab"
         subtitle="पहले Learn & Examples में word meanings याद करें, फिर Practice tab में meaning, synonym, antonym और context पहचानें।"
       />
+
+      <LabModeToggle mode={labMode} onChange={setLabMode} />
+
       {labMode === 'learn' ? (
-        <VocabularyLearn level={level} setLevel={setLevel} />
+        <VocabularyLearn level={level} setLevel={changeLevel} />
       ) : (
-              <LabModeToggle mode={labMode} onChange={setLabMode} />
-
-      <div className="english-lab-toolbar">
-        <div className="english-lab-toggle">
-          {(['meaning','reverse','synonym','antonym','context'] as const).map((value) => (
-            <button key={value} className={mode === value ? 'active' : ''} onClick={() => { setMode(value); setIndex(0); setSession((x) => x + 1); setSelected(''); setChecked(false); }}>
-              {value === 'meaning' ? 'Word → Hindi' : value === 'reverse' ? 'Hindi → Word' : value === 'synonym' ? 'Synonym' : value === 'antonym' ? 'Antonym' : 'Context'}
-            </button>
-          ))}
-        </div>
-        <div className="english-lab-stats"><span>{attempted} attempts</span><span>{attempted ? Math.round((correctCount / attempted) * 100) : 0}% accuracy</span></div>
-      </div>
-
-      <div className="english-lab-levels vocabulary">
-        {vocabularyLevels.map((entry) => (
-          <button key={entry.id} className={level === entry.id ? 'active' : ''} onClick={() => { setLevel(entry.id); setIndex(0); setSession((x) => x + 1); setSelected(''); setChecked(false); }}>
-            <b>{entry.title}</b><small>{entry.hindi}</small>
-          </button>
-        ))}
-      </div>
-
-      <section className="english-vocab-card card">
-        {!item ? <p>इस level के लिए items उपलब्ध नहीं हैं।</p> : <>
-          <div className="english-lab-question-head"><span>{level}</span><span>Question {index + 1} · ENDLESS</span></div>
-          <div className="english-vocab-prompt"><small>{mode === 'meaning' ? 'इस शब्द का हिन्दी अर्थ चुनें' : mode === 'reverse' ? 'इस हिन्दी अर्थ के लिए सही English word चुनें' : mode === 'synonym' ? 'सही synonym चुनें' : mode === 'antonym' ? 'सही antonym चुनें' : 'Sentence में दिए शब्द का contextual meaning चुनें'}</small><h2>{prompt}</h2></div>
-          <div className="english-vocab-options">
-            {options.map((option) => <button key={option} className={selected === option ? 'selected' : ''} onClick={() => !checked && setSelected(option)}>{option}</button>)}
+        <>
+          <div className="english-lab-toolbar">
+            <div className="english-lab-toggle">
+              {(['meaning','reverse','synonym','antonym','context'] as const).map((value) => (
+                <button key={value} className={mode === value ? 'active' : ''} onClick={() => changeMode(value)}>
+                  {value === 'meaning' ? 'Word → Hindi' : value === 'reverse' ? 'Hindi → Word' : value === 'synonym' ? 'Synonym' : value === 'antonym' ? 'Antonym' : 'Context'}
+                </button>
+              ))}
+            </div>
+            <div className="english-lab-stats"><span>{attempted} attempts</span><span>{attempted ? Math.round((correctCount / attempted) * 100) : 0}% accuracy</span></div>
           </div>
-          <div className="english-lab-actions">
-            {!checked ? <button className="btn primary" disabled={!selected} onClick={check}>उत्तर जाँचें</button> : <button className="btn primary" onClick={next}>अगला शब्द →</button>}
+
+          <div className="english-lab-levels vocabulary">
+            {vocabularyLevels.map((entry) => (
+              <button key={entry.id} className={level === entry.id ? 'active' : ''} onClick={() => changeLevel(entry.id)}>
+                <b>{entry.title}</b><small>{entry.hindi}</small>
+              </button>
+            ))}
           </div>
-          {checked && <div className={'english-lab-feedback ' + (normalize(selected) === normalize(targetAnswer) ? 'correct' : 'wrong')}>
-            <strong>{normalize(selected) === normalize(targetAnswer) ? '✓ सही' : 'अभी सही नहीं'}</strong>
-            <p><b>सही उत्तर:</b> {targetAnswer}</p>
-            <p><b>Sentence:</b> {item.sentence}</p>
-            <p><b>Context:</b> {item.contextMeaning}</p>
-            <div className="english-lab-build"><b>Vocabulary example कैसे समझें?</b><p>पहले word की grammatical role पहचानें, फिर sentence में उसके आसपास के words से उसका meaning confirm करें। अगली बार इसी word के साथ एक नया context sentence मिलेगा.</p></div>
-            <p><b>Synonyms:</b> {item.synonyms.length ? item.synonyms.join(', ') : '—'} · <b>Antonyms:</b> {item.antonyms.length ? item.antonyms.join(', ') : '—'}</p>
-          </div>}
-        </>}
-      </section>
 
-
+          <section className="english-vocab-card card">
+            {!item ? <p>इस level के लिए items उपलब्ध नहीं हैं।</p> : <>
+              <div className="english-lab-question-head"><span>{level}</span><span>Question {index + 1} · ENDLESS</span></div>
+              <div className="english-vocab-prompt"><small>{mode === 'meaning' ? 'इस शब्द का हिन्दी अर्थ चुनें' : mode === 'reverse' ? 'इस हिन्दी अर्थ के लिए सही English word चुनें' : mode === 'synonym' ? 'सही synonym चुनें' : mode === 'antonym' ? 'सही antonym चुनें' : 'Sentence में दिए शब्द का contextual meaning चुनें'}</small><h2>{prompt}</h2></div>
+              <div className="english-vocab-options">
+                {options.map((option) => <button key={option} className={selected === option ? 'selected' : ''} onClick={() => !checked && setSelected(option)}>{option}</button>)}
+              </div>
+              <div className="english-lab-actions">
+                {!checked ? <button className="btn primary" disabled={!selected} onClick={check}>उत्तर जाँचें</button> : <button className="btn primary" onClick={next}>अगला शब्द →</button>}
+              </div>
+              {checked && <div className={'english-lab-feedback ' + (normalize(selected) === normalize(targetAnswer) ? 'correct' : 'wrong')}>
+                <strong>{normalize(selected) === normalize(targetAnswer) ? '✓ सही' : 'अभी सही नहीं'}</strong>
+                <p><b>सही उत्तर:</b> {targetAnswer}</p>
+                <p><b>Sentence:</b> {item.sentence}</p>
+                <p><b>Context:</b> {item.contextMeaning}</p>
+                <div className="english-lab-build"><b>Vocabulary example कैसे समझें?</b><p>पहले word की grammatical role पहचानें, फिर sentence में उसके आसपास के words से उसका meaning confirm करें। अगली बार इसी word के साथ एक नया context sentence मिलेगा.</p></div>
+                <p><b>Synonyms:</b> {item.synonyms.length ? item.synonyms.join(', ') : '—'} · <b>Antonyms:</b> {item.antonyms.length ? item.antonyms.join(', ') : '—'}</p>
+              </div>}
+            </>}
+          </section>
+        </>
       )}
 
       <div className="english-lab-next">
