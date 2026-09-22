@@ -118,7 +118,7 @@ const counts = {
   sub_sci: scienceQuestions.length,
 };
 
-const expectedCounts = { sub_eng: 100, sub_hin: 110, sub_math: 220, sub_sci: 380, total: 810 };
+const expectedCounts = { sub_eng: 100, sub_hin: 110, sub_math: 220, sub_sci: 390, total: 820 };
 
 // Never crash the entire app because of a content-count mismatch.
 // Keep the integrity check visible in the console so content issues can be fixed
