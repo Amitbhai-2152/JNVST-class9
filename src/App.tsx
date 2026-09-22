@@ -673,8 +673,19 @@ const LessonPage = () => {
   const isScience = l?.topicId.startsWith('top_sci_') ?? false;
   const pages = useMemo(() => l ? (isScience ? getScienceStudyPages(l.content) : getStudyPages(l.content)) : [], [l, isScience]);
   const [page, setPage] = useState(0);
+  const lessonTopRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => setPage(0), [lessonId]);
+  useEffect(() => {
+    setPage(0);
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [lessonId]);
+
+  const goToScienceSection = (sectionIndex: number) => {
+    setPage(sectionIndex);
+    window.requestAnimationFrame(() => {
+      lessonTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
 
   if (!l) return <Shell><Card className="empty"><h1>पाठ नहीं मिला</h1></Card></Shell>;
 
@@ -739,14 +750,14 @@ const LessonPage = () => {
         <small>हर भाग का उद्देश्य और क्रम स्पष्ट है</small>
       </div>
       <div className="science-outline-list">
-        {scienceSections.map((title, i) => <button key={title + i} className={i === page ? 'active' : ''} aria-current={i === page ? 'step' : undefined} onClick={() => setPage(i)}>
+        {scienceSections.map((title, i) => <button key={title + i} className={i === page ? 'active' : ''} aria-current={i === page ? 'step' : undefined} onClick={() => goToScienceSection(i)}>
           <span>{String(i + 1).padStart(2, '0')}</span><b>{title}</b>
         </button>)}
       </div>
     </nav>}
 
-    <Card className="lesson-card">
-      <div className="study-reader">
+    <Card className="lesson-card" >
+      <div className="study-reader" ref={lessonTopRef}>
         <div className="study-reader-head">
           <div><b>{isScience ? 'Science Study Section' : 'टॉपिक-पाठ'}</b><span>{isScience ? (page + 1) + ' / ' + pages.length : 'पृष्ठ ' + (page + 1) + ' / ' + pages.length}</span></div>
           <div className="study-progress"><span style={{width: progressPercent + '%'}} /></div>
