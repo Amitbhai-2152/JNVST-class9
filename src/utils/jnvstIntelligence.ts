@@ -285,6 +285,74 @@ const challengerOptionIsMeaningful = (text: string): boolean => {
   return normalized.length >= 2 && !/^[A-D]$/i.test(normalized);
 };
 
+export const getChallengerComplexityScore = (question: Question): number => {
+  const text = question.textPlain ?? question.text?.map((block) => block.type === 'paragraph' ? block.text : '').join(' ') ?? '';
+  const normalized = text.replace(/\s+/g, ' ').trim();
+  const tags = new Set(question.tags);
+
+  let score: number = question.difficulty === 'challenge' ? 42 : question.difficulty === 'hard' ? 30 : question.difficulty === 'medium' ? 15 : 0;
+
+  const tagWeights: Record<string, number> = {
+    'multi-step': 10,
+    application: 8,
+    reasoning: 10,
+    'word-problem': 6,
+    reverse: 8,
+    'nested-operation': 7,
+    'algebraic-application': 8,
+    comparison: 6,
+    'simultaneous-reasoning': 9,
+    'successive-change': 7,
+    'successive-percentage': 7,
+    'prime-factorisation': 6,
+    'geometry-application': 7,
+    'percentage': 4,
+    'probability': 5,
+  };
+  for (const [tag, weight] of Object.entries(tagWeights)) {
+    if (tags.has(tag)) score += weight;
+  }
+
+  const stepWords = ['पहले', 'फिर', 'बाद', 'शेष', 'वापस', 'हटा', 'जगह', 'बदल', 'बढ़ा', 'घटा', 'मूल', 'नया', 'साथ', 'क्रमशः', 'निकाला', 'रखा'];
+  const stepHits = new Set(stepWords.filter((word) => normalized.includes(word))).size;
+  if (stepHits >= 3) score += 10;
+  else if (stepHits === 2) score += 6;
+  else if (stepHits === 1) score += 2;
+
+  const operationCount = (normalized.match(/[+−\-×÷=]/g) ?? []).length;
+  if (operationCount >= 5) score += 8;
+  else if (operationCount >= 3) score += 5;
+  else if (operationCount >= 2) score += 2;
+
+  const numberCount = (normalized.match(/\d+(?:\.\d+)?/g) ?? []).length;
+  if (numberCount >= 6) score += 5;
+  else if (numberCount >= 4) score += 3;
+
+  if (/यदि|मान लें|ज्ञात है|दिया गया|का उपयोग|का अंतर|कितना अधिक|कितना कम|कितने प्रतिशत|प्रायिकता|अनुपात/.test(normalized)) score += 4;
+  if (/\?/.test(normalized)) score += 1;
+
+  // Pure one-rule prompts are not enough for Challenger on their own.
+  if (/^(मान ज्ञात कीजिए|सरलीकृत कीजिए|यदि [^,]{0,35},? तो [^?]{0,35} क्या)/.test(normalized) && stepHits < 2) score -= 10;
+  if (/^यदि [^,]{0,25},? तो .*का मान क्या/.test(normalized) && operationCount <= 1 && stepHits === 0) score -= 8;
+
+  return Math.max(0, Math.min(100, score));
+};
+
+const challengerDifficultyRank: Record<Question['difficulty'], number> = {
+  challenge: 0,
+  hard: 1,
+  medium: 2,
+  easy: 3,
+};
+
+const rankChallengerCandidates = (candidates: Question[], seed: string): Question[] =>
+  candidates.slice().sort((a, b) =>
+    getChallengerComplexityScore(b) - getChallengerComplexityScore(a) ||
+    challengerDifficultyRank[a.difficulty] - challengerDifficultyRank[b.difficulty] ||
+    stableHash(seed + ':' + a.id) - stableHash(seed + ':' + b.id) ||
+    a.id.localeCompare(b.id)
+  );
+
 const arrangeChallengerOptions = (question: Question, index: number, seed: string): Question => {
   const correct = question.options.find((option) => question.correctOptionIds.includes(option.id));
   if (!correct) return question;
@@ -317,18 +385,7 @@ export const getChapterChallengerQuestions = (
   seed = 'jnvst-challenger',
 ): Question[] => {
   const target = Math.max(20, limit);
-  const difficultyRank: Record<Question['difficulty'], number> = {
-    challenge: 0,
-    hard: 1,
-    medium: 2,
-    easy: 3,
-  };
-
-  const sourceQuestions = chapterId.startsWith('chap_math_')
-    ? [...mathTopicChallengersV2, ...mathChapterChallengers, ...allQuestions]
-    : allQuestions;
-
-  const candidates = sourceQuestions
+  const allChapterCandidates = [...mathTopicChallengersV2, ...mathChapterChallengers, ...allQuestions]
     .filter((question) =>
       question.chapterId === chapterId &&
       question.type === 'mcq' &&
@@ -336,18 +393,56 @@ export const getChapterChallengerQuestions = (
       question.correctOptionIds.length === 1 &&
       question.options.every((option) => challengerOptionIsMeaningful(option.text)) &&
       new Set(question.options.map((option) => option.text.trim().toLowerCase())).size === 4
-    )
-    .sort((a, b) =>
-      difficultyRank[a.difficulty] - difficultyRank[b.difficulty] ||
-      stableHash(seed + ':' + chapterId + ':' + a.id) - stableHash(seed + ':' + chapterId + ':' + b.id) ||
-      a.id.localeCompare(b.id)
     );
 
-  return candidates
+  const uniqueById = new Map<ID, Question>();
+  for (const question of allChapterCandidates) {
+    // Prefer the dedicated V2 question when an id ever appears in more than one source.
+    if (!uniqueById.has(question.id)) uniqueById.set(question.id, question);
+  }
+
+  const candidates = [...uniqueById.values()];
+  if (!chapterId.startsWith('chap_math_')) {
+    return rankChallengerCandidates(candidates, seed + ':' + chapterId)
+      .slice(0, target)
+      .map((question, index) => arrangeChallengerOptions(question, index, seed + ':' + chapterId));
+  }
+
+  const chapterTopics = topics
+    .filter((topic) => topic.chapterId === chapterId)
+    .sort((a, b) => a.order - b.order);
+
+  // Give every official Maths subtopic a seat before filling by global difficulty/complexity.
+  const baseQuota = Math.floor(target / Math.max(1, chapterTopics.length));
+  let remainder = target % Math.max(1, chapterTopics.length);
+  const selected: Question[] = [];
+  const selectedIds = new Set<ID>();
+
+  for (const topic of chapterTopics) {
+    const quota = baseQuota + (remainder > 0 ? 1 : 0);
+    if (remainder > 0) remainder -= 1;
+    const pool = rankChallengerCandidates(
+      candidates.filter((question) => question.topicId === topic.id),
+      seed + ':' + chapterId + ':' + topic.id,
+    );
+    for (const question of pool.slice(0, quota)) {
+      if (selected.length >= target || selectedIds.has(question.id)) continue;
+      selected.push(question);
+      selectedIds.add(question.id);
+    }
+  }
+
+  for (const question of rankChallengerCandidates(candidates, seed + ':' + chapterId + ':fill')) {
+    if (selected.length >= target) break;
+    if (selectedIds.has(question.id)) continue;
+    selected.push(question);
+    selectedIds.add(question.id);
+  }
+
+  return selected
     .slice(0, target)
     .map((question, index) => arrangeChallengerOptions(question, index, seed + ':' + chapterId));
 };
-
 
 export const getTopicChallengerQuestions = (
   topicId: ID,
@@ -355,30 +450,19 @@ export const getTopicChallengerQuestions = (
   seed = 'jnvst-topic-challenger',
 ): Question[] => {
   const target = Math.max(20, limit);
-  const difficultyRank: Record<Question['difficulty'], number> = {
-    challenge: 0,
-    hard: 1,
-    medium: 2,
-    easy: 3,
-  };
+  const eligible = (question: Question) =>
+    question.subjectId === 'sub_math' &&
+    question.topicId === topicId &&
+    question.type === 'mcq' &&
+    question.options.length === 4 &&
+    question.correctOptionIds.length === 1 &&
+    question.options.every((option) => challengerOptionIsMeaningful(option.text)) &&
+    new Set(question.options.map((option) => option.text.trim().toLowerCase())).size === 4;
 
-  const candidates = [...mathTopicChallengersV2, ...allQuestions]
-    .filter((question) =>
-      question.subjectId === 'sub_math' &&
-      question.topicId === topicId &&
-      question.type === 'mcq' &&
-      question.options.length === 4 &&
-      question.correctOptionIds.length === 1 &&
-      question.options.every((option) => challengerOptionIsMeaningful(option.text)) &&
-      new Set(question.options.map((option) => option.text.trim().toLowerCase())).size === 4
-    )
-    .sort((a, b) =>
-      difficultyRank[a.difficulty] - difficultyRank[b.difficulty] ||
-      stableHash(seed + ':' + topicId + ':' + a.id) - stableHash(seed + ':' + topicId + ':' + b.id) ||
-      a.id.localeCompare(b.id)
-    );
+  const dedicated = mathTopicChallengersV2.filter(eligible);
+  const source = dedicated.length >= target ? dedicated : [...dedicated, ...allQuestions.filter(eligible)];
 
-  return candidates
+  return rankChallengerCandidates(source, seed + ':' + topicId)
     .slice(0, target)
     .map((question, index) => arrangeChallengerOptions(question, index, seed + ':' + topicId));
 };
