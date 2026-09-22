@@ -3,6 +3,7 @@ import { chapters, subjects, topics } from '../data/curriculum';
 import { allQuestions, jnvstExamQuestions } from '../data/questions';
 import { mathChapterChallengers } from '../data/questions/mathChapterChallengers';
 import { mathTopicChallengersV2 } from '../data/questions/mathTopicChallengersV2';
+import { englishChapterChallengers } from '../data/questions/englishChallengers';
 
 export interface TopicPerformance {
   topicId: ID;
@@ -264,6 +265,89 @@ export const getMathSmartPracticeQuestions = (progress: ProgressState, limit = 1
   return result;
 };
 
+export const getEnglishSmartPracticeQuestions = (
+  progress: ProgressState,
+  limit = 12,
+  seed = 'jnvst-english-smart',
+): Question[] => {
+  const englishTopics = topics
+    .filter((topic) => topic.chapterId.startsWith('chap_eng_'))
+    .sort((a, b) => (chapterOrder.get(a.chapterId)! - chapterOrder.get(b.chapterId)!) || (a.order - b.order));
+  const candidates = jnvstExamQuestions.filter((question) => question.subjectId === 'sub_eng');
+  const performances = getTopicPerformances(progress);
+  const scored = candidates.map((question) => {
+    const attempts = progress.questionAttempts?.[question.id] ?? [];
+    const latest = attempts[attempts.length - 1];
+    const daysSinceAttempt = latest ? (Date.now() - latest.timestamp) / (24 * 60 * 60 * 1000) : Infinity;
+    const performance = performances.find((item) => item.topicId === question.topicId);
+    let score = stableHash(seed + ':' + question.id) % 35;
+
+    if (!attempts.length) score += 90;
+    if (latest && !latest.isCorrect) score += 100;
+    if (latest?.isCorrect) score += 5;
+    if (daysSinceAttempt >= 7) score += 25;
+    if (performance?.attempts && performance.accuracy < 80) score += 65;
+    if (!performance?.attempts) score += 20;
+    if (question.difficulty === 'hard') score += 8;
+    if (question.difficulty === 'challenge') score += 12;
+
+    return { question, score };
+  }).sort((a, b) => b.score - a.score || a.question.id.localeCompare(b.question.id));
+
+  const result: Question[] = [];
+  const used = new Set<ID>();
+
+  // Breadth first: every official English topic gets one adaptive question.
+  for (const topic of englishTopics) {
+    if (result.length >= limit) break;
+    const item = scored.find((entry) => entry.question.topicId === topic.id && !used.has(entry.question.id));
+    if (!item) continue;
+    result.push(item.question);
+    used.add(item.question.id);
+  }
+
+  // Then fill remaining slots with the strongest weak/wrong/unseen candidates.
+  for (const item of scored) {
+    if (result.length >= limit) break;
+    if (used.has(item.question.id)) continue;
+    result.push(item.question);
+    used.add(item.question.id);
+  }
+
+  return result;
+};
+
+export const buildEnglishMockPaper = (seed = 'jnvst-english-2027'): Question[] => {
+  const englishTopics = topics
+    .filter((topic) => topic.chapterId.startsWith('chap_eng_'))
+    .sort((a, b) => (chapterOrder.get(a.chapterId)! - chapterOrder.get(b.chapterId)!) || (topicOrder.get(a.id)! - topicOrder.get(b.id)!));
+  const candidates = jnvstExamQuestions.filter((question) => question.subjectId === 'sub_eng');
+  const result: Question[] = [];
+  const used = new Set<ID>();
+
+  // First guarantee one question from each official English topic.
+  for (const topic of englishTopics) {
+    const question = candidates
+      .filter((item) => item.topicId === topic.id && !used.has(item.id))
+      .sort((a, b) => stableHash(seed + ':topic:' + topic.id + ':' + a.id) - stableHash(seed + ':topic:' + topic.id + ':' + b.id) || a.id.localeCompare(b.id))[0];
+    if (!question) continue;
+    result.push(question);
+    used.add(question.id);
+  }
+
+  // Fill the remaining five slots with seeded variety while keeping all questions JNVST-compatible.
+  candidates
+    .filter((question) => !used.has(question.id))
+    .sort((a, b) => stableHash(seed + ':extra:' + a.id) - stableHash(seed + ':extra:' + b.id) || a.id.localeCompare(b.id))
+    .slice(0, Math.max(0, 15 - result.length))
+    .forEach((question) => {
+      result.push(question);
+      used.add(question.id);
+    });
+
+  return result.slice(0, 15);
+};
+
 export const buildJnvstMockPaper = (seed = 'jnvst-2027'): Question[] => {
   const sectionTargets: Record<string, number> = {
     sub_hin: 15,
@@ -385,7 +469,7 @@ export const getChapterChallengerQuestions = (
   seed = 'jnvst-challenger',
 ): Question[] => {
   const target = Math.max(20, limit);
-  const allChapterCandidates = [...mathTopicChallengersV2, ...mathChapterChallengers, ...allQuestions]
+  const allChapterCandidates = [...mathTopicChallengersV2, ...mathChapterChallengers, ...englishChapterChallengers, ...allQuestions]
     .filter((question) =>
       question.chapterId === chapterId &&
       question.type === 'mcq' &&
@@ -402,7 +486,7 @@ export const getChapterChallengerQuestions = (
   }
 
   const candidates = [...uniqueById.values()];
-  if (!chapterId.startsWith('chap_math_')) {
+  if (!chapterId.startsWith('chap_math_') && !chapterId.startsWith('chap_eng_')) {
     return rankChallengerCandidates(candidates, seed + ':' + chapterId)
       .slice(0, target)
       .map((question, index) => arrangeChallengerOptions(question, index, seed + ':' + chapterId));
@@ -412,7 +496,7 @@ export const getChapterChallengerQuestions = (
     .filter((topic) => topic.chapterId === chapterId)
     .sort((a, b) => a.order - b.order);
 
-  // Give every official Maths subtopic a seat before filling by global difficulty/complexity.
+  // Give every official Maths/English subtopic a seat before filling by global difficulty/complexity.
   const baseQuota = Math.floor(target / Math.max(1, chapterTopics.length));
   let remainder = target % Math.max(1, chapterTopics.length);
   const selected: Question[] = [];
