@@ -279,7 +279,7 @@ export const buildJnvstMockPaper = (seed = 'jnvst-2027'): Question[] => {
 };
 
 const challengerOptionIsMeaningful = (text: string): boolean => {
-  const normalized = text.trim().replace(/^[A-D](?:[.)\\-:]|\\s)+/i, '').trim();
+  const normalized = text.trim().replace(/^[A-D](?:[.)]|-|:|\s)+/i, '').trim();
   return normalized.length >= 2 && !/^[A-D]$/i.test(normalized);
 };
 
