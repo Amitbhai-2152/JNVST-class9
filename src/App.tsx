@@ -21,6 +21,7 @@ const examSections = [
 
 const difficultyLabel: Record<Question['difficulty'], string> = { easy: 'आसान', medium: 'मध्यम', hard: 'कठिन', challenge: 'चैलेंज' };
 const sameAnswer = (a: ID[], b: ID[]) => a.length === b.length && a.every((x) => b.includes(x));
+const formatMockTime = (seconds: number) => String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0');
 const InlineText = ({ text }: { text: string }) => <MathAwareText text={text} />;
 
 const ContentRenderer = ({ blocks }: { blocks: ContentBlock[] }) => <div className="lesson-content">{blocks.map((b, i) => {
@@ -912,30 +913,48 @@ const MathMockTestPage = () => {
   const [started, setStarted] = useState(false);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, ID[]>>({});
+  const answersRef = useRef<Record<string, ID[]>>({});
   const [finished, setFinished] = useState(false);
   const [timeLeft, setTimeLeft] = useState(53 * 60);
+  const [markedForReview, setMarkedForReview] = useState<Set<ID>>(new Set());
 
   const q = qs[index];
   const selected = q ? (answers[q.id] || []) : [];
   const answeredCount = Object.values(answers).filter((value) => value.length > 0).length;
   const score = qs.reduce((sum, question) => sum + (sameAnswer(answers[question.id] || [], question.correctOptionIds) ? 1 : 0), 0);
-  const choose = (id: ID) => { if (q) setAnswers((current) => ({ ...current, [q.id]: [id] })); };
+  const choose = (id: ID) => {
+    if (!q) return;
+    const next = { ...answersRef.current, [q.id]: [id] };
+    answersRef.current = next;
+    setAnswers(next);
+  };
+  const toggleMathReview = (questionId: ID) => {
+    setMarkedForReview((current) => {
+      const next = new Set(current);
+      if (next.has(questionId)) next.delete(questionId);
+      else next.add(questionId);
+      return next;
+    });
+  };
+  useEffect(() => { answersRef.current = answers; }, [answers]);
 
   const finish = () => {
+    const currentAnswers = answersRef.current;
     const now = Date.now();
+    const currentScore = qs.reduce((sum, question) => sum + (sameAnswer(currentAnswers[question.id] || [], question.correctOptionIds) ? 1 : 0), 0);
     const result: MockTestResult = {
       id: 'math-mock-' + now,
-      score,
+      score: currentScore,
       totalMarks: qs.length,
       timestamp: now,
-      answers,
-      sectionScores: { sub_math: score },
+      answers: currentAnswers,
+      sectionScores: { sub_math: currentScore },
     };
     p.recordAttempts(qs.map((question) => ({
       id: question.id,
       attempt: {
-        selectedOptionIds: answers[question.id] || [],
-        isCorrect: sameAnswer(answers[question.id] || [], question.correctOptionIds),
+        selectedOptionIds: currentAnswers[question.id] || [],
+        isCorrect: sameAnswer(currentAnswers[question.id] || [], question.correctOptionIds),
         timestamp: now,
         mode: 'mock-test',
       },
@@ -959,11 +978,6 @@ const MathMockTestPage = () => {
     return () => window.clearInterval(timer);
   }, [started, finished]);
 
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return String(minutes).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
-  };
 
   if (finished) {
     const topicStats = mathTopics.map((topic) => {
@@ -990,7 +1004,7 @@ const MathMockTestPage = () => {
           {topicStats.map((topic) => <div className="math-result-topic" key={topic.id}><div><b>{topic.title}</b><span>{topic.correct} / {topic.count} सही</span></div><span className="count">{topic.count ? Math.round((topic.correct / topic.count) * 100) + '%' : '—'}</span></div>)}
         </div>
       </Card>
-      <div className="actions"><button className="btn primary" onClick={() => { setMockNumber((value) => value + 1); setStarted(false); setFinished(false); setIndex(0); setAnswers({}); setTimeLeft(53 * 60); }}>नया गणित Mock</button><Link className="btn" to="/math-smart-practice">गलतियों पर स्मार्ट अभ्यास</Link><Link className="btn" to="/math-formulas">सूत्र-पत्र</Link></div>
+      <div className="actions"><button className="btn primary" onClick={() => { setMockNumber((value) => value + 1); setStarted(false); setFinished(false); setIndex(0); answersRef.current = {}; setAnswers({}); setMarkedForReview(new Set()); setTimeLeft(53 * 60); }}>नया गणित Mock</button><Link className="btn" to="/math-smart-practice">गलतियों पर स्मार्ट अभ्यास</Link><Link className="btn" to="/math-formulas">सूत्र-पत्र</Link></div>
     </Shell>;
   }
 
@@ -1019,21 +1033,25 @@ const MathMockTestPage = () => {
       </ul>
     </Card> : q && <div className="math-mock-layout">
       <Card className="question-card">
-        <div className="progressline"><span>प्रश्न {index + 1} / {qs.length}</span><span>हल किए: {answeredCount}</span><span className={timeLeft <= 300 ? 'mock-timer danger' : 'mock-timer'}>⏱ {formatTime(timeLeft)}</span></div>
+        <div className="progressline test-progressline"><span>प्रश्न {index + 1} / {qs.length}</span><span>हल किए: {answeredCount}</span><span>{markedForReview.size} review</span><span className={timeLeft <= 300 ? 'mock-timer danger' : 'mock-timer'}>⏱ {formatMockTime(timeLeft)}</span></div>
         <div className="question-text">{questionTextBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div>
         <div className="options">{q.options.map(o => <button key={o.id} className={'option ' + (selected.includes(o.id) ? 'selected' : '')} onClick={() => choose(o.id)}><InlineText text={o.text} /></button>)}</div>
-        <div className="study-reader-actions">
-          <button className="btn" disabled={index === 0} onClick={() => setIndex((x) => x - 1)}>← पिछला</button>
-          {index === qs.length - 1
-            ? <button className="btn primary" onClick={finish}>टेस्ट जमा करें</button>
-            : <button className="btn primary" onClick={() => setIndex((x) => x + 1)}>अगला प्रश्न →</button>}
+        <div className="science-mock-actions">
+          <button className={'btn ' + (markedForReview.has(q.id) ? 'review-active' : '')} onClick={() => toggleMathReview(q.id)}>{markedForReview.has(q.id) ? '★ Review में चिन्हित' : '☆ Review के लिए रखें'}</button>
+          <div className="science-mock-nav-actions">
+            <button className="btn" disabled={index === 0} onClick={() => setIndex((x) => x - 1)}>← पिछला</button>
+            {index === qs.length - 1
+              ? <button className="btn primary" onClick={finish}>टेस्ट जमा करें</button>
+              : <button className="btn primary" onClick={() => setIndex((x) => x + 1)}>अगला प्रश्न →</button>}
+          </div>
         </div>
       </Card>
       <Card className="math-mock-palette">
         <h3>Question Navigator</h3>
         <p>{answeredCount} / {qs.length} answered</p>
+        <div className="science-palette-legend"><span>● answered</span><span>★ review</span><span>○ unanswered</span></div>
         <div className="math-palette-grid">
-          {qs.map((question, questionIndex) => <button key={question.id} className={(answers[question.id]?.length ? 'answered ' : '') + (questionIndex === index ? 'current' : '')} onClick={() => setIndex(questionIndex)}>{questionIndex + 1}</button>)}
+          {qs.map((question, questionIndex) => <button key={question.id} className={(answers[question.id]?.length ? 'answered ' : '') + (markedForReview.has(question.id) ? 'marked ' : '') + (questionIndex === index ? 'current' : '')} onClick={() => setIndex(questionIndex)}>{markedForReview.has(question.id) ? '★' : questionIndex + 1}</button>)}
         </div>
       </Card>
     </div>}
@@ -1046,18 +1064,33 @@ const MockTestsPage = () => {
   const [started, setStarted] = useState(false);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, ID[]>>({});
+  const answersRef = useRef<Record<string, ID[]>>({});
   const [finished, setFinished] = useState(false);
   const [timeLeft, setTimeLeft] = useState(150 * 60);
+  const [markedForReview, setMarkedForReview] = useState<Set<ID>>(new Set());
   const q = qs[index];
 
   const selected = q ? (answers[q.id] || []) : [];
-  const choose = (id: ID) => setAnswers((current) => ({
-    ...current,
-    [q.id]: [id],
-  }));
+  const answeredCount = Object.values(answers).filter((value) => value.length > 0).length;
+  const choose = (id: ID) => {
+    if (!q) return;
+    const next = { ...answersRef.current, [q.id]: [id] };
+    answersRef.current = next;
+    setAnswers(next);
+  };
+  const toggleMockReview = (questionId: ID) => {
+    setMarkedForReview((current) => {
+      const next = new Set(current);
+      if (next.has(questionId)) next.delete(questionId);
+      else next.add(questionId);
+      return next;
+    });
+  };
+  useEffect(() => { answersRef.current = answers; }, [answers]);
 
   const finish = () => {
-    const score = qs.reduce((sum, question) => sum + (sameAnswer(answers[question.id] || [], question.correctOptionIds) ? 1 : 0), 0);
+    const currentAnswers = answersRef.current;
+    const score = qs.reduce((sum, question) => sum + (sameAnswer(currentAnswers[question.id] || [], question.correctOptionIds) ? 1 : 0), 0);
     const sectionScores = qs.reduce<Record<string, number>>((scores, question) => {
       scores[question.subjectId] = (scores[question.subjectId] ?? 0) + (sameAnswer(answers[question.id] || [], question.correctOptionIds) ? 1 : 0);
       return scores;
@@ -1073,8 +1106,8 @@ const MockTestsPage = () => {
     p.recordAttempts(qs.map((question) => ({
       id: question.id,
       attempt: {
-        selectedOptionIds: answers[question.id] || [],
-        isCorrect: sameAnswer(answers[question.id] || [], question.correctOptionIds),
+        selectedOptionIds: currentAnswers[question.id] || [],
+        isCorrect: sameAnswer(currentAnswers[question.id] || [], question.correctOptionIds),
         timestamp: Date.now(),
         mode: 'mock-test',
       },
@@ -1109,7 +1142,7 @@ const MockTestsPage = () => {
     return <Shell><div className="page-head"><h1>मॉक टेस्ट परिणाम</h1><p>इस परीक्षा का परिणाम आपकी progress में सुरक्षित कर दिया गया है।</p></div>
       <Card><h2>{latest?.score ?? 0} / {latest?.totalMarks ?? qs.length}</h2><p>सटीकता: {latest?.totalMarks ? Math.round((latest.score / latest.totalMarks) * 100) : 0}%</p>
         <div className="grid">{examSections.map(section => <Card key={section.id}><h3>{section.title}</h3><p>{latest?.sectionScores?.[section.id] ?? 0} / {section.questions}</p></Card>)}</div>
-        <div className="actions"><button className="btn primary" onClick={() => { setStarted(false); setFinished(false); setIndex(0); setAnswers({}); }}>नया मॉक टेस्ट</button><Link className="btn" to="/smart-practice">गलतियों पर अभ्यास</Link></div>
+        <div className="actions"><button className="btn primary" onClick={() => { answersRef.current = {}; setStarted(false); setFinished(false); setIndex(0); setAnswers({}); setMarkedForReview(new Set()); setTimeLeft(150 * 60); }}>नया मॉक टेस्ट</button><Link className="btn" to="/smart-practice">गलतियों पर अभ्यास</Link></div>
       </Card>
     </Shell>;
   }
@@ -1117,12 +1150,23 @@ const MockTestsPage = () => {
   return <Shell>
     <div className="page-head"><h1>JNVST मॉक टेस्ट</h1><p>100 प्रश्न · 150 मिनट · हिंदी 15 · अंग्रेज़ी 15 · गणित 35 · विज्ञान 35</p><div className="actions">{!started && <button className="btn primary" onClick={() => { setTimeLeft(150 * 60); setStarted(true); }}>टेस्ट शुरू करें</button>}</div></div>
     {!started ? <Card><h2>परीक्षा-पूर्व निर्देश</h2><ul><li>केवल चार-विकल्प, एक-सही-उत्तर वाले MCQ इस परीक्षा में लिए गए हैं।</li><li>प्रश्नों का subject-wise वितरण JNVST pattern के अनुसार रखा गया है।</li><li>हर उत्तर चुनकर अगले प्रश्न पर जाएँ; अंत में आपका score और section-wise परिणाम सुरक्षित होगा।</li>
-        <li>150 मिनट का timer आधिकारिक पूरे Selection Test की अवधि को दर्शाता है।</li></ul></Card> : q && <Card className="question-card"><div className="question-body">
-      <div className="progressline"><span>प्रश्न {index + 1} / {qs.length}</span><span>{examSections.find((section) => section.id === q.subjectId)?.title ?? 'विषय'}</span><span className={timeLeft <= 300 ? 'mock-timer danger' : 'mock-timer'}>⏱ {formatTime(timeLeft)}</span></div>
+        <li>150 मिनट का timer आधिकारिक पूरे Selection Test की अवधि को दर्शाता है।</li></ul></Card> : q && <div className="full-mock-layout"><Card className="question-card"><div className="question-body">
+      <div className="progressline test-progressline"><span>प्रश्न {index + 1} / {qs.length}</span><span>{examSections.find((section) => section.id === q.subjectId)?.title ?? 'विषय'}</span><span>हल किए: {answeredCount}</span><span>{markedForReview.size} review</span><span className={timeLeft <= 300 ? 'mock-timer danger' : 'mock-timer'}>⏱ {formatMockTime(timeLeft)}</span></div>
       <div className="question-text">{questionTextBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div>
       <div className="options">{q.options.map(o => <button key={o.id} className={'option ' + (selected.includes(o.id) ? 'selected' : '')} onClick={() => choose(o.id)}><InlineText text={o.text} /></button>)}</div>
-      <div className="study-reader-actions"><button className="btn primary" onClick={() => index === qs.length - 1 ? finish() : setIndex(x => x + 1)}>{index === qs.length - 1 ? 'टेस्ट जमा करें' : 'अगला प्रश्न →'}</button></div>
-    </div></Card>}
+      <div className="science-mock-actions">
+        <button className={'btn ' + (markedForReview.has(q.id) ? 'review-active' : '')} onClick={() => toggleMockReview(q.id)}>{markedForReview.has(q.id) ? '★ Review में चिन्हित' : '☆ Review के लिए रखें'}</button>
+        <div className="science-mock-nav-actions">
+          <button className="btn" disabled={index === 0} onClick={() => setIndex(x => x - 1)}>← पिछला</button>
+          <button className="btn primary" onClick={() => index === qs.length - 1 ? finish() : setIndex(x => x + 1)}>{index === qs.length - 1 ? 'टेस्ट जमा करें' : 'अगला प्रश्न →'}</button>
+        </div>
+      </div>
+    </div></Card>
+    <Card className="full-mock-palette">
+      <div className="full-mock-palette-head"><div><b>Question Navigator</b><span>{answeredCount} / {qs.length} answered</span></div><strong>⏱ {formatMockTime(timeLeft)}</strong></div>
+      <div className="science-palette-legend"><span>● answered</span><span>★ review</span><span>○ unanswered</span></div>
+      <div className="full-mock-palette-grid">{qs.map((question, questionIndex) => <button key={question.id} className={(answers[question.id]?.length ? 'answered ' : '') + (markedForReview.has(question.id) ? 'marked ' : '') + (questionIndex === index ? 'current' : '')} onClick={() => setIndex(questionIndex)}>{markedForReview.has(question.id) ? '★' : questionIndex + 1}</button>)}</div>
+    </Card></div>}
   </Shell>;
 };
 
