@@ -389,20 +389,20 @@ const ScienceSubjectOverview = () => {
           const mastered = Boolean(attemptsForUnit && unitAccuracy >= 80);
           const status = mastered ? 'मजबूत' : attemptsForUnit ? 'अभ्यास चल रहा' : 'शुरू नहीं';
           const questionCountForUnit = topic ? getQuestionsByTopic(topic.id).length : 0;
-          const coverage = questionCountForUnit ? Math.min(100, Math.round((attemptsForUnit / questionCountForUnit) * 100)) : 0;
+          const accuracyForUnit = attemptsForUnit ? unitAccuracy : 0;
           return <Card className="science-learning-card" key={unit.topicId}>
             <div className="science-learning-card-top">
               <span className="science-unit-number">{String(index + 1).padStart(2, '0')}</span>
               <div>
                 <span className={`science-status ${mastered ? 'mastered' : attemptsForUnit ? 'active' : 'new'}`}>{status}</span>
                 <h4>{unit.title}</h4>
-                <small>{questionCountForUnit} प्रश्न · {lessonId ? '1 guided lesson' : 'lesson unavailable'}</small>
+                <small>{questionCountForUnit} प्रश्न · {lessonId ? '1 guided lesson' : 'पाठ उपलब्ध नहीं'}</small>
               </div>
             </div>
             <p className="science-learning-focus">{unit.coreSkills.slice(0, 2).join(' · ')}</p>
-            <div className="science-learning-meta"><span>अभ्यास कवरेज</span><b>{coverage}%</b></div>
-            <div className="science-progress"><span style={{width: coverage + '%'}} /></div>
-            {attemptsForUnit > 0 && <div className="science-learning-accuracy">हाल की सटीकता: <b>{unitAccuracy}%</b></div>}
+            <div className="science-learning-meta"><span>अभ्यास सटीकता</span><b>{attemptsForUnit ? unitAccuracy + '%' : '—'}</b></div>
+            <div className="science-progress"><span style={{width: accuracyForUnit + '%'}} /></div>
+            {attemptsForUnit > 0 && <div className="science-learning-accuracy">{attemptsForUnit} प्रश्न-प्रयास दर्ज हैं</div>}
             <div className="actions">
               {lessonId && <Link className="btn" to={`/lessons/${lessonId}`}>पाठ पढ़ें</Link>}
               <Link className="btn primary" to={`/practice/${unit.topicId}`}>अभ्यास करें</Link>
@@ -475,7 +475,7 @@ const ScienceSmartPracticePage = () => {
   };
 
   return <Shell>
-    <div className="page-head"><Link to="/subjects/sub_sci">← विज्ञान तैयारी केंद्र</Link><p>यह अभ्यास केवल Science के JNVST-compatible MCQs से बनता है और आपकी कमजोर/गलत/अनदेखी items को प्राथमिकता देता है।</p><h1>🎯 स्मार्ट विज्ञान अभ्यास</h1><div className="progressline"><span>प्रश्न {i + 1} / {qs.length}</span><span>{topics.find((topic) => topic.id === q.topicId)?.title ?? 'विज्ञान'}</span></div></div>
+    <div className="page-head"><Link to="/subjects/sub_sci">← विज्ञान तैयारी केंद्र</Link><p>यह अभ्यास केवल Science के JNVST-compatible MCQs से बनता है और आपकी कमजोर/गलत/अनदेखी items को प्राथमिकता देता है।</p><h1>🎯 स्मार्ट विज्ञान अभ्यास</h1><div className="progressline"><span>प्रश्न {i + 1} / {qs.length}</span><span>{topics.find((topic) => topic.id === q.topicId)?.title ?? 'विज्ञान'}</span><span>{difficultyLabel[q.difficulty]}</span></div></div>
     <Card className="science-smart-banner"><div><b>12 प्रश्न · Science-only adaptive set</b><span>पहले chapter coverage, फिर weak areas और पिछली गलतियों पर फोकस।</span></div><Link className="btn" to="/science-mock-test">35 प्रश्न का Science Mock →</Link></Card>
     <Card className="question-card"><div className="question-body">
       <div className="question-text">{questionTextBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div>
@@ -554,7 +554,7 @@ const ScienceMockTestPage = () => {
   return <Shell>
     <div className="page-head"><Link to="/subjects/sub_sci">← विज्ञान तैयारी केंद्र</Link><h1>⏱ विज्ञान Mock Test</h1><p>35 प्रश्न · 35 अंक · केवल विज्ञान · सभी 18 units की कम-से-कम 1-question coverage</p>{!started && <div className="actions"><button className="btn primary" onClick={() => {answersRef.current={};setAnswers({});setTimeLeft(50*60);setStarted(true);}}>टेस्ट शुरू करें</button></div>}</div>
     {!started ? <Card className="science-mock-intro"><h2>टेस्ट से पहले</h2><div className="pattern"><div><b>35</b><span>प्रश्न</span></div><div><b>35</b><span>अंक</span></div><div><b>50 min</b><span>recommended practice time</span></div><div><b>18</b><span>इकाइयाँ</span></div><div><b>1+</b><span>प्रश्न/इकाई</span></div><div><b>4</b><span>विकल्प/प्रश्न</span></div></div><ul><li>यह Science-only practice mock है; यह आधिकारिक अलग Science परीक्षा-समय नहीं है।</li><li>हर प्रश्न चार विकल्प और एक सही उत्तर वाले MCQ pool से आता है।</li><li>Question navigator से किसी भी प्रश्न पर जा सकते हैं; खाली प्रश्न बाद में कर सकते हैं।</li><li>50 मिनट recommended practice limit है; पूरा JNVST Selection Test आधिकारिक रूप से 150 मिनट का है।</li></ul></Card>
-    : q && <div className="science-mock-layout"><Card className="question-card"><div className="progressline"><span>प्रश्न {index+1} / {qs.length}</span><span>हल किए: {answeredCount}</span><span className={timeLeft<=300 ? 'mock-timer danger' : 'mock-timer'}>⏱ {formatTime(timeLeft)}</span></div><div className="question-text">{questionTextBlocks(q).map((b,idx)=><ContentRenderer key={idx} blocks={[b]} />)}</div><div className="options">{q.options.map((o)=><button key={o.id} className={'option ' + (answers[q.id]?.includes(o.id) ? 'selected' : '')} onClick={()=>choose(o.id)}><InlineText text={o.text}/></button>)}</div><div className="study-reader-actions"><button className="btn" disabled={index===0} onClick={()=>setIndex(x=>x-1)}>← पिछला</button>{index===qs.length-1?<button className="btn primary" onClick={finish}>टेस्ट जमा करें</button>:<button className="btn primary" onClick={()=>setIndex(x=>x+1)}>अगला प्रश्न →</button>}</div></Card>
+    : q && <div className="science-mock-layout"><Card className="question-card"><div className="progressline"><span>प्रश्न {index+1} / {qs.length}</span><span>{topics.find((topic) => topic.id === q.topicId)?.title ?? 'विज्ञान'} · {difficultyLabel[q.difficulty]}</span><span className={timeLeft<=300 ? 'mock-timer danger' : 'mock-timer'}>⏱ {formatTime(timeLeft)}</span></div><div className="question-text">{questionTextBlocks(q).map((b,idx)=><ContentRenderer key={idx} blocks={[b]} />)}</div><div className="options">{q.options.map((o)=><button key={o.id} className={'option ' + (answers[q.id]?.includes(o.id) ? 'selected' : '')} onClick={()=>choose(o.id)}><InlineText text={o.text}/></button>)}</div><div className="study-reader-actions"><button className="btn" disabled={index===0} onClick={()=>setIndex(x=>x-1)}>← पिछला</button>{index===qs.length-1?<button className="btn primary" onClick={finish}>टेस्ट जमा करें</button>:<button className="btn primary" onClick={()=>setIndex(x=>x+1)}>अगला प्रश्न →</button>}</div></Card>
       <Card className="science-mock-palette"><h3>Question Navigator</h3><p>{answeredCount} / {qs.length} answered</p><div className="science-palette-grid">{qs.map((question,qi)=><button key={question.id} className={(answers[question.id]?.length ? 'answered ' : '') + (qi===index ? 'current' : '')} onClick={()=>setIndex(qi)}>{qi+1}</button>)}</div></Card></div>}
   </Shell>;
 };
