@@ -300,6 +300,85 @@ export const buildMathMockPaper = (seed = 'jnvst-math-2027'): Question[] => {
   return [...base, ...extras];
 };
 
+export const getScienceSmartPracticeQuestions = (
+  progress: ProgressState,
+  limit = 12,
+  seed = 'jnvst-science-smart',
+): Question[] => {
+  const scienceTopics = topics
+    .filter((topic) => topic.chapterId.startsWith('chap_sci_'))
+    .sort((a, b) => (chapterOrder.get(a.chapterId)! - chapterOrder.get(b.chapterId)!) || (a.order - b.order));
+  const candidates = jnvstExamQuestions.filter((question) => question.subjectId === 'sub_sci');
+  const performances = getTopicPerformances(progress);
+  const scored = candidates.map((question) => {
+    const attempts = progress.questionAttempts?.[question.id] ?? [];
+    const latest = attempts[attempts.length - 1];
+    const daysSinceAttempt = latest ? (Date.now() - latest.timestamp) / (24 * 60 * 60 * 1000) : Infinity;
+    const perf = performances.find((item) => item.topicId === question.topicId);
+    let score = stableHash(seed + ':' + question.id) % 30;
+    if (!attempts.length) score += 80;
+    if (latest && !latest.isCorrect) score += 90;
+    if (latest?.isCorrect) score += 10;
+    if (daysSinceAttempt >= 7) score += 25;
+    if (perf?.attempts && perf.accuracy < 80) score += 60;
+    if (!perf?.attempts) score += 20;
+    if (question.difficulty === 'hard') score += 8;
+    if (question.difficulty === 'challenge') score += 12;
+    return { question, score };
+  }).sort((a, b) => b.score - a.score || a.question.id.localeCompare(b.question.id));
+
+  const result: Question[] = [];
+  const used = new Set<ID>();
+
+  // First pass: ensure all three Science chapters contribute before adapting freely.
+  for (const chapter of scienceChaptersForSmartPractice()) {
+    const item = scored.find((entry) => entry.question.chapterId === chapter.id && !used.has(entry.question.id));
+    if (!item || result.length >= limit) continue;
+    result.push(item.question);
+    used.add(item.question.id);
+  }
+  for (const item of scored) {
+    if (result.length >= limit) break;
+    if (used.has(item.question.id)) continue;
+    result.push(item.question);
+    used.add(item.question.id);
+  }
+  return result;
+};
+
+const scienceChaptersForSmartPractice = () =>
+  chapters.filter((chapter) => chapter.subjectId === 'sub_sci').sort((a, b) => a.order - b.order);
+
+export const buildScienceMockPaper = (seed = 'jnvst-science-2027'): Question[] => {
+  const scienceTopics = topics
+    .filter((topic) => topic.chapterId.startsWith('chap_sci_'))
+    .sort((a, b) => (chapterOrder.get(a.chapterId)! - chapterOrder.get(b.chapterId)!) || (a.order - b.order));
+  const candidates = jnvstExamQuestions.filter((question) => question.subjectId === 'sub_sci');
+  const result: Question[] = [];
+  const used = new Set<ID>();
+
+  // One question from every Science topic: all 18 units are guaranteed to appear.
+  for (const topic of scienceTopics) {
+    const question = candidates
+      .filter((item) => item.topicId === topic.id)
+      .sort((a, b) => stableHash(seed + ':topic:' + topic.id + ':' + a.id) - stableHash(seed + ':topic:' + topic.id + ':' + b.id))[0];
+    if (question && !used.has(question.id)) {
+      result.push(question);
+      used.add(question.id);
+    }
+  }
+
+  // Fill to the official 35-question Science section with seeded variety.
+  for (const question of candidates
+    .filter((item) => !used.has(item.id))
+    .sort((a, b) => stableHash(seed + ':extra:' + a.id) - stableHash(seed + ':extra:' + b.id))) {
+    if (result.length >= 35) break;
+    result.push(question);
+    used.add(question.id);
+  }
+  return result;
+};
+
 export const getPerformanceSummary = (progress: ProgressState) => {
   const attempts = Object.values(progress.questionAttempts ?? {}).flat();
   const correct = attempts.filter((attempt) => attempt.isCorrect).length;
