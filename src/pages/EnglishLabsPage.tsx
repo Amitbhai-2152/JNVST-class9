@@ -69,13 +69,14 @@ const TranslationLearn = ({
   const [showAnswer, setShowAnswer] = useState(true);
 
   const example = useMemo(() => {
-    if (exampleIndex < translationLabItems.length) {
-      const source = translationLabItems[exampleIndex];
+    const fixedPool = level === 0 ? translationLabItems : translationLabItems.filter((source) => source.level === level);
+    if (exampleIndex < fixedPool.length) {
+      const source = fixedPool[exampleIndex];
       if (source.direction === direction) return source;
       return { ...source, direction, prompt: source.displayAnswer, displayAnswer: source.prompt, acceptableAnswers: [source.prompt] };
     }
     const generatedLevel = level === 0 ? ((exampleIndex % 6) + 1) : level;
-    return generateTranslationItem(generatedLevel, direction, 7200 + generatedLevel * 1009 + (exampleIndex - translationLabItems.length) * 7919);
+    return generateTranslationItem(generatedLevel, direction, 7200 + generatedLevel * 1009 + (exampleIndex - fixedPool.length) * 7919);
   }, [direction, level, exampleIndex]);
 
   const nextExample = () => {
@@ -103,6 +104,12 @@ const TranslationLearn = ({
           <button className={direction === 'en-hi' ? 'active' : ''} onClick={() => { setDirection('en-hi'); setExampleIndex(0); setShowAnswer(true); }}>English → Hindi</button>
         </div>
         <div className="english-lab-levels compact">
+          <button
+            className={level === 0 ? 'active' : ''}
+            onClick={() => { setLevel(0); setExampleIndex(0); setShowAnswer(true); }}
+          >
+            <b>All Levels</b><span>पूरा translation bank</span>
+          </button>
           {translationLevels.map((entry) => (
             <button
               key={entry.level}
@@ -252,6 +259,7 @@ const TranslationLab = () => {
   const p = useProgressStore();
   const [direction, setDirection] = useState<TranslationDirection>('hi-en');
   const [level, setLevel] = useState(1);
+  const [learnLevel, setLearnLevel] = useState(0);
   const [session, setSession] = useState(0);
   const [index, setIndex] = useState(0);
   const [answer, setAnswer] = useState('');
@@ -279,6 +287,7 @@ const TranslationLab = () => {
     setIndex(0);
     setSession((x) => x + 1);
     resetQuestion();
+    setLearnLevel(0);
   };
 
   const changeLevel = (value: number) => {
@@ -317,8 +326,8 @@ const TranslationLab = () => {
 
       {labMode === 'learn' ? (
         <TranslationLearn
-          level={level}
-          setLevel={changeLevel}
+          level={learnLevel}
+          setLevel={setLearnLevel}
           direction={direction}
           setDirection={changeDirection}
         />
