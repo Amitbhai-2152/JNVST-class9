@@ -1,4 +1,4 @@
-import type { Chapter, ContentBlock, Lesson, Topic } from "../../types";
+import type { Chapter, ContentBlock, Lesson, Topic, ID } from "../../types";
 import { allQuestions } from "../questions";
 import { richChapterContent } from "./richChapterContent";
 import { scienceStudyPages, scienceLessonCore, scienceLessonLens } from "../scienceLessonCore";
@@ -68,7 +68,14 @@ export const getScienceChapterStudyPages = (chapter: Chapter): ContentBlock[][] 
   const stored = topicId ? scienceStudyPages[topicId] : undefined;
   if (stored?.length === 12) {
     return stored.map((page, index) => [
-      pageTitle(chapter, index + 1, page.find((b) => b.type === "heading" && b.level === 2)?.text.replace(/^पृष्ठ\s+\d+\s+·\s*/, "").trim() ?? ""),
+      pageTitle(
+        chapter,
+        index + 1,
+        (() => {
+          const pageHeading = page.find((b): b is Extract<ContentBlock, { type: "heading" }> => b.type === "heading" && b.level === 2);
+          return pageHeading?.text.replace(/^पृष्ठ\s+\d+\s+·\s*/, "").trim() ?? "";
+        })(),
+      ),
       ...page.slice(1),
     ]);
   }
