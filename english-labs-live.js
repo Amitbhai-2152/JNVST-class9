@@ -210,32 +210,31 @@
   const mount=()=>{
     const hash=location.hash||'';
     const route=hash.split('?')[0];
-    const wanted=route.includes('/english-translation-lab')?'translation':route.includes('/english-vocabulary-lab')?'vocabulary':'';
+    const wanted=route.includes('/english-translation-practice')?'translation-practice':route.includes('/english-vocabulary-practice')?'vocabulary-practice':route.includes('/english-translation-lab')?'translation':route.includes('/english-vocabulary-lab')?'vocabulary':'';
     if(!wanted){
       const old=document.getElementById(OVERLAY);if(old)old.remove();return;
     }
     style();
     if(state.lab!==wanted){
-      state.lab=wanted;state.mode='learn';state.transIndex=0;state.vocabIndex=0;state.transSeen.clear();state.answer='';state.checked=false;
+      state.lab=wanted;state.mode=wanted.endsWith('-practice')?'practice':'learn';state.transIndex=0;state.vocabIndex=0;state.transSeen.clear();state.answer='';state.checked=false;
       if(wanted==='vocabulary')resetVocabulary();
     }
     let root=document.getElementById(OVERLAY);
     if(!root){root=document.createElement('div');root.id=OVERLAY;document.body.appendChild(root);}
-    root.innerHTML=wanted==='translation'
-      ? shell('Translation Learn + Practice','पहले अलग-अलग sentence structures के real examples सीखें। फिर Practice में खुद translation करें। Learn stream session में exact sentence repeat नहीं करेगा।')
-      : shell('Vocabulary Learn + Practice','पहले word, हिन्दी meaning, synonyms, antonyms और context सीखें। Expanded bank के सभी unique words एक round में केवल एक बार आएँगे।');
+    root.innerHTML=(wanted==='translation'||wanted==='translation-practice')
+      ? shell(wanted==='translation-practice'?'Translation Practice Page':'Translation Learn + Practice',wanted==='translation-practice'?'अब केवल practice करें: sentence translate करें, hint लें और उत्तर check करें।':'पहले अलग-अलग sentence structures के real examples सीखें। फिर Practice में खुद translation करें। Learn stream session में exact sentence repeat नहीं करेगा।')
+      : shell(wanted==='vocabulary-practice'?'Vocabulary Practice Page':'Vocabulary Learn + Practice',wanted==='vocabulary-practice'?'अब केवल practice करें: meaning, synonym, antonym और context questions solve करें।':'पहले word, हिन्दी meaning, synonyms, antonyms और context सीखें। Expanded bank के सभी unique words एक round में केवल एक बार आएँगे।');
     renderControls();
     wanted==='translation'?renderTranslationBody():renderVocabularyBody();
   };
 
   const renderControls=()=>{
     const c=document.getElementById('jel-content');
+    const dedicatedPractice=state.lab.endsWith('-practice');
+    const baseLab=state.lab==='translation-practice'?'translation':state.lab==='vocabulary-practice'?'vocabulary':state.lab;
     c.insertAdjacentHTML('afterbegin',`
-      <div class="jel-tabs">
-        <button class="jel-btn ${state.mode==='learn'?'active':''}" data-jel="mode" data-val="learn">📖 Learn & Examples</button>
-        <button class="jel-btn ${state.mode==='practice'?'active':''}" data-jel="mode" data-val="practice">🎯 Practice</button>
-      </div>
-      ${state.lab==='translation'?'<div class="jel-card"><div class="jel-row"><button class="jel-btn '+(state.direction==='hi-en'?'active':'')+'" data-jel="dir" data-val="hi-en">Hindi → English</button><button class="jel-btn '+(state.direction==='en-hi'?'active':'')+'" data-jel="dir" data-val="en-hi">English → Hindi</button></div><div class="jel-levels"><button class="jel-level '+(state.level===0?'active':'')+'" data-jel="level" data-val="0"><b>All Levels</b><span>पूरी range</span></button>'+[1,2,3,4,5,6].map(l=>'<button class="jel-level '+(state.level===l?'active':'')+'" data-jel="level" data-val="'+l+'"><b>Level '+l+'</b><span>'+['Foundation','Everyday English','Grammar Builder','Mixed Grammar','Strong Sentence','Exam Bridge'][l-1]+'</span></button>').join('')+'</div></div>':'<div class="jel-card"><div class="jel-row"><button class="jel-btn '+(state.level==='all'?'active':'')+'" data-jel="vlevel" data-val="all">All Levels · '+VOCAB.length+' words</button>'+['beginner','basic','intermediate','jnvst','challenge'].map(l=>'<button class="jel-btn '+(state.level===l?'active':'')+'" data-jel="vlevel" data-val="'+l+'">'+l+'</button>').join('')+'</div></div>'}
+      ${dedicatedPractice?'<div class="jel-card"><div class="jel-row"><a class="jel-btn" href="#/english-'+baseLab+'">← Learn & Examples</a><span class="jel-counter">DEDICATED PRACTICE PAGE</span></div></div>':'<div class="jel-tabs"><button class="jel-btn '+(state.mode==='learn'?'active':'')+'" data-jel="mode" data-val="learn">📖 Learn & Examples</button><button class="jel-btn '+(state.mode==='practice'?'active':'')+'" data-jel="mode" data-val="practice">🎯 Practice</button></div>'}
+      ${baseLab==='translation'?'<div class="jel-card"><div class="jel-row"><button class="jel-btn '+(state.direction==='hi-en'?'active':'')+'" data-jel="dir" data-val="hi-en">Hindi → English</button><button class="jel-btn '+(state.direction==='en-hi'?'active':'')+'" data-jel="dir" data-val="en-hi">English → Hindi</button></div><div class="jel-levels"><button class="jel-level '+(state.level===0?'active':'')+'" data-jel="level" data-val="0"><b>All Levels</b><span>पूरी range</span></button>'+[1,2,3,4,5,6].map(l=>'<button class="jel-level '+(state.level===l?'active':'')+'" data-jel="level" data-val="'+l+'"><b>Level '+l+'</b><span>'+['Foundation','Everyday English','Grammar Builder','Mixed Grammar','Strong Sentence','Exam Bridge'][l-1]+'</span></button>').join('')+'</div></div>':'<div class="jel-card"><div class="jel-row">'+(dedicatedPractice?['meaning','reverse','synonym','antonym','context'].map(l=>'<button class="jel-btn" data-jel="vpractice" data-val="'+l+'">'+(l==='meaning'?'Word → Hindi':l==='reverse'?'Hindi → Word':l==='synonym'?'Synonym':l==='antonym'?'Antonym':'Context')+'</button>').join(''):'')+'<button class="jel-btn '+(state.level==='all'?'active':'')+'" data-jel="vlevel" data-val="all">All Levels · '+VOCAB.length+' words</button>'+['beginner','basic','intermediate','jnvst','challenge'].map(l=>'<button class="jel-btn '+(state.level===l?'active':'')+'" data-jel="vlevel" data-val="'+l+'">'+l+'</button>').join('')+'</div></div>'}
     `);
   };
 
@@ -253,7 +252,7 @@
           <div class="jel-steps"><b>Sentence बनाने के steps</b><ol>${item.steps.map(x=>'<li>'+esc(x)+'</li>').join('')}</ol></div>
         </div>
         <div class="jel-memory"><b>Remember:</b> पहले structure बोलें, फिर पूरा sentence बिना देखे दोहराएँ।</div>
-        <div class="jel-row" style="margin-top:14px"><button class="jel-btn primary" data-jel="next-trans">अगला example →</button></div>
+        <div class="jel-row" style="margin-top:14px"><button class="jel-btn primary" data-jel="next-trans">अगला example →</button><a class="jel-btn" href="#/english-translation-practice">🎯 Practice Page</a></div>
       `;
     }else{
       card.innerHTML=`
@@ -284,7 +283,7 @@
         <div class="jel-grid" style="margin-top:14px"><div class="jel-mini"><b>Synonyms</b><p>${esc(item.synonyms.length?item.synonyms.join(', '):'—')}</p></div><div class="jel-mini"><b>Antonyms</b><p>${esc(item.antonyms.length?item.antonyms.join(', '):'—')}</p></div></div>
         <div class="jel-context"><small>Fresh context example</small><p>${esc(vocabExample(item,state.vocabIndex+state.vocabRound))}</p><span>Context meaning: ${esc(item.meaning)}</span></div>
         <div class="jel-memory"><b>याद करने की 4-step method:</b> word पढ़ें → Hindi meaning बोलें → example में उपयोग देखें → बिना देखे meaning recall करें।</div>
-        <div class="jel-row" style="margin-top:14px"><button class="jel-btn primary" data-jel="next-vocab">अगला word →</button></div>
+        <div class="jel-row" style="margin-top:14px"><button class="jel-btn primary" data-jel="next-vocab">अगला word →</button><a class="jel-btn" href="#/english-vocabulary-practice">🎯 Practice Page</a></div>
       `;
     }else{
       const opts=shuffle([item.meaning,...shuffle(chosen.filter(x=>x.word!==item.word).map(x=>x.meaning)).slice(0,3)]);
