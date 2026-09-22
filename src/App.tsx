@@ -210,7 +210,26 @@ const Dashboard = () => {
 
 const SubjectsPage = () => <Shell><div className="page-head"><h1>विषय</h1><p>विषय चुनें और अभ्यास शुरू करें।</p></div><div className="grid">{subjects.map(s => <Link key={s.id} to={`/subjects/${s.id}`}><Card className="subject-card"><div className="icon">{s.iconRef}</div><h2>{s.title}</h2><p>{s.description}</p></Card></Link>)}</div></Shell>;
 
-const TopicCard = ({ topicId }: { topicId: ID }) => { const t = topics.find(x => x.id === topicId)!; const qCount = getQuestionsByTopic(t.id).length; const lessonId = t.lessonIds[0]; const lesson = lessonId ? getLesson(lessonId) : undefined; const chapter = chapters.find(x => x.id === t.chapterId); const topicPages = lesson ? getStudyPages(lesson.content).length : 0; const chapterPages = chapter ? getChapterStudyPages(chapter, allLessons, 12).length : 12; return <Card className="topic-card"><div className="topic-top"><h3>{t.title}</h3><span className="count">{qCount} प्रश्न</span></div><div className="topic-meta"><span>📖 अध्याय अध्ययन: {chapterPages} पृष्ठ</span><span>⏱ विस्तृत पाठ</span></div><div className="actions">{lessonId && <Link className="btn" to={`/lessons/${lessonId}`}>टॉपिक पढ़ें{topicPages ? ` · ${topicPages} पृष्ठ` : ''}</Link>}<Link className="btn primary" to={`/chapters/${t.chapterId}/study`}>अध्याय पढ़ें</Link><Link className="btn" to={`/practice/${t.id}`}>अभ्यास करें</Link></div></Card>; };
+const TopicCard = ({ topicId }: { topicId: ID }) => {
+  const t = topics.find(x => x.id === topicId)!;
+  const qCount = getQuestionsByTopic(t.id).length;
+  const lessonId = t.lessonIds[0];
+  const chapter = chapters.find(x => x.id === t.chapterId);
+  const isMath = t.id.startsWith('top_math_');
+  const chapterPages = chapter ? getChapterStudyPages(chapter, allLessons, 12).length : 12;
+  return <Card className="topic-card">
+    <div className="topic-top"><h3>{t.title}</h3><span className="count">{qCount} प्रश्न</span></div>
+    <div className="topic-meta">
+      <span>📖 अध्याय अध्ययन: {chapterPages} पृष्ठ</span>
+      <span>{isMath ? '🎯 अभ्यास + Challenger' : '⏱ विस्तृत पाठ'}</span>
+    </div>
+    <div className="actions">
+      {!isMath && lessonId && <Link className="btn" to={`/lessons/${lessonId}`}>टॉपिक पढ़ें</Link>}
+      <Link className="btn primary" to={`/chapters/${t.chapterId}/study`}>अध्याय पढ़ें</Link>
+      <Link className="btn" to={`/practice/${t.id}`}>अभ्यास करें</Link>
+    </div>
+  </Card>;
+};
 
 const MathSubjectOverview = () => {
   const p = useProgressStore();
@@ -264,37 +283,6 @@ const MathSubjectOverview = () => {
       </Card>
     </div>
 
-    <section className="math-chapter-map">
-      <div className="math-mastery-head">
-        <div>
-          <span className="eyebrow">5 CHAPTERS • 11 OFFICIAL UNITS</span>
-          <h3>पूरा गणित Study Roadmap</h3>
-          <p>हर chapter के अंदर सभी official units हैं। पहले concept पढ़ें, फिर topic practice, फिर Smart Practice और अंत में Math Mock।</p>
-        </div>
-      </div>
-      <div className="math-chapter-grid">
-        {chapters.filter((chapter) => chapter.subjectId === 'sub_math').sort((a, b) => a.order - b.order).map((chapter) => {
-          const chapterTopics = chapter.topicIds.map((id) => topics.find((topic) => topic.id === id)).filter(Boolean) as typeof topics;
-          const chapterPerformance = chapterTopics.map((topic) => performances.find((item) => item.topicId === topic.id));
-          const mastered = chapterPerformance.filter((item) => item?.attempts && item.accuracy >= 80).length;
-          const attempted = chapterPerformance.filter((item) => item?.attempts).length;
-          const pct = chapterTopics.length ? Math.round((mastered / chapterTopics.length) * 100) : 0;
-          return <Card className="math-chapter-card" key={chapter.id}>
-            <div className="math-chapter-card-head"><span className="math-unit-number">{String(chapter.order).padStart(2, '0')}</span><div><h4>{chapter.title}</h4><small>{chapterTopics.length} इकाइयाँ · {attempted} practiced · {mastered} mastered</small></div></div>
-            <div className="math-progress"><span style={{ width: pct + '%' }} /></div>
-            <div className="math-chapter-topics">
-              {chapterTopics.map((topic) => {
-                const performance = performances.find((item) => item.topicId === topic.id);
-                const done = performance?.attempts && performance.accuracy >= 80;
-                return <Link to={`/practice/${topic.id}`} key={topic.id} className={`math-mini-topic ${done ? 'done' : ''}`}><span>{done ? '✓' : '•'}</span><span>{topic.title}</span></Link>;
-              })}
-            </div>
-            <div className="actions"><Link className="btn" to={`/chapters/${chapter.id}`}>Chapter खोलें</Link><Link className="btn primary" to={`/chapters/${chapter.id}/study`}>पूरा अध्ययन</Link></div>
-          </Card>;
-        })}
-      </div>
-    </section>
-
     <section className="math-mastery">
       <div className="math-mastery-head">
         <div>
@@ -317,7 +305,6 @@ const MathSubjectOverview = () => {
               <div><h4>मुख्य सूत्र</h4><div className="math-formula-chips">{unit.formulaFacts.map((formula) => <span key={formula}><MathText value={formula} /></span>)}</div></div>
               <div><h4>Exam Traps</h4><ul>{unit.examTraps.map((item) => <li key={item}>{item}</li>)}</ul></div>
               <div className="actions">
-                {topic?.lessonIds[0] && <Link className="btn" to={`/lessons/${topic.lessonIds[0]}`}>पाठ पढ़ें</Link>}
                 <Link className="btn primary" to={`/practice/${unit.topicId}`}>प्रश्न हल करें</Link>
               </div>
             </div>
@@ -665,6 +652,67 @@ const ChapterPage = () => {
     </Shell>;
   }
 
+  if (c.subjectId === 'sub_math') {
+    const chapterTopics = c.topicIds.map((id) => topics.find((topic) => topic.id === id)).filter(Boolean) as typeof topics;
+    const masteryUnits = chapterTopics.map((topic) => mathMasteryUnitMap.get(topic.id)).filter(Boolean) as typeof mathMasteryUnits;
+    const questionCountForChapter = chapterTopics.reduce((sum, topic) => sum + getQuestionsByTopic(topic.id).length, 0);
+    const performances = getTopicPerformances(p);
+    const chapterPerformance = chapterTopics.map((topic) => performances.find((item) => item.topicId === topic.id)).filter(Boolean);
+    const attemptsForChapter = chapterPerformance.reduce((sum, item) => sum + (item?.attempts ?? 0), 0);
+    const correctForChapter = chapterPerformance.reduce((sum, item) => sum + (item?.correct ?? 0), 0);
+    const accuracyForChapter = attemptsForChapter ? Math.round((correctForChapter / attemptsForChapter) * 100) : 0;
+    const pageCount = getChapterStudyPages(c, allLessons, 12).length;
+    const challengerCount = getChapterChallengerQuestions(c.id, 20).length;
+    const previous = chapters.find((item) => item.subjectId === 'sub_math' && item.order === c.order - 1);
+    const next = chapters.find((item) => item.subjectId === 'sub_math' && item.order === c.order + 1);
+
+    return <Shell>
+      <section className="math-chapter-page">
+        <div className="math-chapter-topbar">
+          <Link to="/subjects/sub_math">← गणित तैयारी केंद्र</Link>
+          <span>अध्याय {String(c.order).padStart(2, '0')} / 5</span>
+        </div>
+        <div className="math-chapter-hero">
+          <div>
+            <span className="eyebrow">MATHEMATICS • JNVST CHAPTER</span>
+            <h1>{c.title}</h1>
+            <p>{masteryUnits.slice(0, 2).map((unit) => unit?.coreSkills.slice(0, 2).join(' · ')).join(' · ') || 'इस अध्याय के मुख्य concepts, methods और JNVST अभ्यास।'}</p>
+            <div className="actions">
+              <Link className="btn primary" to={`/chapters/${c.id}/study`}>📖 अध्याय पढ़ें</Link>
+              <a className="btn" href="#math-chapter-practice">🎯 अभ्यास करें</a>
+              <Link className="btn challenger" to={`/chapters/${c.id}/challenger`}>⚡ Challenger · {challengerCount}</Link>
+            </div>
+          </div>
+          <div className="math-chapter-index"><span>CHAPTER</span><strong>{String(c.order).padStart(2, '0')}</strong><small>{pageCount} अध्ययन पृष्ठ · {chapterTopics.length} इकाइयाँ</small></div>
+        </div>
+        <div className="math-chapter-stats">
+          <Card><b>{questionCountForChapter}</b><span>अभ्यास प्रश्न</span></Card>
+          <Card><b>{pageCount}</b><span>अध्ययन पृष्ठ</span></Card>
+          <Card><b>{attemptsForChapter}</b><span>आपके प्रयास</span></Card>
+          <Card><b>{attemptsForChapter ? accuracyForChapter + '%' : '—'}</b><span>आपकी सटीकता</span></Card>
+        </div>
+        <div className="math-chapter-focus-grid">
+          <Card><span className="science-panel-label">CHAPTER FOCUS</span><h3>मुख्य skills</h3><div className="math-chapter-chip-list">{masteryUnits.flatMap((unit) => unit?.coreSkills.slice(0, 3) ?? []).map((item) => <span key={item}>{item}</span>)}</div></Card>
+          <Card><span className="science-panel-label">FORMULA + TRAPS</span><h3>याद रखने योग्य</h3><ul className="math-chapter-list">{masteryUnits.flatMap((unit) => unit?.mustKnow.slice(0, 2) ?? []).slice(0, 4).map((item) => <li key={item}><InlineText text={item} /></li>)}</ul></Card>
+          <Card><span className="science-panel-label">EXAM TRAPS</span><h3>गलती से बचें</h3><ul className="math-chapter-list">{masteryUnits.flatMap((unit) => unit?.examTraps.slice(0, 2) ?? []).slice(0, 4).map((item) => <li key={item}>{item}</li>)}</ul></Card>
+        </div>
+        <section id="math-chapter-practice" className="math-chapter-practice">
+          <div className="math-chapter-section-head"><div><span className="eyebrow">PRACTICE BY UNIT</span><h2>अभ्यास</h2><p>हर इकाई के प्रश्न अलग से हल करें; performance उसी topic पर दर्ज होगी।</p></div></div>
+          <div className="math-practice-grid">
+            {chapterTopics.map((topic) => <Card className="math-practice-card" key={topic.id}><div className="math-practice-card-top"><span>{String(topic.order).padStart(2, '0')}</span><b>{getQuestionsByTopic(topic.id).length} प्रश्न</b></div><h3>{topic.title}</h3><p>{mathMasteryUnitMap.get(topic.id)?.coreSkills.slice(0, 2).join(' · ') || 'इस इकाई के JNVST अभ्यास प्रश्न।'}</p><div className="actions"><Link className="btn primary" to={`/practice/${topic.id}`}>अभ्यास शुरू करें →</Link></div></Card>)}
+          </div>
+        </section>
+        <section className="math-chapter-challenger">
+          <div><span className="eyebrow">20-QUESTION CHALLENGER</span><h2>Challenger Mode</h2><p>{challengerCount} प्रश्नों का कठिन chapter set — चार विकल्प, varied answer positions और review सहित। पहले अध्याय अध्ययन कर लेना recommended है।</p></div>
+          <Link className="btn challenger" to={`/chapters/${c.id}/challenger`}>⚡ Challenger शुरू करें</Link>
+        </section>
+        <div className="math-chapter-footer">
+          {previous ? <Link className="math-chapter-nav" to={`/chapters/${previous.id}`}>← {String(previous.order).padStart(2, '0')} · {previous.title}</Link> : <span/>}
+          {next ? <Link className="math-chapter-nav next" to={`/chapters/${next.id}`}>{String(next.order).padStart(2, '0')} · {next.title} →</Link> : <span/>}
+        </div>
+      </section>
+    </Shell>;
+  }
   const pageCount = getChapterStudyPages(c, allLessons, 12).length;
   return <Shell><div className="page-head"><Link to={`/subjects/${s.id}`}>← {s.title}</Link><h1>{c.title}</h1><p>{pageCount} पृष्ठ का अध्याय अध्ययन पाठ उपलब्ध है।</p><div className="actions"><Link className="btn primary" to={`/chapters/${c.id}/study`}>📖 अध्याय पढ़ें · {pageCount}+ पृष्ठ</Link><Link className="btn challenger" to={`/chapters/${c.id}/challenger`}>⚡ Challenger Questions · {getChapterChallengerQuestions(c.id, 20).length}</Link></div></div><div className="grid">{c.topicIds.map(id => <TopicCard key={id} topicId={id} />)}</div></Shell>;
 };
@@ -1082,13 +1130,16 @@ const PracticePage = () => {
   const { topicId } = useParams();
   const qs = useMemo(() => getQuestionsByTopic(topicId || ''), [topicId]);
   const q = qs[0];
+  const isMath = q?.chapterId?.startsWith('chap_math_');
+  const topic = topics.find((item) => item.id === topicId);
   return <AssessmentRunner
     questions={qs}
-    title="अभ्यास"
+    title={isMath ? '🎯 ' + (topic?.title ?? 'गणित') + ' — अभ्यास' : 'अभ्यास'}
     backTo={q?.chapterId?.startsWith('chap_sci_') ? '/subjects/sub_sci' : q?.chapterId ? '/chapters/' + q.chapterId : '/subjects'}
     backLabel={q?.chapterId?.startsWith('chap_sci_') ? 'विज्ञान तैयारी केंद्र' : 'अध्याय'}
-    description="इस topic के पूरे question set को exam-style timed practice की तरह हल करें। सही उत्तर टेस्ट पूरा होने के बाद दिखाया जाएगा।"
-    badge="TOPIC PRACTICE"
+    description={isMath ? 'इस गणित इकाई के पूरे question set को timed practice की तरह हल करें। उत्तर और explanation टेस्ट पूरा होने के बाद answer review में देखें।' : 'इस topic के पूरे question set को exam-style timed practice की तरह हल करें। सही उत्तर टेस्ट पूरा होने के बाद दिखाया जाएगा।'}
+    badge={isMath ? 'MATH PRACTICE' : 'TOPIC PRACTICE'}
+    bannerLink={isMath && q?.chapterId ? { to: '/chapters/' + q.chapterId + '/study', label: '📖 अध्याय अध्ययन →' } : undefined}
   />;
 };
 
