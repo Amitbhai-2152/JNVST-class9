@@ -438,7 +438,16 @@ const wordParts: Record<string, 'adjective' | 'verb' | 'adverb' | 'noun'> = {
 };
 
 const pickExample = (word: string, subject: string, seed: number): string => {
-  const type = wordParts[word] ?? 'noun';
+  const type = wordParts[word];
+  if (!type) {
+    const variants = [
+      'In the lesson, ' + subject + ' learned the word "' + word + '" and linked it with its Hindi meaning.',
+      subject + ' wrote the word "' + word + '" in a vocabulary notebook for revision.',
+      'The teacher used the word "' + word + '" while explaining the passage to ' + subject + '.',
+      'During revision, ' + subject + ' recalled the word "' + word + '" from its Hindi meaning.',
+    ];
+    return variants[Math.abs(hashSeed(seed, 913)) % variants.length];
+  }
   const variant = Math.abs(hashSeed(seed, 901)) % 4;
   if (type === 'adjective') {
     const templates = [
