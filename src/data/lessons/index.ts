@@ -6,7 +6,6 @@ import { englishLessonsData } from './english';
 import { hindiLessonsData } from './hindi';
 import { mathLessonsData } from './math';
 import { scienceLessonsData } from './science';
-import { getPhase5Enhancement } from './phase5Content';
 
 const PAGE_COUNT = 12;
 
@@ -61,11 +60,9 @@ const paginateLesson = (lesson: Lesson): Lesson => {
   // question-based practice content so every curriculum topic gets the same
   // concept/example/trap/exam-recall treatment without deleting existing material.
   const lessonSource = lesson.content.filter((block) => !isStudyMarker(block));
-  const phase5Source = getPhase5Enhancement(lesson.topicId);
   const lessonAtoms = lessonSource.flatMap(atomize);
-  const phase5Atoms = phase5Source.flatMap(atomize);
   const questionAtoms = questionUnits(lesson);
-  const source = [...lessonAtoms, ...phase5Atoms, ...questionAtoms];
+  const source = [...lessonAtoms, ...questionAtoms];
 
   if (!source.length) {
     const fallback: ContentBlock[] = lesson.objectives.length
@@ -100,7 +97,7 @@ const paginateLesson = (lesson: Lesson): Lesson => {
     pages.push(...content);
   }
 
-  return {\n    ...lesson,\n    estimatedMinutes: lesson.estimatedMinutes + (phase5Source.length ? 10 : 0),\n    content: pages,\n  };
+  return {\n    ...lesson,\n    estimatedMinutes: lesson.estimatedMinutes + 10,\n    content: pages,\n  };
 };
 
 export const allLessons: Lesson[] = [
