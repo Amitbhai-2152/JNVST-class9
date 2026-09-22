@@ -99,18 +99,7 @@ const getStudyPages = (blocks: ContentBlock[]): ContentBlock[][] => {
   }
   if (current.length) pages.push(current);
   return pages.length ? pages : [blocks];
-};const getStudyPages = (blocks: ContentBlock[]): ContentBlock[][] => {
-  const pages: ContentBlock[][] = [];
-  let current: ContentBlock[] = [];
-  for (const block of blocks) {
-    const marker = block.type === 'heading' && /^अध्ययन पृष्ठ\s+\d+/.test(block.text);
-    if (marker && current.length) { pages.push(current); current = []; }
-    current.push(block);
-  }
-  if (current.length) pages.push(current);
-  return pages.length ? pages : [blocks];
-};
-const getScienceStudyPages = (blocks: ContentBlock[]): ContentBlock[][] => {
+};const getScienceStudyPages = (blocks: ContentBlock[]): ContentBlock[][] => {
   const pages: ContentBlock[][] = [];
   let current: ContentBlock[] = [];
   for (const block of blocks) {
