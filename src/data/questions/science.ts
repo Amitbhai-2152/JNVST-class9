@@ -14,6 +14,7 @@ import { scienceQuestionsPart12 } from './sciencePart12';
 import { scienceQuestionsPart13 } from './sciencePart13';
 import { scienceQuestionsPart14 } from './sciencePart14';
 import { scienceQuestionsPart15 } from './sciencePart15';
+import { scienceChapterChallengers } from './scienceChapterChallengers';
 
 export const scienceQuestions: Question[] = [
   ...scienceQuestionsPart01,
@@ -31,4 +32,5 @@ export const scienceQuestions: Question[] = [
   ...scienceQuestionsPart13,
   ...scienceQuestionsPart14,
   ...scienceQuestionsPart15,
+  ...scienceChapterChallengers,
 ];
