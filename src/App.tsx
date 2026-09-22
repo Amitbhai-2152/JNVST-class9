@@ -8,7 +8,7 @@ import { MathAwareText, MathText } from './components/MathText';
 import { useProgressStore } from './store/progress';
 import type { ContentBlock, ID, MockTestResult, Question } from './types';
 import { buildJnvstMockPaper, buildMathMockPaper, buildScienceMockPaper, getChapterChallengerQuestions, getPerformanceSummary, getRevisionTopics, getSmartPracticeQuestions, getMathSmartPracticeQuestions, getScienceSmartPracticeQuestions, getSmartRecommendations, getWeakTopics, getTopicPerformances } from './utils/jnvstIntelligence';
-import { mathMasteryUnits } from './data/mathMastery';
+import { mathMasteryUnits, mathMasteryUnitMap } from './data/mathMastery';
 import { scienceMasteryUnits } from './data/sciencePrep';
 import { scienceLessonCore } from './data/scienceLessonCore';
 
