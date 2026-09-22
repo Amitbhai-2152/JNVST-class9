@@ -51,26 +51,26 @@ const groups: FormulaGroup[] = [
     title: '5. प्रत्यक्ष और प्रतिलोम समानुपात',
     focus: 'राशियों के बीच स्थिर संबंध',
     formulas: [
-      { label: 'प्रत्यक्ष', value: 'y\\propto x\\Rightarrow\\frac{y}{x}=\\text{स्थिर}' },
-      { label: 'प्रतिलोम', value: 'y\\propto\\frac{1}{x}\\Rightarrow xy=\\text{स्थिर}' },
+      { label: 'प्रत्यक्ष', value: 'y=kx' },
+      { label: 'प्रतिलोम', value: 'xy=k' },
     ],
   },
   {
     title: '6. राशियों की तुलना',
     focus: 'प्रतिशत, लाभ-हानि, छूट और ब्याज',
     formulas: [
-      { label: 'प्रतिशत', value: '\\text{प्रतिशत}=\\frac{\\text{भाग}}{\\text{पूर्ण राशि}}\\times100' },
-      { label: 'लाभ', value: '\\text{लाभ}=SP-CP' },
-      { label: 'लाभ प्रतिशत', value: '\\text{लाभ\\%}=\\frac{SP-CP}{CP}\\times100' },
-      { label: 'हानि प्रतिशत', value: '\\text{हानि\\%}=\\frac{CP-SP}{CP}\\times100' },
-      { label: 'छूट प्रतिशत', value: '\\text{छूट\\%}=\\frac{MP-SP}{MP}\\times100' },
+      { label: 'प्रतिशत', value: 'P=\\frac{a}{t}\\times100' },
+      { label: 'लाभ', value: 'L=SP-CP' },
+      { label: 'लाभ प्रतिशत', value: 'LP=\\frac{L}{CP}\\times100' },
+      { label: 'हानि प्रतिशत', value: 'HP=\\frac{H}{CP}\\times100' },
+      { label: 'छूट प्रतिशत', value: 'DP=\\frac{D}{MP}\\times100' },
       { label: 'साधारण ब्याज', value: 'SI=\\frac{P\\times R\\times T}{100}' },
       { label: 'चक्रवृद्धि राशि', value: 'A=P\\left(1+\\frac{R}{100}\\right)^n' },
     ],
   },
   {
     title: '7. बीजीय व्यंजक, सर्वसमिकाएँ और गुणनखंडन',
-    focus: 'सरलीकरण, विस्तार और factorisation',
+    focus: 'सरलीकरण, विस्तार और गुणनखंडन',
     formulas: [
       { label: 'पहली सर्वसमिका', value: '(a+b)^2=a^2+2ab+b^2' },
       { label: 'दूसरी सर्वसमिका', value: '(a-b)^2=a^2-2ab+b^2' },
@@ -91,7 +91,7 @@ const groups: FormulaGroup[] = [
     focus: 'गुण, कोण और विकर्ण',
     formulas: [
       { label: 'चतुर्भुज के कोणों का योग', value: '\\angle A+\\angle B+\\angle C+\\angle D=360^\\circ' },
-      { label: 'समांतर चतुर्भुज', value: '\\text{आसन्न कोणों का योग}=180^\\circ' },
+      { label: 'समांतर चतुर्भुज', value: 'A+B=180^\\circ' },
       { label: 'समांतर चतुर्भुज का क्षेत्रफल', value: 'A=bh' },
       { label: 'समचतुर्भुज का क्षेत्रफल', value: 'A=\\frac{1}{2}d_1d_2' },
     ],
@@ -114,10 +114,10 @@ const groups: FormulaGroup[] = [
     title: '11. आँकड़ों का प्रबंधन और प्रायिकता',
     focus: 'तालिका, बार ग्राफ, वृत्त आलेख और सरल प्रायिकता',
     formulas: [
-      { label: 'माध्य', value: '\\text{माध्य}=\\frac{\\text{सभी प्रेक्षणों का योग}}{\\text{प्रेक्षणों की संख्या}}' },
-      { label: 'वृत्त आलेख से मान', value: '\\text{मान}=\\frac{\\text{केंद्रीय कोण}}{360^\\circ}\\times\\text{कुल मान}' },
-      { label: 'प्रायिकता', value: 'P(E)=\\frac{\\text{अनुकूल परिणाम}}{\\text{कुल समान संभावित परिणाम}}' },
-      { label: 'पूरक घटना', value: 'P(\\text{नहीं }E)=1-P(E)' },
+      { label: 'माध्य', value: '\\bar{x}=\\frac{\\Sigma x}{n}' },
+      { label: 'वृत्त आलेख से मान', value: 'A=\\frac{\\theta}{360^\\circ}\\times T' },
+      { label: 'प्रायिकता', value: 'P(E)=\\frac{n(E)}{n(S)}' },
+      { label: 'पूरक घटना', value: 'P(E')=1-P(E)' },
     ],
   },
 ];
