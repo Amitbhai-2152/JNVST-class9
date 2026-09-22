@@ -2,7 +2,7 @@ import type { Question } from '../../types';
 
 export const scienceQuestionsPart13: Question[] = [
   {
-    id: 'q_sci_b3_18_001', type: 'mcq', subjectId: 'sub_sci', chapterId: 'chap_sci_03', topicId: 'top_sci_03_06',
+    id: 'q_sci_b3_18_001', type: 'mcq', subjectId: 'sub_sci', chapterId: 'chap_sci_07', topicId: 'top_sci_03_06',
     textPlain: 'वन्यजीव अभयारण्य स्थापित करने का मुख्य उद्देश्य क्या है?',
     options: [
       { id: 'opt_1', text: 'केवल लकड़ी का उत्पादन बढ़ाना' },
@@ -16,7 +16,7 @@ export const scienceQuestionsPart13: Question[] = [
     tags: ['conservation', 'wildlife-sanctuary', 'purpose']
   },
   {
-    id: 'q_sci_b3_18_002', type: 'mcq', subjectId: 'sub_sci', chapterId: 'chap_sci_03', topicId: 'top_sci_03_06',
+    id: 'q_sci_b3_18_002', type: 'mcq', subjectId: 'sub_sci', chapterId: 'chap_sci_07', topicId: 'top_sci_03_06',
     textPlain: 'राष्ट्रीय उद्यान और वन्यजीव अभयारण्य दोनों में मुख्य समानता क्या है?',
     options: [
       { id: 'opt_1', text: 'दोनों का उद्देश्य प्राकृतिक जीवन और उसके आवास का संरक्षण करना है।' },
@@ -30,7 +30,7 @@ export const scienceQuestionsPart13: Question[] = [
     tags: ['conservation', 'national-park', 'comparison']
   },
   {
-    id: 'q_sci_b3_18_003', type: 'mcq', subjectId: 'sub_sci', chapterId: 'chap_sci_03', topicId: 'top_sci_03_06',
+    id: 'q_sci_b3_18_003', type: 'mcq', subjectId: 'sub_sci', chapterId: 'chap_sci_07', topicId: 'top_sci_03_06',
     textPlain: 'जीवमंडल आरक्षित क्षेत्र की प्रमुख विशेषता क्या है?',
     options: [
       { id: 'opt_1', text: 'यह केवल एक प्रजाति की रक्षा करता है।' },
@@ -44,7 +44,7 @@ export const scienceQuestionsPart13: Question[] = [
     tags: ['conservation', 'biosphere-reserve', 'biodiversity']
   },
   {
-    id: 'q_sci_b3_18_004', type: 'mcq', subjectId: 'sub_sci', chapterId: 'chap_sci_03', topicId: 'top_sci_03_06',
+    id: 'q_sci_b3_18_004', type: 'mcq', subjectId: 'sub_sci', chapterId: 'chap_sci_07', topicId: 'top_sci_03_06',
     textPlain: 'जिस प्रजाति के पृथ्वी से पूरी तरह समाप्त हो जाने की पुष्टि हो चुकी हो, उसे क्या कहा जाता है?',
     options: [
       { id: 'opt_1', text: 'सामान्य प्रजाति' },
@@ -58,7 +58,7 @@ export const scienceQuestionsPart13: Question[] = [
     tags: ['conservation', 'extinction', 'definitions']
   },
   {
-    id: 'q_sci_b3_18_005', type: 'mcq', subjectId: 'sub_sci', chapterId: 'chap_sci_03', topicId: 'top_sci_03_06',
+    id: 'q_sci_b3_18_005', type: 'mcq', subjectId: 'sub_sci', chapterId: 'chap_sci_07', topicId: 'top_sci_03_06',
     textPlain: 'किसी प्रजाति के बहुत कम संख्या में रह जाने और उसके समाप्त होने के खतरे को क्या कहा जाता है?',
     options: [
       { id: 'opt_1', text: 'संकटग्रस्त स्थिति' },
@@ -72,7 +72,7 @@ export const scienceQuestionsPart13: Question[] = [
     tags: ['conservation', 'endangered-species', 'definitions']
   },
   {
-    id: 'q_sci_b3_18_006', type: 'mcq', subjectId: 'sub_sci', chapterId: 'chap_sci_03', topicId: 'top_sci_03_06',
+    id: 'q_sci_b3_18_006', type: 'mcq', subjectId: 'sub_sci', chapterId: 'chap_sci_07', topicId: 'top_sci_03_06',
     textPlain: 'वनों की कटाई का कौन-सा प्रभाव जैव विविधता के लिए सबसे प्रतिकूल है?',
     options: [
       { id: 'opt_1', text: 'वन्यजीवों के प्राकृतिक आवास का नष्ट होना' },
@@ -86,7 +86,7 @@ export const scienceQuestionsPart13: Question[] = [
     tags: ['conservation', 'deforestation', 'habitat']
   },
   {
-    id: 'q_sci_b3_18_007', type: 'mcq', subjectId: 'sub_sci', chapterId: 'chap_sci_03', topicId: 'top_sci_03_06',
+    id: 'q_sci_b3_18_007', type: 'mcq', subjectId: 'sub_sci', chapterId: 'chap_sci_07', topicId: 'top_sci_03_06',
     textPlain: 'लुप्तप्राय प्रजातियों की जानकारी और संरक्षण की आवश्यकता को समझने में कौन-सी पुस्तक उपयोगी मानी जाती है?',
     options: [
       { id: 'opt_1', text: 'रेड डाटा बुक' },
@@ -100,7 +100,7 @@ export const scienceQuestionsPart13: Question[] = [
     tags: ['conservation', 'red-data-book', 'endangered-species']
   },
   {
-    id: 'q_sci_b3_18_008', type: 'mcq', subjectId: 'sub_sci', chapterId: 'chap_sci_03', topicId: 'top_sci_03_06',
+    id: 'q_sci_b3_18_008', type: 'mcq', subjectId: 'sub_sci', chapterId: 'chap_sci_07', topicId: 'top_sci_03_06',
     textPlain: 'किसी वन क्षेत्र में पेड़ काटने के बाद वहाँ दोबारा पेड़ लगाना किस प्रक्रिया का उदाहरण है?',
     options: [
       { id: 'opt_1', text: 'पुनर्वनीकरण' },
@@ -114,7 +114,7 @@ export const scienceQuestionsPart13: Question[] = [
     tags: ['conservation', 'reforestation', 'restoration']
   },
   {
-    id: 'q_sci_b3_18_009', type: 'mcq', subjectId: 'sub_sci', chapterId: 'chap_sci_03', topicId: 'top_sci_03_06',
+    id: 'q_sci_b3_18_009', type: 'mcq', subjectId: 'sub_sci', chapterId: 'chap_sci_07', topicId: 'top_sci_03_06',
     textPlain: 'वन्यजीवों के प्राकृतिक आवास के नष्ट होने पर उनका एक स्थान से दूसरे स्थान की ओर जाना मुख्यतः किस कारण से हो सकता है?',
     options: [
       { id: 'opt_1', text: 'भोजन और सुरक्षित आवास की कमी' },
@@ -128,7 +128,7 @@ export const scienceQuestionsPart13: Question[] = [
     tags: ['conservation', 'habitat-loss', 'reasoning']
   },
   {
-    id: 'q_sci_b3_18_010', type: 'mcq', subjectId: 'sub_sci', chapterId: 'chap_sci_03', topicId: 'top_sci_03_06',
+    id: 'q_sci_b3_18_010', type: 'mcq', subjectId: 'sub_sci', chapterId: 'chap_sci_07', topicId: 'top_sci_03_06',
     textPlain: 'फ्लोरा और फॉना शब्द क्रमशः किससे संबंधित हैं?',
     options: [
       { id: 'opt_1', text: 'किसी क्षेत्र के पौधे और जंतु' },
