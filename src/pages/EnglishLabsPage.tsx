@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { translationLabItems, translationLevels, vocabularyLabItems, vocabularyLevels, type TranslationDirection } from '../data/englishLabs';
 import { generateTranslationItem, generateVocabularyItem } from '../data/englishLabGenerator';
@@ -67,6 +67,11 @@ const TranslationLearn = ({
 }) => {
   const [exampleIndex, setExampleIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(true);
+  const seenExamplesRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    seenExamplesRef.current.clear();
+  }, [direction, level]);
 
   const example = useMemo(() => {
     const fixedPool = level === 0 ? translationLabItems : translationLabItems.filter((source) => source.level === level);
@@ -75,9 +80,23 @@ const TranslationLearn = ({
       if (source.direction === direction) return source;
       return { ...source, direction, prompt: source.displayAnswer, displayAnswer: source.prompt, acceptableAnswers: [source.prompt] };
     }
+
     const generatedLevel = level === 0 ? ((exampleIndex % 6) + 1) : level;
-    return generateTranslationItem(generatedLevel, direction, 7200 + generatedLevel * 1009 + (exampleIndex - fixedPool.length) * 7919);
+    const baseSeed = 7200 + generatedLevel * 1009 + (exampleIndex - fixedPool.length) * 7919;
+    let candidate = generateTranslationItem(generatedLevel, direction, baseSeed);
+    let offset = 0;
+    const keyOf = (item: typeof candidate) => item.prompt + '||' + item.displayAnswer;
+    while (seenExamplesRef.current.has(keyOf(candidate)) && offset < 500) {
+      offset += 1;
+      candidate = generateTranslationItem(generatedLevel, direction, baseSeed + offset * 104729);
+    }
+    return candidate;
   }, [direction, level, exampleIndex]);
+
+  useEffect(() => {
+    if (!example) return;
+    seenExamplesRef.current.add(example.prompt + '||' + example.displayAnswer);
+  }, [example]);
 
   const nextExample = () => {
     setExampleIndex((value) => value + 1);
@@ -173,11 +192,26 @@ const VocabularyLearn = ({
 }) => {
   const [exampleIndex, setExampleIndex] = useState(0);
   const [showMeaning, setShowMeaning] = useState(true);
+  const seenWordsRef = useRef<Set<string>>(new Set());
 
-  const word = useMemo(
-    () => generateVocabularyItem(level, 15000 + exampleIndex * 97, vocabularyLabItems),
-    [level, exampleIndex],
-  );
+  useEffect(() => {
+    seenWordsRef.current.clear();
+  }, [level]);
+
+  const word = useMemo(() => {
+    let candidate = generateVocabularyItem(level, 15000 + exampleIndex * 97, vocabularyLabItems);
+    let offset = 0;
+    while (seenWordsRef.current.has(candidate.word.toLowerCase()) && offset < 500) {
+      offset += 1;
+      candidate = generateVocabularyItem(level, 15000 + exampleIndex * 97 + offset * 1009, vocabularyLabItems);
+    }
+    return candidate;
+  }, [level, exampleIndex]);
+
+  useEffect(() => {
+    if (!word) return;
+    seenWordsRef.current.add(word.word.toLowerCase());
+  }, [word]);
 
   const nextWord = () => {
     setExampleIndex((value) => value + 1);
@@ -190,7 +224,7 @@ const VocabularyLearn = ({
         <div>
           <span className="eyebrow">VOCABULARY MEMORY STREAM</span>
           <h2>Word → Meaning → Example → Revision</h2>
-          <p>हर word को हिन्दी meaning, synonyms, antonyms और fresh context sentence के साथ याद करें। All Levels में पूरा expanded word bank क्रम से पढ़ें; उसके बाद fresh revision examples जारी रहते हैं।</p>
+          <p>हर word को हिन्दी meaning, synonyms, antonyms और fresh context sentence के साथ याद करें। All Levels में पूरा expanded word bank क्रम से पढ़ें; एक ही session में कोई word दोबारा नहीं आएगा। पूरा bank खत्म होने पर revision examples जारी होंगे।</p>
         </div>
         <div className="english-learn-progress">
           <b>Word {exampleIndex + 1}</b>
@@ -203,7 +237,7 @@ const VocabularyLearn = ({
           className={level === 'all' ? 'active' : ''}
           onClick={() => { setLevel('all'); setExampleIndex(0); setShowMeaning(true); }}
         >
-          <b>All Levels</b><small>पूरा expanded bank</small>
+          <b>All Levels</b><small>पूरा bank · no-repeat</small>
         </button>
         {vocabularyLevels.map((entry) => (
           <button
