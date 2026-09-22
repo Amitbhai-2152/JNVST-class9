@@ -12,7 +12,7 @@ const lessonCounts = Object.fromEntries(scienceTopics.map((topic) => [
 const questionCounts = Object.fromEntries(scienceTopics.map((topic) => [
   topic.id, scienceQuestions.filter((question) => question.topicId === topic.id).length,
 ]));
-const targetQuestionsPerTopic = 15;
+const targetQuestionsPerTopic = 20;
 
 const missingLessons = scienceTopics.filter((topic) => (lessonCounts[topic.id] ?? 0) < 1).map((topic) => topic.id);
 const emptyQuestionTopics = scienceTopics.filter((topic) => (questionCounts[topic.id] ?? 0) === 0).map((topic) => topic.id);
