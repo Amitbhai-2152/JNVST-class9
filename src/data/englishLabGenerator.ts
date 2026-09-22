@@ -280,7 +280,6 @@ const vastAdjectives = [
   {en:'focused',hiM:'एकाग्र',hiF:'एकाग्र'},{en:'helpful',hiM:'मददगार',hiF:'मददगार'},{en:'regular',hiM:'नियमित',hiF:'नियमित'},{en:'calm',hiM:'शांत',hiF:'शांत'},
 ];
 const vastPick = <T,>(items:T[], index:number):T => items[((index % items.length)+items.length)%items.length];
-const vastIndices = (n:number, lengths:number[]) => lengths.map((len, i) => Math.floor(n / lengths.slice(0,i).reduce((a,b)=>a*b,1)) % len);
 const vastBuild = (
   level: TranslationItem['level'],
   direction: TranslationDirection,
@@ -313,7 +312,7 @@ const vastBuild = (
       break;
     case 1:
       en = subject.en + ' does not ' + action.enBase + ' ' + time.en + '.';
-      hi = subject.hi + ' ' + time.hi + ' ' + hiPresent.replace(/(ता|ती) है$/, '').trim() + ' नहीं करता/करती।';
+      hi = subject.hi + ' ' + hiPresent.replace(/ता है$/, 'ता नहीं है').replace(/ती है$/, 'ती नहीं है') + ' ' + time.hi + '।';
       grammarPoint = 'Simple Present Negative: does not + V1';
       hint = 'Negative + singular subject में does not के बाद V1 रखें।';
       explanation = 'Does not already tense carries करता है, इसलिए main verb base form में रहता है।';
@@ -321,7 +320,7 @@ const vastBuild = (
       break;
     case 2:
       en = 'Does ' + subject.en + ' ' + action.enBase + ' ' + time.en + '?';
-      hi = 'क्या ' + subject.hi + ' ' + hiPresent.replace(/(ता|ती) है$/, '').trim() + ' ' + time.hi + '?';
+      hi = 'क्या ' + subject.hi + ' ' + hiPresent + ' ' + time.hi + '?';
       grammarPoint = 'Simple Present Question: Does + subject + V1?';
       hint = 'क्या... करता/करती है? = Does + subject + V1';
       explanation = 'Does question का tense mark है, इसलिए main verb base form में रहता है।';
@@ -329,7 +328,7 @@ const vastBuild = (
       break;
     case 3:
       en = subject.en + ' is ' + action.enIng + ' ' + time.en + '.';
-      hi = subject.hi + ' ' + time.hi + ' ' + (subject.gender === 'f' ? action.hiPresentF.replace(/ता|ती/,'रही') : action.hiPresentM.replace(/ता|ते/,'रहा')) + '।';
+      hi = subject.hi + ' ' + (subject.gender === 'f' ? action.hiPresentF.replace(/ती है$/, 'रही है') : action.hiPresentM.replace(/ता है$/, 'रहा है')) + ' ' + time.hi + '।';
       grammarPoint = 'Present Continuous: is + V-ing';
       hint = 'अभी/इस समय चल रहे काम के लिए is + V-ing।';
       explanation = 'Singular subject के साथ is और main verb का -ing form ongoing action दिखाता है।';
@@ -361,7 +360,7 @@ const vastBuild = (
       break;
     case 7:
       en = subject.en + ' should ' + action.enBase + ' ' + time.en + '.';
-      hi = subject.hi + ' को ' + time.hi + ' ' + hiPresent.replace(/(ता|ती) है$/, '').trim() + ' चाहिए।';
+      hi = subject.hi + ' को ' + time.hi + ' ' + hiPresent.replace(/ता है$/, 'ना चाहिए').replace(/ती है$/, 'नी चाहिए') + '।';
       grammarPoint = 'Modal: should + V1';
       hint = 'चाहिए = should; इसके बाद V1 आता है।';
       explanation = 'Should advice/recommendation दिखाता है और उसके बाद main verb base form में रहता है।';
@@ -385,7 +384,7 @@ const vastBuild = (
       break;
     case 10:
       en = 'Although ' + subject.en + ' was ' + adj.en + ', ' + subject.en + ' ' + action.enPast + '.';
-      hi = 'हालाँकि ' + subject.hi + ' ' + (subject.gender === 'f' ? 'थकी' : 'थका') + ' हुई/हुआ था, फिर भी ' + subject.hi + ' ने ' + hiPast + '।';
+      hi = 'हालाँकि ' + subject.hi + ' ' + hiAdj + ' था/थी, फिर भी ' + subject.hi + ' ने ' + hiPast + '।';
       grammarPoint = 'Although + contrast clause';
       hint = 'हालाँकि = although; contrast के बाद main result देखें।';
       explanation = 'Although दो ideas में contrast बनाता है; main action past tense में रखा गया है।';
@@ -393,7 +392,7 @@ const vastBuild = (
       break;
     default:
       en = 'When ' + subject.en + ' arrived at ' + place.en + ', ' + subject.en + ' was ' + action.enIng + '.';
-      hi = 'जब ' + subject.hi + ' ' + place.hi + ' पहुँचा/पहुँची, तब ' + subject.hi + ' ' + (subject.gender === 'f' ? '...' : '...') + '।';
+      hi = 'जब ' + subject.hi + ' ' + place.hi + ' पहुँचा' + (subject.gender === 'f' ? 'ी' : '') + ', तब ' + subject.hi + ' ' + (subject.gender === 'f' ? action.hiPresentF.replace(/ती है$/, 'रही थी') : action.hiPresentM.replace(/ता है$/, 'रहा था')) + '।';
       grammarPoint = 'When + Simple Past, Past Continuous';
       hint = 'एक past event हुआ और दूसरा action उस समय चल रहा था।';
       explanation = 'When-clause completed past event दिखाता है; दूसरे clause में Past Continuous background action दिखाता है।';
