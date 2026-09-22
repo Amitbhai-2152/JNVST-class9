@@ -1,6 +1,7 @@
 import type { ID, ProgressState, Question } from '../types';
 import { chapters, subjects, topics } from '../data/curriculum';
 import { allQuestions, jnvstExamQuestions } from '../data/questions';
+import { mathChapterChallengers } from '../data/questions/mathChapterChallengers';
 
 export interface TopicPerformance {
   topicId: ID;
@@ -320,7 +321,11 @@ export const getChapterChallengerQuestions = (
     easy: 3,
   };
 
-  const candidates = allQuestions
+  const sourceQuestions = chapterId.startsWith('chap_math_')
+    ? [...mathChapterChallengers, ...allQuestions]
+    : allQuestions;
+
+  const candidates = sourceQuestions
     .filter((question) =>
       question.chapterId === chapterId &&
       question.type === 'mcq' &&
