@@ -67,7 +67,7 @@ export default function ChapterStudyPage() {
 
   const scienceStageTitle = (blocks: ContentBlock[], index: number) => {
     const heading = blocks.find((block) => block.type === 'heading' && block.level === 2);
-    if (heading?.type === 'heading') return heading.text.replace(/^(?:अध्ययन भाग\\s+\\d+\\s*[—-]\\s*|\\d+\\.\\s*)/, '').trim();
+    if (heading?.type === 'heading') return heading.text.replace(/^(?:अध्ययन भाग\s+\d+\s*[—-]\s*|\d+\.\s*)/, '').trim();
     return stageLabels[index] ?? `अध्याय चरण ${index + 1}`;
   };
 
