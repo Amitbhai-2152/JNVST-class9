@@ -330,7 +330,7 @@ export const getScienceSmartPracticeQuestions = (
   const result: Question[] = [];
   const used = new Set<ID>();
 
-  // First pass: ensure all three Science chapters contribute before adapting freely.
+  // First pass: ensure all 18 Science chapters contribute before adapting freely.
   for (const chapter of scienceChaptersForSmartPractice()) {
     const item = scored.find((entry) => entry.question.chapterId === chapter.id && !used.has(entry.question.id));
     if (!item || result.length >= limit) continue;
