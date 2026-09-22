@@ -1534,3 +1534,630 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Science subject: final responsive hardening
+ * Desktop/laptop styles above remain unchanged.
+ * Narrow layouts only stack/collapse components that cannot safely fit.
+ */
+.science-hub,
+.science-chapter-shell,
+.science-study-page,
+.science-revision-page,
+.science-mock-page,
+.science-assessment-shell {
+  min-width: 0;
+}
+
+.science-hub > *,
+.science-chapter-shell > *,
+.science-study-page > *,
+.science-revision-page > *,
+.science-mock-page > *,
+.science-assessment-shell > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.science-hub-hero > div:first-child,
+.science-chapter-hero > div:first-child,
+.science-study-hero > div:first-child,
+.science-lesson-actions > div:first-child {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.science-source-strip > div:first-child,
+.science-learning-card-top > div,
+.science-revision-head > div,
+.science-visual-head,
+.science-outline-head,
+.science-study-map-head {
+  min-width: 0;
+}
+
+.science-hub h2,
+.science-hub h3,
+.science-hub h4,
+.science-hub p,
+.science-hub small,
+.science-chapter-shell h1,
+.science-chapter-shell h2,
+.science-chapter-shell h3,
+.science-chapter-shell p,
+.science-study-page h1,
+.science-study-page h2,
+.science-study-page h3,
+.science-study-page p,
+.science-revision-page h1,
+.science-revision-page h3,
+.science-revision-page li,
+.science-mock-page h1,
+.science-mock-page h2,
+.science-mock-page p {
+  overflow-wrap: anywhere;
+}
+
+.science-learning-card,
+.science-revision-card,
+.science-chapter-content-grid .card,
+.science-lesson-companion-panel,
+.science-focus-item,
+.science-mock-page .question-card,
+.science-mock-page .science-mock-palette {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.science-learning-card .actions,
+.science-revision-card .actions,
+.science-lesson-actions .actions,
+.science-chapter-hero .actions,
+.science-hub-hero .actions,
+.science-source-strip {
+  min-width: 0;
+}
+
+.science-learning-card .actions .btn,
+.science-revision-card .actions .btn,
+.science-lesson-actions .actions .btn,
+.science-chapter-hero .actions .btn,
+.science-hub-hero .actions .btn {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.science-lesson-companion-grid,
+.science-learning-summary,
+.science-learning-grid,
+.science-visual-grid,
+.science-focus-grid,
+.science-result-grid,
+.science-chapter-stats {
+  min-width: 0;
+}
+
+.science-skill-chips span,
+.science-fact-chips span,
+.science-chapter-skills span {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.science-study-page .science-study-main,
+.science-study-page .science-study-content-card,
+.science-study-page .science-study-content-head,
+.science-study-page .science-study-content-head > div:first-child,
+.science-study-page .science-study-content-card .lesson-content {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.science-study-page .science-study-content-card {
+  overflow: hidden;
+}
+
+.science-study-page .science-study-content-card .lesson-content {
+  width: 100%;
+  margin: 0 auto;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.science-study-page .science-study-content-card .lesson-content > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.science-study-page .science-study-content-card .lesson-content img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+}
+
+.science-study-page .science-study-content-card .lesson-content .formula-block,
+.science-study-page .science-study-content-card .lesson-content .table-wrap {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.science-study-page .science-study-content-card .lesson-content .math-display {
+  display: block;
+  width: max-content;
+  min-width: 0;
+  max-width: none;
+}
+
+.science-study-page .science-study-content-card .lesson-content .math-inline {
+  display: inline-block;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  vertical-align: middle;
+  -webkit-overflow-scrolling: touch;
+}
+
+.science-study-page .science-study-page-actions > * {
+  min-width: 0;
+}
+
+.science-mock-page .question-text,
+.science-mock-page .question-text .lesson-content,
+.science-mock-page .question-text .lesson-content > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.science-mock-page .question-text .lesson-content {
+  overflow-wrap: anywhere;
+}
+
+.science-mock-page .option,
+.science-mock-page .science-mock-actions,
+.science-mock-page .science-mock-nav-actions,
+.science-mock-page .science-palette-grid {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.science-mock-page .option .math-inline,
+.science-mock-page .question-text .math-inline {
+  max-width: 100%;
+}
+
+.science-assessment-shell .assessment-start-hero,
+.science-assessment-shell .assessment-banner,
+.science-assessment-shell .assessment-layout,
+.science-assessment-shell .assessment-question-card,
+.science-assessment-shell .assessment-palette-card,
+.science-assessment-shell .assessment-summary-card,
+.science-assessment-shell .assessment-answer-review {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.science-assessment-shell .assessment-question-text,
+.science-assessment-shell .assessment-question-text .lesson-content,
+.science-assessment-shell .assessment-question-text .lesson-content > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.science-assessment-shell .assessment-question-text .lesson-content {
+  overflow-wrap: anywhere;
+}
+
+.science-assessment-shell .assessment-question-text .lesson-content .formula-block,
+.science-assessment-shell .assessment-question-text .lesson-content .table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.science-assessment-shell .assessment-question-text .lesson-content .math-inline {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+}
+
+.science-assessment-shell .assessment-options .option {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.science-assessment-shell .assessment-review-question,
+.science-assessment-shell .assessment-review-answer span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+@media (max-width: 900px) {
+  .science-hub-hero,
+  .science-chapter-hero,
+  .science-study-hero,
+  .science-assessment-shell .assessment-start-hero,
+  .science-assessment-shell .assessment-banner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .science-hub-hero,
+  .science-chapter-hero,
+  .science-study-hero {
+    width: 100%;
+  }
+
+  .science-hub-badge,
+  .science-chapter-index,
+  .science-study-hero-progress,
+  .science-assessment-shell .assessment-time-hero {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+  }
+
+  .science-learning-grid,
+  .science-revision-grid,
+  .science-chapter-content-grid,
+  .science-assessment-shell .assessment-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .science-learning-summary,
+  .science-chapter-stats,
+  .science-assessment-shell .assessment-start-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .science-lesson-companion-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .science-study-page .science-study-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .science-study-page .science-study-sidebar {
+    position: static;
+  }
+
+  .science-study-page .science-study-stage-list {
+    display: flex;
+    overflow-x: auto;
+    gap: 7px;
+    padding-bottom: 3px;
+    scrollbar-width: thin;
+  }
+
+  .science-study-page .science-study-stage-list button {
+    flex: 0 0 190px;
+    min-width: 0;
+  }
+
+  .science-lesson-outline {
+    position: static;
+  }
+
+  .science-outline-list,
+  .science-study-map-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .science-assessment-shell .assessment-palette-card,
+  .science-mock-page .science-mock-palette {
+    position: static;
+  }
+}
+
+@media (max-width: 700px) {
+  .science-hub-hero,
+  .science-chapter-hero,
+  .science-study-hero {
+    padding: 20px 16px;
+  }
+
+  .science-hub-hero h2,
+  .science-chapter-hero h1,
+  .science-study-hero h1 {
+    font-size: 28px;
+    line-height: 1.2;
+  }
+
+  .science-source-strip,
+  .science-lesson-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .science-hub-hero .actions,
+  .science-chapter-hero .actions,
+  .science-lesson-actions .actions,
+  .science-assessment-shell .assessment-actions,
+  .science-mock-page .science-mock-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .science-hub-hero .actions .btn,
+  .science-chapter-hero .actions .btn,
+  .science-lesson-actions .actions .btn,
+  .science-assessment-shell .assessment-actions > .btn,
+  .science-mock-page .science-mock-actions > .btn {
+    width: 100%;
+  }
+
+  .science-lesson-companion-grid,
+  .science-study-system-grid,
+  .science-assessment-shell .assessment-instruction-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .science-study-page .science-study-content-head {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px 14px 12px;
+  }
+
+  .science-study-page .science-study-page-chip {
+    width: max-content;
+    max-width: 100%;
+  }
+
+  .science-study-page .science-study-content-card .lesson-content {
+    padding: 14px 14px 20px;
+    font-size: 15px;
+    line-height: 1.72;
+  }
+
+  .science-study-page .science-study-content-card .lesson-content > p,
+  .science-study-page .science-study-content-card .lesson-content > li,
+  .science-study-page .science-study-content-card .lesson-content li {
+    font-size: 15px;
+    line-height: 1.72;
+  }
+
+  .science-study-page .science-study-content-card .lesson-content > h2 {
+    font-size: 22px;
+    line-height: 1.3;
+  }
+
+  .science-study-page .science-study-content-card .lesson-content > h3 {
+    font-size: 18px;
+    line-height: 1.35;
+  }
+
+  .science-study-page .science-study-page-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .science-study-page .science-study-page-actions .science-study-dots,
+  .science-study-page .science-study-page-actions > button,
+  .science-study-page .science-study-page-actions > a {
+    width: 100%;
+  }
+
+  .science-study-page .science-study-page-actions .science-study-dots {
+    justify-content: center;
+  }
+
+  .science-outline-list,
+  .science-study-map-list {
+    display: flex;
+    overflow-x: auto;
+    gap: 7px;
+    padding-bottom: 3px;
+  }
+
+  .science-outline-list button {
+    flex: 0 0 170px;
+  }
+
+  .science-study-map-list button {
+    flex: 0 0 180px;
+  }
+
+  .science-learning-summary,
+  .science-chapter-stats,
+  .science-mock-page .science-result-grid,
+  .science-assessment-shell .assessment-start-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .science-mock-page .pattern,
+  .science-assessment-shell .assessment-instruction-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .science-mock-page .science-mock-nav-actions,
+  .science-assessment-shell .assessment-nav-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .science-mock-page .science-mock-nav-actions .btn,
+  .science-assessment-shell .assessment-nav-actions .btn {
+    width: 100%;
+  }
+
+  .science-assessment-shell .assessment-topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .science-assessment-shell .assessment-live-timer {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .science-assessment-shell .assessment-progress-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .science-assessment-shell .assessment-review-item summary {
+    grid-template-columns: 28px minmax(0, 1fr) 48px;
+  }
+
+  .science-assessment-shell .assessment-start-button {
+    width: 100%;
+  }
+
+  .science-revision-card .actions .btn {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .science-hub-hero,
+  .science-chapter-hero,
+  .science-study-hero {
+    border-radius: 18px;
+  }
+
+  .science-hub-badge,
+  .science-chapter-index,
+  .science-study-hero-progress,
+  .science-assessment-shell .assessment-time-hero {
+    min-height: 74px;
+  }
+
+  .science-source-note {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .science-lesson-companion-grid,
+  .science-study-system-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .science-learning-summary,
+  .science-chapter-stats {
+    gap: 7px;
+  }
+
+  .science-learning-summary > div,
+  .science-chapter-stats .card {
+    padding: 11px;
+  }
+
+  .science-learning-summary b,
+  .science-chapter-stats b {
+    font-size: 22px;
+  }
+
+  .science-revision-card {
+    padding: 13px;
+  }
+
+  .science-revision-head {
+    grid-template-columns: 36px minmax(0, 1fr);
+  }
+
+  .science-revision-head h3 {
+    font-size: 16px;
+  }
+
+  .science-mock-page .science-mock-intro {
+    padding: 14px;
+  }
+
+  .science-mock-page .pattern > div {
+    padding: 10px;
+  }
+
+  .science-mock-page .pattern b {
+    font-size: 22px;
+  }
+
+  .science-mock-page .pattern span,
+  .science-mock-page .science-result-grid span {
+    font-size: 10px;
+    line-height: 1.35;
+  }
+
+  .science-mock-page .science-result-grid {
+    gap: 7px;
+  }
+
+  .science-mock-page .science-result-grid .card,
+  .science-assessment-shell .assessment-result-grid .card {
+    padding: 11px;
+  }
+
+  .science-mock-page .science-result-grid b,
+  .science-assessment-shell .assessment-result-grid b {
+    font-size: 22px;
+  }
+
+  .science-assessment-shell .assessment-start-grid,
+  .science-assessment-shell .assessment-instruction-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .science-assessment-shell .assessment-review-item summary {
+    padding: 9px;
+  }
+
+  .science-assessment-shell .assessment-review-question {
+    font-size: 11px;
+  }
+
+  .science-study-page .science-study-content-card .lesson-content {
+    padding-left: 10px;
+    padding-right: 10px;
+    font-size: 14px;
+  }
+
+  .science-study-page .science-study-content-card .lesson-content > p,
+  .science-study-page .science-study-content-card .lesson-content li {
+    font-size: 14px;
+  }
+
+  .science-study-page .science-study-content-card .lesson-content .katex {
+    font-size: .88em;
+  }
+
+  .science-study-page .science-study-content-card .lesson-content .table-wrap th,
+  .science-study-page .science-study-content-card .lesson-content .table-wrap td {
+    padding: 8px 7px;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+}
+
+@media (max-width: 380px) {
+  .science-learning-summary,
+  .science-chapter-stats,
+  .science-mock-page .science-result-grid,
+  .science-assessment-shell .assessment-start-grid,
+  .science-assessment-shell .assessment-instruction-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .science-mock-page .pattern,
+  .science-mock-page .science-mock-nav-actions,
+  .science-assessment-shell .assessment-nav-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .science-study-page .science-study-content-card .lesson-content {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .science-assessment-shell .assessment-question-text,
+  .science-assessment-shell .assessment-options {
+    width: 100%;
+  }
+}
