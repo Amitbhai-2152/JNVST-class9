@@ -19,7 +19,7 @@ const subjectPatterns = {
   math: /^q_math_/,
   sci: /^q_sci_/,
 };
-const expected = { eng: 100, hin: 110, math: 110, sci: 180 };
+const expected = { eng: 100, hin: 110, math: 220, sci: 180 };
 const ids = new Set();
 const counts = { eng: 0, hin: 0, math: 0, sci: 0 };
 
@@ -32,6 +32,17 @@ for (const file of files) {
     if (ids.has(id)) throw new Error(`Duplicate question ID: ${id}`);
     ids.add(id);
     counts[key] += 1;
+  }
+
+  // mathPart5 uses a small factory to keep 110 new MCQs readable.
+  // Validate those generated IDs from their explicit make('xx', ...) codes too.
+  if (file === 'mathPart5.ts') {
+    for (const match of source.matchAll(/\bmake\(\s*['\"]([^'\"]+)['\"]/g)) {
+      const id = `q_math_b3_${match[1]}`;
+      if (ids.has(id)) throw new Error(`Duplicate question ID: ${id}`);
+      ids.add(id);
+      counts.math += 1;
+    }
   }
 }
 
@@ -51,7 +62,7 @@ if (missingCurriculumQuestionIds.length) {
 }
 
 const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
-if (total !== 500) throw new Error(`Total question count mismatch: expected 500, found ${total}`);
+if (total !== 610) throw new Error(`Total question count mismatch: expected 610, found ${total}`);
 
 const requiredPrefixes = ['q_eng_', 'q_hin_', 'q_math_', 'q_sci_'];
 if (ids.size !== total) throw new Error(`Question ID integrity mismatch: expected ${total}, indexed ${ids.size}`);
