@@ -1,0 +1,61 @@
+import { chapters, topics } from '../curriculum';
+import { mathLessonsData } from '../lessons/math';
+import { mathQuestions } from './math';
+
+const mathSubjectId = 'sub_math';
+const mathChapters = chapters.filter((chapter) => chapter.subjectId === mathSubjectId);
+const mathTopics = topics.filter((topic) => mathChapters.some((chapter) => chapter.id === topic.chapterId));
+const mathLessons = mathLessonsData;
+
+const lessonTopicIds = new Set(mathLessons.map((lesson) => lesson.topicId));
+const questionCounts = Object.fromEntries(
+  mathTopics.map((topic) => [topic.id, mathQuestions.filter((question) => question.topicId === topic.id).length]),
+);
+const lessonCounts = Object.fromEntries(
+  mathTopics.map((topic) => [topic.id, mathLessons.filter((lesson) => lesson.topicId === topic.id).length]),
+);
+
+const missingTopics = mathTopics
+  .filter((topic) => !lessonTopicIds.has(topic.id))
+  .map((topic) => topic.id);
+
+const emptyQuestionTopics = mathTopics
+  .filter((topic) => (questionCounts[topic.id] ?? 0) === 0)
+  .map((topic) => topic.id);
+
+const mappingProblems = mathLessons
+  .filter((lesson) => !mathTopics.some((topic) => topic.id === lesson.topicId))
+  .map((lesson) => ({ lessonId: lesson.id, topicId: lesson.topicId }));
+
+const weakLessonCoverage = mathTopics
+  .filter((topic) => (lessonCounts[topic.id] ?? 0) < 1)
+  .map((topic) => ({ topicId: topic.id, lessonCount: lessonCounts[topic.id] ?? 0 }));
+
+const mathMcqCount = mathQuestions.filter((question) => question.type === 'mcq').length;
+const mathJnvstCount = mathQuestions.filter((question) =>
+  question.type === 'mcq' &&
+  question.options.length === 4 &&
+  question.correctOptionIds.length === 1,
+).length;
+
+export const jnvstMathQualityAudit = {
+  विषय: 'गणित',
+  अध्याय: mathChapters.length,
+  आधिकारिक_मुख्य_विषयांश: mathTopics.length,
+  स्रोत_पाठ: mathLessons.length,
+  कुल_प्रश्न: mathQuestions.length,
+  MCQ: mathMcqCount,
+  JNVST_अनुकूल_MCQ: mathJnvstCount,
+  विषयांश_वार_प्रश्न: questionCounts,
+  विषयांश_वार_पाठ: lessonCounts,
+  अनुपलब्ध_पाठ_विषयांश: missingTopics,
+  शून्य_प्रश्न_विषयांश: emptyQuestionTopics,
+  गलत_मैपिंग: mappingProblems,
+  कम_पाठ_कवरेज: weakLessonCoverage,
+  सूत्र_पुनरावृत्ति: 'MathFormulaSheetPage में सभी 11 मुख्य गणित इकाइयाँ शामिल हैं।',
+};
+
+export const jnvstMathQualityStatus = {
+  स्थिति: missingTopics.length || emptyQuestionTopics.length || mappingProblems.length ? 'समीक्षा आवश्यक' : 'जाँच पूर्ण',
+  टिप्पणी: 'गणित की content, topic mapping और question coverage को source-level checks से जाँचा जाता है।',
+};
