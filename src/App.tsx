@@ -369,9 +369,9 @@ const ScienceSubjectOverview = () => {
 
     <section className="science-learning-map">
       <div className="science-section-head">
-        <span className="eyebrow">18 STUDY UNITS • DIRECT NAVIGATION</span>
-        <h3>अपनी Science पढ़ाई सीधे Unit से शुरू करें</h3>
-        <p>सभी 18 units बिना किसी अतिरिक्त chapter grouping के सीधे यहाँ दिखाए गए हैं। हर unit में concept lesson, practice और exam-focused revision तक सीधा रास्ता है।</p>
+        <span className="eyebrow">18 अध्याय • NCERT क्रम</span>
+        <h3>Science Chapters — सीधे अध्याय चुनें</h3>
+        <p>अध्याय 01 से 18 तक क्रमबद्ध सूची। हर अध्याय से concept lesson, अध्याय अध्ययन और practice तक सीधा रास्ता है।</p>
       </div>
       <div className="science-learning-summary">
         <div><b>18</b><span>कक्षा VIII Science units</span></div>
@@ -605,7 +605,7 @@ const ChapterPage = () => {
 
         <div className="science-chapter-hero">
           <div>
-            <span className="eyebrow">NCERT CLASS VIII SCIENCE • JNVST PREPARATION</span>
+            <span className="eyebrow">SCIENCE CHAPTER • NCERT CLASS VIII • JNVST PREPARATION</span>
             <h1>{c.title}</h1>
             <p>{mastery?.coreSkills.slice(0, 3).join(' · ') ?? 'इस अध्याय के मुख्य Science concepts और अभ्यास।'}</p>
             <div className="actions">
