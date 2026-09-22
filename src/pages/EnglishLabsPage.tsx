@@ -43,6 +43,8 @@ const LabHeader = ({ title, subtitle, backTo = '/subjects/sub_eng' }: { title: s
 );
 
 
+// English labs: learn first; practice remains separate.
+
 const LabModeToggle = ({ mode, onChange }: { mode: 'learn' | 'practice'; onChange: (value: 'learn' | 'practice') => void }) => (
   <div className="english-lab-mode-switch" role="tablist" aria-label="Learning mode">
     <button className={mode === 'learn' ? 'active' : ''} onClick={() => onChange('learn')} role="tab" aria-selected={mode === 'learn'}>
