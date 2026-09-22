@@ -7,10 +7,11 @@ import MathFormulaSheet from './pages/MathFormulaSheetPage';
 import { MathAwareText, MathText } from './components/MathText';
 import { useProgressStore } from './store/progress';
 import type { ContentBlock, ID, MockTestResult, Question } from './types';
-import { buildJnvstMockPaper, buildMathMockPaper, buildScienceMockPaper, getChapterChallengerQuestions, getTopicChallengerQuestions, getPerformanceSummary, getRevisionTopics, getSmartPracticeQuestions, getMathSmartPracticeQuestions, getScienceSmartPracticeQuestions, getSmartRecommendations, getWeakTopics, getTopicPerformances } from './utils/jnvstIntelligence';
+import { buildJnvstMockPaper, buildMathMockPaper, buildScienceMockPaper, getChapterChallengerQuestions, getTopicChallengerQuestions, getPerformanceSummary, getRevisionTopics, getSmartPracticeQuestions, getMathSmartPracticeQuestions, getScienceSmartPracticeQuestions, getSmartRecommendations, getWeakTopics, getTopicPerformances, buildEnglishMockPaper, getEnglishSmartPracticeQuestions } from './utils/jnvstIntelligence';
 import { mathMasteryUnits, mathMasteryUnitMap } from './data/mathMastery';
 import { scienceMasteryUnits } from './data/sciencePrep';
 import { scienceLessonCore } from './data/scienceLessonCore';
+import { englishMasteryUnits, englishMasteryUnitMap } from './data/englishPrep';
 
 const examSections = [
   { id: 'sub_hin', title: 'हिंदी', questions: 15 },
@@ -598,7 +599,8 @@ const SubjectPage = () => {
     </div>
     {s.id === 'sub_math' && <MathSubjectOverview />}
     {s.id === 'sub_sci' && <ScienceSubjectOverview />}
-    {s.id !== 'sub_sci' && cs.map(c => <Card key={c.id} className="chapter-section"><div className="chapter-section-head"><Link className="chapter-link" to={`/chapters/${c.id}`}><h2>{c.title} →</h2></Link><Link className="btn challenger" to={`/chapters/${c.id}/challenger`}>⚡ Challenger · {getChapterChallengerQuestions(c.id, 20).length}</Link></div><div className="grid">{c.topicIds.map(id => <TopicCard key={id} topicId={id} />)}</div></Card>)}
+    {s.id === 'sub_eng' && <EnglishSubjectOverview />}
+    {s.id !== 'sub_sci' && s.id !== 'sub_math' && s.id !== 'sub_eng' && cs.map(c => <Card key={c.id} className="chapter-section"><div className="chapter-section-head"><Link className="chapter-link" to={`/chapters/${c.id}`}><h2>{c.title} →</h2></Link><Link className="btn challenger" to={`/chapters/${c.id}/challenger`}>⚡ Challenger · {getChapterChallengerQuestions(c.id, 20).length}</Link></div><div className="grid">{c.topicIds.map(id => <TopicCard key={id} topicId={id} />)}</div></Card>)}
   </Shell>;
 };
 
@@ -929,6 +931,7 @@ type AssessmentRunnerProps = {
   bannerLink?: { to: string; label: string };
   emptyTitle?: string;
   emptyText?: string;
+  mode?: 'practice' | 'mock-test';
 };
 
 const AssessmentRunner = ({
@@ -942,6 +945,7 @@ const AssessmentRunner = ({
   bannerLink,
   emptyTitle = 'अभी प्रश्न उपलब्ध नहीं हैं',
   emptyText = 'इस अभ्यास के लिए प्रश्न उपलब्ध नहीं हैं।',
+  mode = 'practice',
 }: AssessmentRunnerProps) => {
   const p = useProgressStore();
   const initialTime = timerSeconds ?? Math.max(5 * 60, questions.length * 60);
@@ -955,6 +959,7 @@ const AssessmentRunner = ({
   const [resultStartedAt, setResultStartedAt] = useState<number | null>(null);
 
   const isScienceAssessment = questions.some((question) => question.chapterId?.startsWith('chap_sci_')) || backTo === '/subjects/sub_sci';
+  const isEnglishAssessment = questions.some((question) => question.chapterId?.startsWith('chap_eng_')) || backTo === '/subjects/sub_eng';
   const q = questions[index];
   const selected = q ? (answers[q.id] || []) : [];
   const answeredCount = Object.values(answers).filter((value) => value.length > 0).length;
@@ -991,9 +996,13 @@ const AssessmentRunner = ({
         selectedOptionIds: currentAnswers[question.id] || [],
         isCorrect: sameAnswer(currentAnswers[question.id] || [], question.correctOptionIds),
         timestamp: now,
-        mode: 'practice',
+        mode,
       },
     })));
+    if (mode === 'mock-test') {
+      const mockScore = questions.reduce((sum, question) => sum + (sameAnswer(currentAnswers[question.id] || [], question.correctOptionIds) ? 1 : 0), 0);
+      p.saveMockResult({ id: 'english-mock-' + now, score: mockScore, totalMarks: questions.length, timestamp: now, answers: currentAnswers, sectionScores: { sub_eng: mockScore } });
+    }
     setFinished(true);
   };
 
@@ -1033,7 +1042,7 @@ const AssessmentRunner = ({
 
   if (finished) {
     return <Shell>
-      <div className={`assessment-shell${isScienceAssessment ? " science-assessment-shell" : ""}`}>
+      <div className={`assessment-shell${isScienceAssessment ? " science-assessment-shell" : ""}${isEnglishAssessment ? " english-assessment-shell" : ""}`}>
         <div className="assessment-breadcrumb"><Link to={backTo}>← {backLabel}</Link><span>{badge}</span></div>
         <section className="assessment-result-hero">
           <span>टेस्ट पूरा हुआ</span>
@@ -1071,7 +1080,7 @@ const AssessmentRunner = ({
 
   if (!started) {
     return <Shell>
-      <div className={`assessment-shell${isScienceAssessment ? " science-assessment-shell" : ""}`}>
+      <div className={`assessment-shell${isScienceAssessment ? " science-assessment-shell" : ""}${isEnglishAssessment ? " english-assessment-shell" : ""}`}>
         <div className="assessment-breadcrumb"><Link to={backTo}>← {backLabel}</Link><span>{badge}</span></div>
         <section className="assessment-start-hero">
           <div>
@@ -1166,15 +1175,16 @@ const PracticePage = () => {
   const qs = useMemo(() => getQuestionsByTopic(topicId || ''), [topicId]);
   const q = qs[0];
   const isMath = q?.chapterId?.startsWith('chap_math_');
+  const isEnglish = q?.chapterId?.startsWith('chap_eng_');
   const topic = topics.find((item) => item.id === topicId);
   return <AssessmentRunner
     questions={qs}
-    title={isMath ? '🎯 ' + (topic?.title ?? 'गणित') + ' — अभ्यास' : 'अभ्यास'}
-    backTo={q?.chapterId?.startsWith('chap_sci_') ? '/subjects/sub_sci' : q?.chapterId ? '/chapters/' + q.chapterId : '/subjects'}
-    backLabel={q?.chapterId?.startsWith('chap_sci_') ? 'विज्ञान तैयारी केंद्र' : 'अध्याय'}
-    description={isMath ? 'इस गणित इकाई के पूरे question set को timed practice की तरह हल करें। उत्तर और explanation टेस्ट पूरा होने के बाद answer review में देखें।' : 'इस topic के पूरे question set को exam-style timed practice की तरह हल करें। सही उत्तर टेस्ट पूरा होने के बाद दिखाया जाएगा।'}
-    badge={isMath ? 'MATH PRACTICE' : 'TOPIC PRACTICE'}
-    bannerLink={isMath && q?.chapterId ? { to: '/chapters/' + q.chapterId + '/study', label: '📖 अध्याय अध्ययन →' } : undefined}
+    title={isMath ? '🎯 ' + (topic?.title ?? 'गणित') + ' — अभ्यास' : isEnglish ? '🎯 ' + (topic?.title ?? 'अंग्रेज़ी') + ' — अभ्यास' : 'अभ्यास'}
+    backTo={q?.chapterId?.startsWith('chap_sci_') ? '/subjects/sub_sci' : isEnglish ? '/subjects/sub_eng' : q?.chapterId ? '/chapters/' + q.chapterId : '/subjects'}
+    backLabel={q?.chapterId?.startsWith('chap_sci_') ? 'विज्ञान तैयारी केंद्र' : isEnglish ? 'अंग्रेज़ी तैयारी केंद्र' : 'अध्याय'}
+    description={isMath ? 'इस गणित इकाई के पूरे question set को timed practice की तरह हल करें। उत्तर और explanation टेस्ट पूरा होने के बाद answer review में देखें।' : isEnglish ? 'पहले question का अर्थ समझें, फिर English rule लागू करें। Practice धीरे-धीरे आपको independent solving और बेहतर exam accuracy की ओर ले जाती है।' : 'इस topic के पूरे question set को exam-style timed practice की तरह हल करें। सही उत्तर टेस्ट पूरा होने के बाद दिखाया जाएगा।'}
+    badge={isMath ? 'MATH PRACTICE' : isEnglish ? 'ENGLISH PRACTICE' : 'TOPIC PRACTICE'}
+    bannerLink={(isMath || isEnglish) && q?.chapterId ? { to: '/chapters/' + q.chapterId + '/study', label: '📖 अध्याय अध्ययन →' } : undefined}
   />;
 };
 
@@ -1184,13 +1194,14 @@ const ChapterChallengerPage = () => {
   const questions = chapter ? getChapterChallengerQuestions(chapter.id, 20, 'jnvst-challenger-' + chapter.id) : [];
   if (!chapter) return <Shell><Card className="empty"><h1>अध्याय नहीं मिला</h1><Link className="btn" to="/subjects">विषयों पर जाएँ</Link></Card></Shell>;
 
+  const isEnglish = chapter.id.startsWith('chap_eng_');
   return <AssessmentRunner
     questions={questions}
     title={'⚡ ' + chapter.title + ' — Challenger Questions'}
     backTo={'/chapters/' + chapter.id}
     backLabel="अध्याय"
-    description="20-प्रश्न Challenger set — पहले Challenge/Hard प्रश्न, फिर chapter coverage से 20 तक। हर प्रश्न में चार वास्तविक विकल्प; सही उत्तर बीच में नहीं दिखेगा और review केवल टेस्ट के अंत में मिलेगा।"
-    badge="CHALLENGER MODE"
+    description={isEnglish ? '20-प्रश्न English Challenger — chapter को पहले पढ़ें, फिर English questions को धीरे-धीरे बिना Hindi translation पर निर्भर हुए solve करें।' : '20-प्रश्न Challenger set — पहले Challenge/Hard प्रश्न, फिर chapter coverage से 20 तक। हर प्रश्न में चार वास्तविक विकल्प; सही उत्तर बीच में नहीं दिखेगा और review केवल टेस्ट के अंत में मिलेगा।'}
+    badge={isEnglish ? 'ENGLISH CHALLENGER' : 'CHALLENGER MODE'}
     bannerLink={{ to: '/chapters/' + chapter.id + '/study', label: '📖 अध्याय अध्ययन →' }}
     emptyTitle="इस अध्याय में अभी Challenger Questions उपलब्ध नहीं हैं"
     emptyText="इस chapter के लिए challenge-level question bank उपलब्ध होने पर यह test यहाँ दिखाई देगा।"
