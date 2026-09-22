@@ -131,7 +131,7 @@ const examChecklist = [
 ];
 
 const MathFormulaSheet = () => (
-  <main>
+  <div className="math-formula-page">
     <div className="page-head">
       <Link to="/subjects/sub_math">← गणित पर वापस</Link>
       <h1>गणित सूत्र-पत्र</h1>
