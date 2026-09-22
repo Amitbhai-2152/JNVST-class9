@@ -1167,3 +1167,17 @@ a { color: inherit; text-decoration: none; }
   color:#755d1c;
 }
 .btn.challenger:hover { border-color:#cdb86b; background:#fff7df; }
+
+
+.chapter-section-head {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+.chapter-section-head .chapter-link { min-width:0; }
+@media (max-width:640px) {
+  .chapter-section-head { flex-direction:column; align-items:stretch; }
+  .chapter-section-head .challenger { width:100%; justify-content:center; }
+}
