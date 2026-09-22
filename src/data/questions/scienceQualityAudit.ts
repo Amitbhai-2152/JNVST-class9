@@ -1,6 +1,7 @@
 import { chapters, topics } from '../curriculum';
 import { scienceLessonsData } from '../lessons/science';
 import { scienceQuestions } from './science';
+import { scienceLessonEnhancementStats } from '../scienceLessonEnhancements';
 
 const scienceSubjectId = 'sub_sci';
 const scienceChapters = chapters.filter((chapter) => chapter.subjectId === scienceSubjectId);
@@ -13,6 +14,7 @@ const questionCounts = Object.fromEntries(scienceTopics.map((topic) => [
   topic.id, scienceQuestions.filter((question) => question.topicId === topic.id).length,
 ]));
 const targetQuestionsPerTopic = 20;
+const minimumLessonBlocks = 12;
 
 const missingLessons = scienceTopics.filter((topic) => (lessonCounts[topic.id] ?? 0) < 1).map((topic) => topic.id);
 const emptyQuestionTopics = scienceTopics.filter((topic) => (questionCounts[topic.id] ?? 0) === 0).map((topic) => topic.id);
@@ -27,6 +29,29 @@ const scienceJnvstCount = scienceQuestions.filter((question) =>
   question.type === 'mcq' && question.options.length === 4 && question.correctOptionIds.length === 1,
 ).length;
 
+const contentCoverage = Object.fromEntries(scienceTopics.map((topic) => {
+  const lesson = scienceLessonsData.find((item) => item.topicId === topic.id);
+  const blocks = lesson?.content ?? [];
+  return [topic.id, {
+    blocks: blocks.length,
+    hasTable: blocks.some((block) => block.type === 'table'),
+    hasGuidedSteps: blocks.some((block) => block.type === 'step-by-step'),
+    hasExamCallout: blocks.some((block) => block.type === 'callout' && ['warning','important','example'].includes(block.style)),
+  }];
+}));
+
+const shortLessons = scienceTopics
+  .filter((topic) => (contentCoverage[topic.id]?.blocks ?? 0) < minimumLessonBlocks)
+  .map((topic) => ({ topicId: topic.id, blocks: contentCoverage[topic.id]?.blocks ?? 0 }));
+
+const missingGuidedLayers = scienceTopics
+  .filter((topic) => {
+    const row = contentCoverage[topic.id];
+    return !row?.hasTable || !row?.hasGuidedSteps || !row?.hasExamCallout;
+  })
+  .map((topic) => ({ topicId: topic.id, coverage: contentCoverage[topic.id] }));
+
+
 export const jnvstScienceQualityAudit = {
   विषय: 'विज्ञान',
   अध्याय: scienceChapters.length,
@@ -37,15 +62,20 @@ export const jnvstScienceQualityAudit = {
   JNVST_अनुकूल_MCQ: scienceJnvstCount,
   विषयांश_वार_प्रश्न: questionCounts,
   विषयांश_वार_पाठ: lessonCounts,
+  content_coverage: contentCoverage,
+  guided_enhancement_blocks: scienceLessonEnhancementStats.totalBlocks,
   अनुपलब्ध_पाठ_विषयांश: missingLessons,
   शून्य_प्रश्न_विषयांश: emptyQuestionTopics,
   गलत_मैपिंग: mappingProblems,
   न्यूनतम_प्रश्न_लक्ष्य: targetQuestionsPerTopic,
   प्रश्न_लक्ष्य_से_कम: belowQuestionTarget,
+  न्यूनतम_पाठ_ब्लॉक_लक्ष्य: minimumLessonBlocks,
+  कम_सामग्री_वाले_पाठ: shortLessons,
+  guided_layers_missing: missingGuidedLayers,
 };
 
 export const jnvstScienceQualityStatus = {
-  स्थिति: missingLessons.length || emptyQuestionTopics.length || mappingProblems.length || belowQuestionTarget.length
+  स्थिति: missingLessons.length || emptyQuestionTopics.length || mappingProblems.length || belowQuestionTarget.length || shortLessons.length || missingGuidedLayers.length
     ? 'समीक्षा आवश्यक'
     : 'जाँच पूर्ण',
   टिप्पणी: 'Science syllabus, lesson mapping और topic-wise question coverage को 18 curriculum topics पर source-level checks से जाँचा जाता है।',
