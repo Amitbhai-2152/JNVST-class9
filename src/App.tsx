@@ -10,6 +10,7 @@ import type { ContentBlock, ID, MockTestResult, Question } from './types';
 import { buildJnvstMockPaper, buildMathMockPaper, buildScienceMockPaper, getPerformanceSummary, getRevisionTopics, getSmartPracticeQuestions, getMathSmartPracticeQuestions, getScienceSmartPracticeQuestions, getSmartRecommendations, getWeakTopics, getTopicPerformances } from './utils/jnvstIntelligence';
 import { mathMasteryUnits } from './data/mathMastery';
 import { scienceMasteryUnits } from './data/sciencePrep';
+import { scienceLessonCore } from './data/scienceLessonCore';
 
 const examSections = [
   { id: 'sub_hin', title: 'हिंदी', questions: 15 },
@@ -605,9 +606,9 @@ const ChapterPage = () => {
     const accuracyForChapter = performance?.accuracy ?? 0;
     const previous = chapters.find((item) => item.subjectId === 'sub_sci' && item.order === c.order - 1);
     const next = chapters.find((item) => item.subjectId === 'sub_sci' && item.order === c.order + 1);
-    const lesson = lessonId ? getLesson(lessonId) : undefined;
-    const pageCount = lesson ? getScienceStudyPages(lesson.content).length : 0;
-    const contentBlockCount = lesson?.content.length ?? 0;
+    const coreBlocks = topic?.id ? (scienceLessonCore[topic.id] ?? []) : [];
+    const pageCount = coreBlocks.filter((block) => block.type === 'heading' && block.level === 2).length;
+    const contentBlockCount = coreBlocks.length;
 
     return <Shell>
       <section className="science-chapter-shell">
