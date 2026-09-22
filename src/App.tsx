@@ -406,7 +406,7 @@ const ScienceSubjectOverview = () => {
             <div className="science-progress"><span style={{width: accuracyForUnit + '%'}} /></div>
             {attemptsForUnit > 0 && <div className="science-learning-accuracy">{attemptsForUnit} प्रश्न-प्रयास दर्ज हैं</div>}
             <div className="actions">
-              <Link className="btn primary" to={`/chapters/chap_sci_${String(index + 1).padStart(2, '0')}`}>अध्याय देखें</Link>
+              <Link className="btn primary" to={`/chapters/${chapters.find((chapter) => chapter.subjectId === 'sub_sci' && chapter.topicIds.includes(unit.topicId))?.id ?? ''}`}>अध्याय देखें</Link>
               {lessonId && <Link className="btn" to={`/lessons/${lessonId}`}>पाठ पढ़ें</Link>}
               <Link className="btn" to={`/practice/${unit.topicId}`}>अभ्यास करें</Link>
             </div>
