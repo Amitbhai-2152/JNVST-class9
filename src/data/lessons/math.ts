@@ -1,5 +1,6 @@
 import type { ContentBlock, Lesson } from '../../types';
 import { mathMasteryUnitMap } from '../mathMastery';
+import { mathDeepDive } from '../mathDeepDive';
 
 const c = (blocks: ContentBlock[]): ContentBlock[] => blocks;
 
@@ -11,6 +12,7 @@ const addJnvstMastery = (topicId: string, content: ContentBlock[]): ContentBlock
 
   return [
     ...content,
+    ...(mathDeepDive[topicId] ?? []),
     { type: 'heading', level: 2, text: 'JNVST Mastery Check — ' + unit.title },
     { type: 'paragraph', text: 'इस section को lesson के अंत में checklist की तरह इस्तेमाल करें। यदि नीचे के सभी बिंदु बिना सहायता के समझ में आ रहे हैं, तो topic practice पर जाएँ।' },
     { type: 'heading', level: 3, text: 'Core skills' },
