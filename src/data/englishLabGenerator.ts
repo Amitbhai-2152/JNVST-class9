@@ -1,5 +1,7 @@
 import type { TranslationDirection, TranslationItem, VocabularyItem } from './englishLabs';
 
+type Gender = 'm' | 'f';
+
 const names = ['Ravi', 'Meena', 'Arjun', 'Nita', 'Aman', 'Tara', 'Rohan', 'Priya'];
 const objects = ['the book', 'the question', 'the letter', 'the door', 'the garden', 'the answer', 'the bag', 'the lesson'];
 const places = ['the school', 'the library', 'the market', 'the classroom', 'the station', 'the village'];
@@ -31,7 +33,7 @@ const hindiAction: Record<string,string> = {
   study:'पढ़ना', read:'पढ़ना', help:'मदद करना', play:'खेलना', clean:'साफ़ करना', practise:'अभ्यास करना'
 };
 
-const pick = <T,>(items: T[], seed: number): T => items[Math.abs(seed) % items.length];
+const pick = <T,>(items: T[], seed: number, salt = 0): T => items[hashSeed(seed, salt) % items.length];
 
 const hashSeed = (seed: number, salt: number) => {
   let x = (seed ^ salt) | 0;
