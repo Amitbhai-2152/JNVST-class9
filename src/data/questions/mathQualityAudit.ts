@@ -32,6 +32,11 @@ const weakLessonCoverage = mathTopics
   .map((topic) => ({ topicId: topic.id, lessonCount: lessonCounts[topic.id] ?? 0 }));
 
 const mathMcqCount = mathQuestions.filter((question) => question.type === 'mcq').length;
+const targetQuestionsPerTopic = 20;
+const belowQuestionTarget = mathTopics
+  .filter((topic) => (questionCounts[topic.id] ?? 0) < targetQuestionsPerTopic)
+  .map((topic) => ({ topicId: topic.id, questionCount: questionCounts[topic.id] ?? 0 }));
+
 const mathJnvstCount = mathQuestions.filter((question) =>
   question.type === 'mcq' &&
   question.options.length === 4 &&
@@ -52,10 +57,12 @@ export const jnvstMathQualityAudit = {
   शून्य_प्रश्न_विषयांश: emptyQuestionTopics,
   गलत_मैपिंग: mappingProblems,
   कम_पाठ_कवरेज: weakLessonCoverage,
+  न्यूनतम_प्रश्न_लक्ष्य: targetQuestionsPerTopic,
+  प्रश्न_लक्ष्य_से_कम: belowQuestionTarget,
   सूत्र_पुनरावृत्ति: 'MathFormulaSheetPage में सभी 11 मुख्य गणित इकाइयाँ शामिल हैं।',
 };
 
 export const jnvstMathQualityStatus = {
-  स्थिति: missingTopics.length || emptyQuestionTopics.length || mappingProblems.length ? 'समीक्षा आवश्यक' : 'जाँच पूर्ण',
-  टिप्पणी: 'गणित की content, topic mapping और question coverage को source-level checks से जाँचा जाता है।',
+  स्थिति: missingTopics.length || emptyQuestionTopics.length || mappingProblems.length || belowQuestionTarget.length ? 'समीक्षा आवश्यक' : 'जाँच पूर्ण',
+  टिप्पणी: 'गणित की content, topic mapping, question depth और JNVST-compatible coverage को source-level checks से जाँचा जाता है।',
 };
