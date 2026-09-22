@@ -2,7 +2,7 @@ import { chapters, topics } from '../curriculum';
 import { mathLessonsData } from '../lessons/math';
 import { mathQuestions } from './math';
 import { mathChapterChallengers } from './mathChapterChallengers';
-import { mathTopicChallengers } from './mathTopicChallengers';
+import { mathTopicChallengersV2 } from './mathTopicChallengersV2';
 
 const mathSubjectId = 'sub_math';
 const mathChapters = chapters.filter((chapter) => chapter.subjectId === mathSubjectId);
@@ -45,7 +45,7 @@ const mathJnvstCount = mathQuestions.filter((question) =>
   question.correctOptionIds.length === 1,
 ).length;
 
-const challengerQuestions = [...mathQuestions, ...mathChapterChallengers, ...mathTopicChallengers];
+const challengerQuestions = [...mathQuestions, ...mathChapterChallengers, ...mathTopicChallengersV2];
 const challengerCountByChapter = Object.fromEntries(
   mathChapters.map((chapter) => [
     chapter.id,
