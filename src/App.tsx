@@ -329,6 +329,7 @@ const MathSubjectOverview = () => {
 };
 
 
+// Production build marker: source changes must flow through Rebuild and Publish Pages.
 const ScienceSubjectOverview = () => {
   const p = useProgressStore();
   const performances = getTopicPerformances(p).filter((topic) => topic.subjectId === 'sub_sci');
