@@ -37,6 +37,23 @@ const belowQuestionTarget = scienceTopics
 const mappingProblems = scienceLessonsData
   .filter((lesson) => !scienceTopics.some((topic) => topic.id === lesson.topicId))
   .map((lesson) => ({ lessonId: lesson.id, topicId: lesson.topicId }));
+const questionMappingProblems = scienceQuestions
+  .map((question) => {
+    const topic = scienceTopics.find((item) => item.id === question.topicId);
+    return topic && topic.chapterId === question.chapterId ? null : {
+      questionId: question.id,
+      topicId: question.topicId,
+      questionChapterId: question.chapterId,
+      topicChapterId: topic?.chapterId ?? 'missing-topic',
+    };
+  })
+  .filter(Boolean);
+
+const chapterOrderProblems = scienceChapters
+  .sort((a, b) => a.order - b.order)
+  .filter((chapter, index) => chapter.order !== index + 1 || chapter.topicIds.length !== 1 || chapter.topicIds[0] !== scienceTopics.sort((x, y) => x.id.localeCompare(y.id)).find(() => false)?.id)
+  .map((chapter) => ({ chapterId: chapter.id, order: chapter.order, topicCount: chapter.topicIds.length }));
+
 const scienceMcqCount = scienceQuestions.filter((question) => question.type === 'mcq').length;
 const scienceJnvstCount = scienceQuestions.filter((question) =>
   question.type === 'mcq' && question.options.length === 4 && question.correctOptionIds.length === 1,
@@ -80,6 +97,8 @@ export const jnvstScienceQualityAudit = {
   अनुपलब्ध_पाठ_विषयांश: missingLessons,
   शून्य_प्रश्न_विषयांश: emptyQuestionTopics,
   गलत_मैपिंग: mappingProblems,
+  प्रश्न_अध्याय_मैपिंग_समस्या: questionMappingProblems,
+  अध्याय_क्रम_समस्या: chapterOrderProblems,
   न्यूनतम_प्रश्न_लक्ष्य: targetQuestionsPerTopic,
   प्रश्न_लक्ष्य_से_कम: belowQuestionTarget,
   न्यूनतम_पाठ_ब्लॉक_लक्ष्य: minimumLessonBlocks,
@@ -89,7 +108,7 @@ export const jnvstScienceQualityAudit = {
 };
 
 export const jnvstScienceQualityStatus = {
-  स्थिति: missingLessons.length || emptyQuestionTopics.length || mappingProblems.length || belowQuestionTarget.length || shortLessons.length || missingGuidedLayers.length || coreStructureProblems.length
+  स्थिति: missingLessons.length || emptyQuestionTopics.length || mappingProblems.length || questionMappingProblems.length || chapterOrderProblems.length || belowQuestionTarget.length || shortLessons.length || missingGuidedLayers.length || coreStructureProblems.length
     ? 'समीक्षा आवश्यक'
     : 'जाँच पूर्ण',
   टिप्पणी: 'Science syllabus, lesson mapping और topic-wise question coverage को 18 curriculum topics पर source-level checks से जाँचा जाता है।',
