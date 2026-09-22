@@ -78,7 +78,22 @@ export const useProgressStore = create<Store>()(
     {
       name: 'jnvst-class9-progress-v2',
       version: 2,
-      migrate: () => initial,
+      migrate: (persistedState) => {
+        const previous = (persistedState ?? {}) as Partial<ProgressState>;
+        return {
+          ...initial,
+          ...previous,
+          lessonActivity: { ...initial.lessonActivity, ...(previous.lessonActivity ?? {}) },
+          questionAttempts: { ...initial.questionAttempts, ...(previous.questionAttempts ?? {}) },
+          bookmarks: {
+            questionIds: previous.bookmarks?.questionIds ?? [],
+            lessonIds: previous.bookmarks?.lessonIds ?? [],
+          },
+          revisionHistory: previous.revisionHistory ?? [],
+          recentlyStudied: previous.recentlyStudied ?? [],
+          mockTestResults: previous.mockTestResults ?? [],
+        };
+      },
     },
   ),
 );
