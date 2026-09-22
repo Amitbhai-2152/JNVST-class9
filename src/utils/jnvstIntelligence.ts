@@ -1,6 +1,6 @@
 import type { ID, ProgressState, Question } from '../types';
 import { chapters, subjects, topics } from '../data/curriculum';
-import { jnvstExamQuestions } from '../data/questions';
+import { allQuestions, jnvstExamQuestions } from '../data/questions';
 
 export interface TopicPerformance {
   topicId: ID;
@@ -283,7 +283,7 @@ export const getChapterChallengerQuestions = (
   limit = 10,
   seed = 'jnvst-challenger',
 ): Question[] => {
-  const candidates = jnvstExamQuestions
+  const candidates = allQuestions
     .filter((question) => question.chapterId === chapterId && question.difficulty === 'challenge')
     .sort((a, b) => stableHash(seed + ':' + chapterId + ':' + a.id) - stableHash(seed + ':' + chapterId + ':' + b.id) || a.id.localeCompare(b.id));
   return candidates.slice(0, limit);
