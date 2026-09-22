@@ -118,10 +118,12 @@ const counts = {
   sub_sci: scienceQuestions.length,
 };
 
+const expectedCounts = { sub_eng: 100, sub_hin: 110, sub_math: 220, sub_sci: 270, total: 590 };
+
 // Never crash the entire app because of a content-count mismatch.
 // Keep the integrity check visible in the console so content issues can be fixed
 // without turning the UI into a blank screen.
-if (counts.sub_eng !== 100 || counts.sub_hin !== 110 || counts.sub_math !== 110 || counts.sub_sci !== 180 || allQuestions.length !== 500) {
+if (counts.sub_eng !== 100 || counts.sub_hin !== 110 || counts.sub_math !== 220 || counts.sub_sci !== 270 || allQuestions.length !== 590) {
   console.error("Question bank integrity check failed", { counts, total: allQuestions.length });
 }
 
