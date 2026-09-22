@@ -55,4 +55,3 @@ jobs:
 
       # GitHub Pages deployment is handled by the repository's managed Pages workflow.
       # This workflow only verifies, builds, and syncs the production files to main.
-\n# English lab rebuild sync\n
