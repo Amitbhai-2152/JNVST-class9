@@ -103,19 +103,21 @@ const getStudyPages = (blocks: ContentBlock[]): ContentBlock[][] => {
   const pages: ContentBlock[][] = [];
   let current: ContentBlock[] = [];
   for (const block of blocks) {
-    const shouldSplit = current.length >= 7 && (block.type === 'heading' || block.type === 'table' || block.type === 'callout');
-    if (shouldSplit) {
+    const sectionStart = block.type === 'heading' && block.level === 2;
+    if (sectionStart && current.length) {
       pages.push(current);
       current = [];
     }
     current.push(block);
-    if (current.length >= 9 && block.type !== 'heading') {
-      pages.push(current);
-      current = [];
-    }
   }
   if (current.length) pages.push(current);
   return pages.length ? pages : [blocks];
+};
+
+const getScienceSectionTitle = (blocks: ContentBlock[], index: number): string => {
+  const heading = blocks.find((block) => block.type === 'heading' && block.level === 2);
+  if (heading?.type === 'heading') return heading.text.replace(/^अध्ययन भाग\s+\d+\s*[—-]\s*/, '').trim();
+  return 'अध्ययन भाग ' + (index + 1);
 };
 
 
@@ -680,6 +682,8 @@ const LessonPage = () => {
   const c = t ? chapters.find((x) => x.id === t.chapterId) : undefined;
   const done = p.lessonActivity[l.id]?.status === 'completed';
   const mastery = isScience ? scienceMasteryUnits.find((unit) => unit.topicId === l.topicId) : undefined;
+  const scienceChapter = isScience ? c : undefined;
+  const scienceSections = isScience ? pages.map((blocks, index) => getScienceSectionTitle(blocks, index)) : [];
   const progressPercent = ((page + 1) / Math.max(1, pages.length)) * 100;
 
   return <Shell>
@@ -689,7 +693,10 @@ const LessonPage = () => {
       <h1>{l.title}</h1>
       <div className="lesson-meta">
         <span>⏱ {l.estimatedMinutes} मिनट</span>
-        <span>{pages.length} अध्ययन पृष्ठ</span>
+        {isScience && scienceChapter
+          ? <span>अध्याय {String(scienceChapter.order).padStart(2, '0')} / 18</span>
+          : <span>{pages.length} अध्ययन पृष्ठ</span>}
+        {isScience && <span>{pages.length} study sections</span>}
         <span>{done ? '✅ पूरा हुआ' : '📖 सीख रहे हैं'}</span>
       </div>
     </div>
