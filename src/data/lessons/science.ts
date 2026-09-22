@@ -1,6 +1,7 @@
 import type { Lesson } from '../../types';
+import { scienceDeepDive } from '../sciencePrep';
 
-export const scienceLessonsData: Lesson[] = [
+const scienceLessonsBase: Lesson[] = [
   {
     id: 'les_sci_01_01_01', topicId: 'top_sci_01_01', title: 'बल तथा दाब (Force and Pressure)',
     objectives: ['बल की अवधारणा समझना', 'संपर्क और असंपर्क बलों में अंतर', 'दाब और क्षेत्रफल के संबंध को समझना'], estimatedMinutes: 25,
@@ -215,4 +216,9 @@ export const scienceLessonsData: Lesson[] = [
       { type: 'callout', style: 'info', title: 'स्वयं जाँचें', text: 'प्रश्न: राष्ट्रीय उद्यान और वन्यजीव अभयारण्य दोनों का मुख्य उद्देश्य क्या है?\nउत्तर: वन्यजीवों तथा उनके प्राकृतिक आवास का संरक्षण।' }
     ],
   },
-];
+  ];
+
+export const scienceLessonsData: Lesson[] = scienceLessonsBase.map((lesson) => ({
+  ...lesson,
+  content: [...lesson.content, ...(scienceDeepDive[lesson.topicId] ?? [])],
+}));
