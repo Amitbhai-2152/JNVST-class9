@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { HashRouter, Link, Route, Routes, useParams } from 'react-router-dom';
 import { allQuestions, allLessons, chapters, getLesson, getQuestionsBySubject, getQuestionsByTopic, getSubject, subjects, topics, jnvstExamQuestions } from './data';
 import { getChapterStudyPages } from './data/lessons/chapterStudy';
@@ -7,8 +7,9 @@ import MathFormulaSheet from './pages/MathFormulaSheetPage';
 import { MathAwareText, MathText } from './components/MathText';
 import { useProgressStore } from './store/progress';
 import type { ContentBlock, ID, MockTestResult, Question } from './types';
-import { buildJnvstMockPaper, buildMathMockPaper, getPerformanceSummary, getRevisionTopics, getSmartPracticeQuestions, getMathSmartPracticeQuestions, getSmartRecommendations, getWeakTopics, getTopicPerformances } from './utils/jnvstIntelligence';
+import { buildJnvstMockPaper, buildMathMockPaper, buildScienceMockPaper, getPerformanceSummary, getRevisionTopics, getSmartPracticeQuestions, getMathSmartPracticeQuestions, getScienceSmartPracticeQuestions, getSmartRecommendations, getWeakTopics, getTopicPerformances } from './utils/jnvstIntelligence';
 import { mathMasteryUnits } from './data/mathMastery';
+import { scienceMasteryUnits } from './data/sciencePrep';
 
 const examSections = [
   { id: 'sub_hin', title: 'हिंदी', questions: 15 },
@@ -244,6 +245,225 @@ const MathSubjectOverview = () => {
   </section>;
 };
 
+
+const ScienceSubjectOverview = () => {
+  const p = useProgressStore();
+  const performances = getTopicPerformances(p).filter((topic) => topic.subjectId === 'sub_sci');
+  const attempts = performances.reduce((sum, topic) => sum + topic.attempts, 0);
+  const correct = performances.reduce((sum, topic) => sum + topic.correct, 0);
+  const accuracy = attempts ? Math.round((correct / attempts) * 100) : 0;
+  const completedLessons = Object.entries(p.lessonActivity ?? {}).filter(([id, activity]) => id.startsWith('les_sci_') && activity.status === 'completed').length;
+  const masteredTopics = performances.filter((topic) => topic.attempts > 0 && topic.accuracy >= 80).length;
+  const questionCount = getQuestionsBySubject('sub_sci').length;
+  const scienceChapters = chapters.filter((chapter) => chapter.subjectId === 'sub_sci').sort((a, b) => a.order - b.order);
+
+  return <section className="science-hub">
+    <div className="science-hub-hero">
+      <div>
+        <span className="eyebrow">JNVST SCIENCE • COMPLETE PREPARATION CENTER</span>
+        <h2>विज्ञान तैयारी केंद्र</h2>
+        <p>कक्षा VIII स्तर की 18 NCERT-aligned Science units, concept lessons, deep-dive revision, 270 practice questions, adaptive practice और 35-प्रश्न Science mock एक ही जगह।</p>
+        <div className="actions">
+          <Link className="btn primary" to="/science-revision">🧠 त्वरित पुनरावृत्ति</Link>
+          <Link className="btn" to="/science-smart-practice">🎯 स्मार्ट विज्ञान अभ्यास</Link>
+          <Link className="btn" to="/science-mock-test">⏱ विज्ञान Mock</Link>
+        </div>
+      </div>
+      <div className="science-hub-badge"><b>35</b><span>प्रश्न</span><small>JNVST विज्ञान</small></div>
+    </div>
+
+    <div className="science-stats">
+      <Card><b>18</b><span>Science इकाइयाँ</span></Card>
+      <Card><b>{questionCount}</b><span>Science अभ्यास प्रश्न</span></Card>
+      <Card><b>{completedLessons}</b><span>पूरे किए पाठ</span></Card>
+      <Card><b>{attempts ? accuracy + '%' : '—'}</b><span>विज्ञान सटीकता</span></Card>
+    </div>
+
+    <div className="science-hub-grid">
+      <Card>
+        <div className="topic-top"><div><h3>आपकी विज्ञान प्रगति</h3><p>{attempts ? attempts + ' प्रयास · ' + masteredTopics + ' इकाइयाँ 80%+ accuracy पर' : 'अभी विज्ञान के प्रयास दर्ज नहीं हैं।'}</p></div><span className="count">{attempts ? accuracy + '%' : 'शुरू करें'}</span></div>
+        <div className="actions"><Link className="btn primary" to={attempts ? "/science-smart-practice" : "/practice/top_sci_03_01"}>{attempts ? 'स्मार्ट अभ्यास शुरू करें' : 'पहला Science topic शुरू करें'}</Link></div>
+      </Card>
+      <Card>
+        <h3>विज्ञान सीखने का चक्र</h3>
+        <ol className="science-steps">
+          <li><b>समझें</b> — concept, definition और कारण-परिणाम।</li>
+          <li><b>देखें</b> — table, diagram cues और real-life examples।</li>
+          <li><b>लगाएँ</b> — topic questions और adaptive practice।</li>
+          <li><b>जाँचें</b> — 35-question Science mock से readiness देखें।</li>
+        </ol>
+      </Card>
+    </div>
+
+    <section className="science-chapter-map">
+      <div className="science-section-head"><span className="eyebrow">3 CHAPTERS • 18 UNITS</span><h3>Science Study Roadmap</h3><p>Physics, Chemistry और Biology chapters में सभी 18 Class VIII Science units structured रूप से जुड़े हैं।</p></div>
+      <div className="science-chapter-grid">
+        {scienceChapters.map((chapter) => {
+          const chapterTopics = chapter.topicIds.map((id) => topics.find((topic) => topic.id === id)).filter(Boolean) as typeof topics;
+          const attempted = chapterTopics.filter((topic) => (performances.find((item) => item.topicId === topic.id)?.attempts ?? 0) > 0).length;
+          const mastered = chapterTopics.filter((topic) => { const item = performances.find((perf) => perf.topicId === topic.id); return Boolean(item?.attempts && item.accuracy >= 80); }).length;
+          const pct = chapterTopics.length ? Math.round((mastered / chapterTopics.length) * 100) : 0;
+          return <Card className="science-chapter-card" key={chapter.id}>
+            <div className="science-chapter-head"><span className="science-unit-number">{String(chapter.order).padStart(2,'0')}</span><div><h4>{chapter.title}</h4><small>{chapterTopics.length} units · {attempted} practiced · {mastered} mastered</small></div></div>
+            <div className="science-progress"><span style={{width:pct + '%'}} /></div>
+            <div className="science-mini-topics">{chapterTopics.map((topic) => {
+              const perf = performances.find((item) => item.topicId === topic.id);
+              const done = Boolean(perf?.attempts && perf.accuracy >= 80);
+              return <Link key={topic.id} className={\`science-mini-topic \${done ? 'done' : ''}\`} to={\`/practice/\${topic.id}\`}><span>{done ? '✓' : '•'}</span><span>{topic.title}</span></Link>;
+            })}</div>
+            <div className="actions"><Link className="btn" to={\`/chapters/\${chapter.id}\`}>Chapter खोलें</Link><Link className="btn primary" to={\`/chapters/\${chapter.id}/study\`}>पूरा अध्ययन</Link></div>
+          </Card>;
+        })}
+      </div>
+    </section>
+
+    <section className="science-mastery">
+      <div className="science-section-head"><span className="eyebrow">18-UNIT MASTERY MAP</span><h3>Science Mastery Checklist</h3><p>हर unit में core skills, must-know facts, quick recall और exam traps एक जगह।</p></div>
+      <div className="science-unit-grid">
+        {scienceMasteryUnits.map((unit, index) => {
+          const topic = topics.find((item) => item.id === unit.topicId);
+          const questionCountForTopic = topic ? getQuestionsByTopic(topic.id).length : 0;
+          const lessonCount = topic?.lessonIds.length ?? 0;
+          return <details className="science-unit" key={unit.topicId}>
+            <summary><span className="science-unit-number">{String(index + 1).padStart(2,'0')}</span><div><b>{unit.title}</b><small>{questionCountForTopic} प्रश्न · {lessonCount} पाठ</small></div><span>＋</span></summary>
+            <div className="science-unit-body">
+              <div><h4>क्या सीखना है</h4><ul>{unit.coreSkills.map((item) => <li key={item}>{item}</li>)}</ul></div>
+              <div><h4>Must Know</h4><ul>{unit.mustKnow.map((item) => <li key={item}>{item}</li>)}</ul></div>
+              <div><h4>Quick Facts</h4><div className="science-fact-chips">{unit.quickFacts.map((item) => <span key={item}>{item}</span>)}</div></div>
+              <div><h4>Exam Traps</h4><ul>{unit.examTraps.map((item) => <li key={item}>{item}</li>)}</ul></div>
+              <div className="actions">{topic?.lessonIds[0] && <Link className="btn" to={\`/lessons/\${topic.lessonIds[0]}\`}>पाठ पढ़ें</Link>}<Link className="btn primary" to={\`/practice/\${unit.topicId}\`}>प्रश्न हल करें</Link></div>
+            </div>
+          </details>;
+        })}
+      </div>
+    </section>
+  </section>;
+};
+
+const ScienceRevisionPage = () => (
+  <Shell>
+    <div className="page-head">
+      <Link to="/subjects/sub_sci">← विज्ञान तैयारी केंद्र</Link>
+      <span className="eyebrow">SCIENCE REVISION SHEET</span>
+      <h1>विज्ञान त्वरित पुनरावृत्ति</h1>
+      <p>18 units के सबसे महत्वपूर्ण facts और exam traps — अंतिम revision के लिए।</p>
+    </div>
+    <div className="science-revision-grid">
+      {scienceMasteryUnits.map((unit, index) => <Card key={unit.topicId} className="science-revision-card">
+        <div className="science-revision-head"><span className="science-unit-number">{String(index + 1).padStart(2,'0')}</span><div><h3>{unit.title}</h3><small>{unit.coreSkills.length} skills · {unit.quickFacts.length} quick facts</small></div></div>
+        <h4>Quick Recall</h4><ul>{unit.quickFacts.map((fact) => <li key={fact}>{fact}</li>)}</ul>
+        <h4>Exam Traps</h4><ul>{unit.examTraps.map((trap) => <li key={trap}>{trap}</li>)}</ul>
+        <div className="actions"><Link className="btn" to={\`/lessons/\${topics.find((topic) => topic.id === unit.topicId)?.lessonIds[0] ?? ''}\`}>पाठ</Link><Link className="btn primary" to={\`/practice/\${unit.topicId}\`}>अभ्यास</Link></div>
+      </Card>)}
+    </div>
+  </Shell>
+);
+
+const ScienceSmartPracticePage = () => {
+  const p = useProgressStore();
+  const [setNumber, setSetNumber] = useState(0);
+  const [qs, setQs] = useState(() => getScienceSmartPracticeQuestions(useProgressStore.getState(), 12, 'jnvst-science-smart-0'));
+  const [i, setI] = useState(0);
+  const [selected, setSelected] = useState<ID[]>([]);
+  const [checked, setChecked] = useState(false);
+
+  if (!qs.length) return <Shell><Card className="empty"><h1>स्मार्ट विज्ञान अभ्यास तैयार नहीं हो सका</h1><p>विज्ञान के topic-wise MCQ उपलब्ध हैं।</p></Card></Shell>;
+  const q = qs[i];
+  const correct = sameAnswer(selected, q.correctOptionIds);
+  const choose = (id: ID) => { if (!checked) setSelected([id]); };
+  const check = () => { if (!selected.length) return; setChecked(true); p.recordAttempt(q.id,{selectedOptionIds:selected,isCorrect:correct,timestamp:Date.now(),mode:'practice'}); };
+  const regenerate = () => {
+    const next = setNumber + 1;
+    setSetNumber(next);
+    setQs(getScienceSmartPracticeQuestions(useProgressStore.getState(),12,'jnvst-science-smart-' + next));
+    setI(0); setSelected([]); setChecked(false);
+  };
+
+  return <Shell>
+    <div className="page-head"><Link to="/subjects/sub_sci">← विज्ञान तैयारी केंद्र</Link><p>यह अभ्यास केवल Science के JNVST-compatible MCQs से बनता है और आपकी कमजोर/गलत/अनदेखी items को प्राथमिकता देता है।</p><h1>🎯 स्मार्ट विज्ञान अभ्यास</h1><div className="progressline"><span>प्रश्न {i + 1} / {qs.length}</span><span>{topics.find((topic) => topic.id === q.topicId)?.title ?? 'विज्ञान'}</span></div></div>
+    <Card className="science-smart-banner"><div><b>12 प्रश्न · Science-only adaptive set</b><span>पहले chapter coverage, फिर weak areas और पिछली गलतियों पर फोकस।</span></div><Link className="btn" to="/science-mock-test">35 प्रश्न का Science Mock →</Link></Card>
+    <Card className="question-card"><div className="question-body">
+      <div className="question-text">{questionTextBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div>
+      <div className="options">{q.options.map((o) => <button key={o.id} className={'option ' + (selected.includes(o.id) ? 'selected' : '') + ' ' + (checked && q.correctOptionIds.includes(o.id) ? 'correct' : '')} onClick={() => choose(o.id)}><InlineText text={o.text} /></button>)}</div>
+      {checked && <div className={'answer ' + (correct ? 'correct' : 'wrong')}><b>{correct ? 'सही उत्तर ✅' : 'गलत उत्तर — समाधान पढ़ें'}</b><div>{questionExplanationBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div></div>}
+      <div className="study-reader-actions">{!checked ? <button className="btn primary" onClick={check}>उत्तर जाँचें</button> : <button className="btn primary" onClick={() => { if (i === qs.length - 1) regenerate(); else { setI((x) => x + 1); setSelected([]); setChecked(false); } }}>{i === qs.length - 1 ? 'नया Smart Set →' : 'अगला प्रश्न →'}</button>}</div>
+    </div></Card>
+  </Shell>;
+};
+
+const ScienceMockTestPage = () => {
+  const p = useProgressStore();
+  const [mockNumber, setMockNumber] = useState(0);
+  const qs = useMemo(() => buildScienceMockPaper('jnvst-science-' + mockNumber + '-' + Date.now()), [mockNumber]);
+  const [started, setStarted] = useState(false);
+  const [index, setIndex] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, ID[]>>({});
+  const answersRef = useRef<Record<string, ID[]>>({});
+  const [finished, setFinished] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(50 * 60);
+  const scienceTopics = topics.filter((topic) => topic.chapterId.startsWith('chap_sci_')).sort((a,b) => (chapters.find((c) => c.id === a.chapterId)?.order ?? 0) - (chapters.find((c) => c.id === b.chapterId)?.order ?? 0) || a.order - b.order);
+  const q = qs[index];
+
+  const choose = (id: ID) => {
+    if (!q) return;
+    const next = {...answersRef.current, [q.id]: [id]};
+    answersRef.current = next;
+    setAnswers(next);
+  };
+  const finish = () => {
+    const currentAnswers = answersRef.current;
+    const now = Date.now();
+    const score = qs.reduce((sum, question) => sum + (sameAnswer(currentAnswers[question.id] || [], question.correctOptionIds) ? 1 : 0), 0);
+    const result: MockTestResult = { id:'science-mock-' + now, score, totalMarks:qs.length, timestamp:now, answers:currentAnswers, sectionScores:{sub_sci:score} };
+    p.recordAttempts(qs.map((question) => ({id:question.id,attempt:{selectedOptionIds:currentAnswers[question.id] || [],isCorrect:sameAnswer(currentAnswers[question.id] || [],question.correctOptionIds),timestamp:now,mode:'mock-test'}})));
+    p.saveMockResult(result);
+    setFinished(true);
+  };
+
+  useEffect(() => {
+    if (!started || finished) return;
+    const timerId = window.setInterval(() => {
+      setTimeLeft((value) => {
+        if (value <= 1) {
+          window.clearInterval(timerId);
+          finish();
+          return 0;
+        }
+        return value - 1;
+      });
+    },1000);
+    return () => window.clearInterval(timerId);
+  },[started,finished]);
+
+  const formatTime = (seconds: number) => String(Math.floor(seconds / 60)).padStart(2,'0') + ':' + String(seconds % 60).padStart(2,'0');
+  const score = qs.reduce((sum, question) => sum + (sameAnswer(answers[question.id] || [], question.correctOptionIds) ? 1 : 0), 0);
+  const answeredCount = Object.values(answers).filter((value) => value.length > 0).length;
+
+  if (finished) {
+    const topicStats = scienceTopics.map((topic) => {
+      const topicQuestions = qs.filter((question) => question.topicId === topic.id);
+      const topicCorrect = topicQuestions.filter((question) => sameAnswer(answers[question.id] || [], question.correctOptionIds)).length;
+      return { ...topic, count:topicQuestions.length, correct:topicCorrect };
+    });
+    return <Shell>
+      <div className="page-head"><Link to="/subjects/sub_sci">← विज्ञान तैयारी केंद्र</Link><h1>विज्ञान Mock Test परिणाम</h1><p>यह 35-प्रश्न Science-only practice test था। परिणाम आपकी progress में सुरक्षित है।</p></div>
+      <section className="science-result-hero"><span>आपका स्कोर</span><strong>{score} / {qs.length}</strong><b>{Math.round((score/qs.length)*100)}% accuracy</b></section>
+      <div className="science-result-grid"><Card><b>{answeredCount}</b><span>attempted</span></Card><Card><b>{qs.length-answeredCount}</b><span>unanswered</span></Card><Card><b>{Math.round((score/qs.length)*100)}%</b><span>accuracy</span></Card></div>
+      <Card><div className="science-section-head"><h2>इकाई-वार प्रदर्शन</h2><p>सभी 18 Science units से कम-से-कम 1 प्रश्न इस paper में है; बाकी प्रश्न seeded variety के लिए चुने जाते हैं।</p></div>
+        <div className="science-result-topics">{topicStats.map((topic) => <div className="science-result-topic" key={topic.id}><div><b>{topic.title}</b><span>{topic.correct} / {topic.count} सही</span></div><span>{topic.count ? Math.round((topic.correct/topic.count)*100) + '%' : '—'}</span></div>)}</div>
+      </Card>
+      <div className="actions"><button className="btn primary" onClick={() => {answersRef.current={};setMockNumber((n)=>n+1);setStarted(false);setFinished(false);setIndex(0);setAnswers({});setTimeLeft(50*60);}}>नया विज्ञान Mock</button><Link className="btn" to="/science-smart-practice">गलतियों पर Smart Practice</Link><Link className="btn" to="/science-revision">त्वरित पुनरावृत्ति</Link></div>
+    </Shell>;
+  }
+
+  return <Shell>
+    <div className="page-head"><Link to="/subjects/sub_sci">← विज्ञान तैयारी केंद्र</Link><h1>⏱ विज्ञान Mock Test</h1><p>35 प्रश्न · 35 अंक · केवल विज्ञान · सभी 18 units की कम-से-कम 1-question coverage</p>{!started && <div className="actions"><button className="btn primary" onClick={() => {answersRef.current={};setAnswers({});setTimeLeft(50*60);setStarted(true);}}>टेस्ट शुरू करें</button></div>}</div>
+    {!started ? <Card className="science-mock-intro"><h2>टेस्ट से पहले</h2><div className="pattern"><div><b>35</b><span>प्रश्न</span></div><div><b>35</b><span>अंक</span></div><div><b>50 min</b><span>recommended practice time</span></div><div><b>18</b><span>इकाइयाँ</span></div><div><b>1+</b><span>प्रश्न/इकाई</span></div><div><b>4</b><span>विकल्प/प्रश्न</span></div></div><ul><li>यह Science-only practice mock है; यह आधिकारिक अलग Science परीक्षा-समय नहीं है।</li><li>हर प्रश्न चार विकल्प और एक सही उत्तर वाले MCQ pool से आता है।</li><li>Question navigator से किसी भी प्रश्न पर जा सकते हैं; खाली प्रश्न बाद में कर सकते हैं।</li><li>50 मिनट recommended practice limit है; पूरा JNVST Selection Test आधिकारिक रूप से 150 मिनट का है।</li></ul></Card>
+    : q && <div className="science-mock-layout"><Card className="question-card"><div className="progressline"><span>प्रश्न {index+1} / {qs.length}</span><span>हल किए: {answeredCount}</span><span className={timeLeft<=300 ? 'mock-timer danger' : 'mock-timer'}>⏱ {formatTime(timeLeft)}</span></div><div className="question-text">{questionTextBlocks(q).map((b,idx)=><ContentRenderer key={idx} blocks={[b]} />)}</div><div className="options">{q.options.map((o)=><button key={o.id} className={'option ' + (answers[q.id]?.includes(o.id) ? 'selected' : '')} onClick={()=>choose(o.id)}><InlineText text={o.text}/></button>)}</div><div className="study-reader-actions"><button className="btn" disabled={index===0} onClick={()=>setIndex(x=>x-1)}>← पिछला</button>{index===qs.length-1?<button className="btn primary" onClick={finish}>टेस्ट जमा करें</button>:<button className="btn primary" onClick={()=>setIndex(x=>x+1)}>अगला प्रश्न →</button>}</div></Card>
+      <Card className="science-mock-palette"><h3>Question Navigator</h3><p>{answeredCount} / {qs.length} answered</p><div className="science-palette-grid">{qs.map((question,qi)=><button key={question.id} className={(answers[question.id]?.length ? 'answered ' : '') + (qi===index ? 'current' : '')} onClick={()=>setIndex(qi)}>{qi+1}</button>)}</div></Card></div>}
+  </Shell>;
+};
+
 const SubjectPage = () => {
   const { subjectId } = useParams();
   const s = getSubject(subjectId || '');
@@ -256,6 +476,7 @@ const SubjectPage = () => {
       <p>{s.description}</p>
     </div>
     {s.id === 'sub_math' && <MathSubjectOverview />}
+    {s.id === 'sub_sci' && <ScienceSubjectOverview />}
     {cs.map(c => <Card key={c.id} className="chapter-section"><Link className="chapter-link" to={`/chapters/${c.id}`}><h2>{c.title} →</h2></Link><div className="grid">{c.topicIds.map(id => <TopicCard key={id} topicId={id} />)}</div></Card>)}
   </Shell>;
 };
@@ -573,4 +794,103 @@ const MockTestsPage = () => {
   </Shell>;
 };
 
-export default function App() { return <HashRouter><Routes><Route path="/" element={<Dashboard />} /><Route path="/subjects" element={<SubjectsPage />} /><Route path="/subjects/:subjectId" element={<SubjectPage />} /><Route path="/chapters/:chapterId" element={<ChapterPage />} /><Route path="/chapters/:chapterId/study" element={<ChapterStudyPage />} /><Route path="/lessons/:lessonId" element={<LessonPage />} /><Route path="/math-formulas" element={<Shell><MathFormulaSheet /></Shell>} /><Route path="/practice/:topicId" element={<PracticePage />} /><Route path="/smart-practice" element={<SmartPracticePage />} /><Route path="/math-smart-practice" element={<MathSmartPracticePage />} /><Route path="/bookmarks" element={<BookmarksPage />} /><Route path="/mock-tests" element={<MockTestsPage />} /><Route path="/math-mock-test" element={<MathMockTestPage />} /><Route path="*" element={<Dashboard />} /></Routes></HashRouter>; }
+export default function App() { return <HashRouter><Routes><Route path="/" element={<Dashboard />} /><Route path="/subjects" element={<SubjectsPage />} /><Route path="/subjects/:subjectId" element={<SubjectPage />} /><Route path="/chapters/:chapterId" element={<ChapterPage />} /><Route path="/chapters/:chapterId/study" element={<ChapterStudyPage />} /><Route path="/lessons/:lessonId" element={<LessonPage />} /><Route path="/math-formulas" element={<Shell><MathFormulaSheet /></Shell>} /><Route path="/science-revision" element={<ScienceRevisionPage />} /><Route path="/science-smart-practice" element={<ScienceSmartPracticePage />} /><Route path="/science-mock-test" element={<ScienceMockTestPage />} /><Route path="/practice/:topicId" element={<PracticePage />} /><Route path="/smart-practice" element={<SmartPracticePage />} /><Route path="/math-smart-practice" element={<MathSmartPracticePage />} /><Route path="/bookmarks" element={<BookmarksPage />} /><Route path="/mock-tests" element={<MockTestsPage />} /><Route path="/math-mock-test" element={<MathMockTestPage />} /><Route path="*" element={<Dashboard />} /></Routes></HashRouter>; }
+
+/* Science preparation center */
+.science-hub { margin-top: 18px; }
+.science-hub-hero { display:flex; justify-content:space-between; align-items:center; gap:22px; padding:32px; border-radius:24px; background:linear-gradient(135deg,#173d35,#2f6b59); color:#fff; box-shadow:0 16px 36px rgba(23,61,53,.16); }
+.science-hub-hero h2 { margin:8px 0 8px; font-size:clamp(30px,4vw,44px); }
+.science-hub-hero p { max-width:760px; margin:0; color:rgba(255,255,255,.84); font-size:16px; line-height:1.7; }
+.science-hub-badge { min-width:155px; min-height:155px; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08); border-radius:22px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.science-hub-badge b { font-size:54px; line-height:1; }
+.science-hub-badge small { opacity:.72; margin-top:3px; }
+.science-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:14px 0; }
+.science-stats .card { padding:17px 18px; }
+.science-stats b { display:block; font-size:28px; color:#1d4b41; }
+.science-stats span { color:#687588; font-size:13px; }
+.science-hub-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.science-steps { margin:14px 0 0; padding-left:20px; }
+.science-steps li { margin:9px 0; color:#56657a; }
+.science-section-head { margin:8px 0 14px; }
+.science-section-head h2,.science-section-head h3 { margin:7px 0 4px; color:#1b433a; }
+.science-section-head p { margin:0; color:#687588; }
+.science-chapter-map,.science-mastery { margin-top:20px; }
+.science-chapter-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.science-chapter-card { padding:18px; }
+.science-chapter-head { display:grid; grid-template-columns:42px minmax(0,1fr); gap:10px; align-items:center; }
+.science-chapter-head h4 { margin:0; color:#214c43; font-size:18px; }
+.science-chapter-head small { display:block; color:#7a8798; margin-top:2px; }
+.science-unit-number { width:38px; height:38px; border-radius:12px; display:grid; place-items:center; background:#edf7f4; color:#23715d; font-size:12px; font-weight:900; }
+.science-progress { height:7px; margin:14px 0 12px; border-radius:999px; background:#edf1f6; overflow:hidden; }
+.science-progress span { display:block; height:100%; border-radius:inherit; background:#2d7b66; }
+.science-mini-topics { display:grid; gap:6px; }
+.science-mini-topic { display:flex; align-items:center; gap:8px; padding:8px 9px; border-radius:9px; color:#59687a; background:#f7f9fc; border:1px solid transparent; font-size:14px; }
+.science-mini-topic:hover { border-color:#d7e8e3; color:#214c43; }
+.science-mini-topic.done { background:#eff8f4; color:#28705a; }
+.science-mini-topic > span:first-child { width:18px; text-align:center; font-weight:900; }
+.science-unit-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.science-unit { background:#fff; border:1px solid #e1e7ef; border-radius:15px; overflow:hidden; }
+.science-unit[open] { border-color:#c6ddd5; box-shadow:0 10px 26px rgba(28,70,60,.055); }
+.science-unit summary { list-style:none; display:grid; grid-template-columns:48px minmax(0,1fr) 28px; align-items:center; gap:12px; padding:14px 16px; cursor:pointer; }
+.science-unit summary::-webkit-details-marker { display:none; }
+.science-unit summary > span:last-child { color:#5f8a7e; font-size:20px; text-align:center; }
+.science-unit[open] summary > span:last-child { transform:rotate(45deg); }
+.science-unit summary b { display:block; color:#203f38; font-size:16px; }
+.science-unit summary small { display:block; color:#7a8798; margin-top:2px; }
+.science-unit-body { padding:0 16px 17px 76px; display:grid; gap:14px; }
+.science-unit-body h4 { margin:0 0 7px; color:#285348; font-size:14px; }
+.science-unit-body ul { margin:0; padding-left:18px; }
+.science-unit-body li { margin:5px 0; color:#56657a; }
+.science-fact-chips { display:flex; gap:7px; flex-wrap:wrap; }
+.science-fact-chips span { padding:7px 10px; border:1px solid #e0ebe7; background:#f6faf8; border-radius:9px; max-width:100%; }
+.science-smart-banner { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:15px; background:linear-gradient(135deg,#edf8f3,#f9fcfb); border-color:#d5e9e1; }
+.science-smart-banner div { display:grid; gap:4px; }
+.science-smart-banner b { color:#20483e; }
+.science-smart-banner span { color:#6a788c; }
+.science-mock-layout { display:grid; grid-template-columns:minmax(0,1fr) 260px; gap:16px; align-items:start; }
+.science-mock-palette { position:sticky; top:90px; }
+.science-palette-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:7px; }
+.science-palette-grid button { border:1px solid #d7dfe9; background:#fff; border-radius:8px; height:36px; cursor:pointer; font-weight:800; color:#4b5b70; }
+.science-palette-grid button.answered { background:#2f7562; color:#fff; border-color:#2f7562; }
+.science-palette-grid button.current { box-shadow:0 0 0 3px #c4ded6; }
+.science-mock-intro { margin-bottom:16px; }
+.science-result-hero { background:linear-gradient(135deg,#173d35,#3f806d); color:#fff; border-radius:22px; padding:34px; text-align:center; margin-bottom:16px; box-shadow:0 16px 34px rgba(23,61,53,.14); }
+.science-result-hero span { display:block; opacity:.75; }
+.science-result-hero strong { display:block; font-size:64px; line-height:1.05; margin:8px 0; }
+.science-result-hero b { font-size:18px; }
+.science-result-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:16px; }
+.science-result-grid .card { display:flex; flex-direction:column; gap:3px; }
+.science-result-grid b { font-size:28px; color:#20483e; }
+.science-result-grid span { color:#6a778a; }
+.science-result-topics { display:grid; gap:9px; }
+.science-result-topic { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 13px; border:1px solid #e5ece9; border-radius:12px; background:#fbfcfe; }
+.science-result-topic > div { display:grid; gap:2px; }
+.science-result-topic b { color:#233f39; }
+.science-result-topic span { color:#748196; font-size:13px; }
+.science-revision-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.science-revision-card h3 { margin:0; color:#214c43; }
+.science-revision-card h4 { margin:17px 0 7px; color:#315e53; font-size:14px; }
+.science-revision-card ul { margin:0; padding-left:19px; }
+.science-revision-head { display:grid; grid-template-columns:42px minmax(0,1fr); gap:10px; align-items:center; }
+.science-revision-head small { color:#7a8798; }
+@media (max-width:820px) {
+  .science-hub-hero { flex-direction:column; align-items:flex-start; }
+  .science-hub-badge { min-width:0; min-height:110px; width:100%; }
+  .science-stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .science-hub-grid,.science-chapter-grid,.science-unit-grid,.science-revision-grid { grid-template-columns:1fr; }
+  .science-unit-body { padding-left:16px; }
+  .science-smart-banner { flex-direction:column; align-items:flex-start; }
+  .science-mock-layout { grid-template-columns:1fr; }
+  .science-mock-palette { position:static; }
+  .science-result-grid { grid-template-columns:1fr; }
+}
+@media (max-width:520px) {
+  .science-hub-hero { padding:22px; border-radius:22px; }
+  .science-hub-hero h2 { font-size:30px; }
+  .science-chapter-card { padding:14px; }
+  .science-unit summary { grid-template-columns:40px minmax(0,1fr) 22px; gap:9px; padding:12px; }
+  .science-unit-number { width:34px; height:34px; }
+  .science-unit-body { padding-left:12px; }
+  .science-result-hero { padding:25px 18px; }
+  .science-result-hero strong { font-size:50px; }
+}
