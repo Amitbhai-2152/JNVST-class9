@@ -96,13 +96,55 @@ export const generateTranslationItem = (level:number, direction:TranslationDirec
 };
 
 const exampleSubjects = ['Riya', 'Kabir', 'Sana', 'Vivek', 'Anu', 'Dev'];
-const exampleTemplates = [
-  (w:string,s:string)=>`${s} was ${w} when the teacher asked a question.`,
-  (w:string,s:string)=>`${s} kept a ${w} idea in mind while solving the problem.`,
-  (w:string,s:string)=>`The ${w} student helped a classmate after school.`,
-  (w:string,s:string)=>`Reading about the topic made the lesson less ${w} for ${s}.`,
-  (w:string,s:string)=>`${s} used the ${w} lesson in a real situation.`,
-];
+const wordParts: Record<string, 'adjective' | 'verb' | 'adverb' | 'noun'> = {
+  happy:'adjective', small:'adjective', begin:'verb', help:'verb', quick:'adjective', clean:'verb',
+  easy:'adjective', quiet:'adjective', careful:'adjective', improve:'verb', common:'adjective',
+  correct:'adjective', different:'adjective', simple:'adjective', choose:'verb', reason:'noun',
+  carefully:'adverb', available:'adjective', similar:'adjective', require:'verb', identify:'verb',
+  compare:'verb', evidence:'noun', infer:'verb', passage:'noun', 'main idea':'noun', detail:'noun',
+  sequence:'noun', support:'verb', context:'noun', regularly:'adverb', unusual:'adjective',
+  cooperation:'noun', accurate:'adjective', essential:'adjective', relevant:'adjective',
+  distractor:'noun', interpret:'verb', contrast:'noun', conclusion:'noun',
+};
+
+const pickExample = (word: string, subject: string, seed: number): string => {
+  const type = wordParts[word] ?? 'noun';
+  const variant = Math.abs(hashSeed(seed, 901)) % 4;
+  if (type === 'adjective') {
+    const templates = [
+      `${subject} gave a ${word} answer to the question.`,
+      `The teacher said that ${subject}'s explanation was ${word}.`,
+      `${subject} found the task ${word} after reading the instructions.`,
+      `A ${word} habit can make daily study easier for ${subject}.`,
+    ];
+    return templates[variant];
+  }
+  if (type === 'verb') {
+    const templates = [
+      `${subject} decided to ${word} the question carefully.`,
+      `The teacher asked ${subject} to ${word} the important points.`,
+      `Regular practice helps ${subject} ${word} faster.`,
+      `Before choosing an option, ${subject} tried to ${word} the clues.`,
+    ];
+    return templates[variant];
+  }
+  if (type === 'adverb') {
+    const templates = [
+      `${subject} read the passage ${word} before answering.`,
+      `${subject} ${word} checked the instructions twice.`,
+      `The student answered the question ${word} during practice.`,
+      `${subject} ${word} revised the difficult words.`,
+    ];
+    return templates[variant];
+  }
+  const templates = [
+    `The teacher explained the ${word} with a simple example to ${subject}.`,
+    `${subject} wrote the ${word} in a notebook for later revision.`,
+    `Finding the ${word} helped ${subject} understand the question.`,
+    `The passage gave ${subject} enough information about the ${word}.`,
+  ];
+  return templates[variant];
+};
 
 export const generateVocabularyItem = (
   level: VocabularyItem['level'],
@@ -113,11 +155,10 @@ export const generateVocabularyItem = (
   const fallback = levelItems.length ? levelItems : base;
   const item = fallback[Math.abs(seed) % Math.max(1, fallback.length)];
   const subject = exampleSubjects[Math.abs(hashSeed(seed, 88)) % exampleSubjects.length];
-  const sentenceFactory = exampleTemplates[Math.abs(hashSeed(seed, 89)) % exampleTemplates.length];
   return {
     ...item,
     id: `gen-v-${level}-${seed}`,
-    sentence: sentenceFactory(item.word, subject),
-    contextMeaning: `इस नए sentence में “${item.word}” का अर्थ ${item.meaning} ही है; आसपास के शब्द देखकर context confirm करें।`,
+    sentence: pickExample(item.word, subject, seed),
+    contextMeaning: `इस नए sentence में “${item.word}” का अर्थ ${item.meaning} ही है; आसपास के words देखकर context confirm करें।`,
   };
 };
