@@ -87,12 +87,24 @@ const advanced = (seed:number, direction:TranslationDirection): TranslationItem 
 
 export const generateTranslationItem = (level:number, direction:TranslationDirection, seed:number): TranslationItem => {
   const bucket = ((seed % 5) + 5) % 5;
-  if (level <= 1) return simplePresent(seed + bucket * 101, direction);
-  if (level === 2) return presentContinuous(seed + bucket * 101, direction);
-  if (level === 3) return pastFuture(seed + bucket * 101, direction);
-  if (level === 4) return conditionalPassive(seed + bucket * 101, direction);
-  if (level === 5) return conditionalPassive(seed + 707, direction);
-  return advanced(seed + bucket * 101, direction);
+  const item =
+    level <= 1 ? simplePresent(seed + bucket * 101, direction) :
+    level === 2 ? presentContinuous(seed + bucket * 101, direction) :
+    level === 3 ? pastFuture(seed + bucket * 101, direction) :
+    level === 4 ? conditionalPassive(seed + bucket * 101, direction) :
+    level === 5 ? conditionalPassive(seed + 707, direction) :
+    advanced(seed + bucket * 101, direction);
+
+  const buildStepsByLevel: Record<number, string[]> = {
+    1: ['1. Subject पहचानें: कौन काम कर रहा है?', '2. Time/habit clue पहचानें.', '3. Simple Present का सही verb form चुनें.', '4. Object/place/time को जोड़कर पूरा natural sentence बनाएं.'],
+    2: ['1. “अभी/now” जैसे ongoing clue पहचानें.', '2. Subject के अनुसार is/am/are चुनें.', '3. Main verb में -ing लगाएँ.', '4. बाकी information सही क्रम में जोड़ें.'],
+    3: ['1. Past/future time clue पहचानें.', '2. Past हो तो V2; future हो तो will + V1 चुनें.', '3. Subject और object की जगह सही रखें.', '4. पूरे sentence का time meaning दोबारा जाँचें.'],
+    4: ['1. Sentence का relationship पहचानें: condition, passive या comparison.', '2. हर clause का tense/form अलग तय करें.', '3. Main verb का सही structure लगाएँ.', '4. Grammar के बाद meaning से cross-check करें.'],
+    5: ['1. Meaning को छोटे clauses में बाँटें.', '2. Connector/condition पहचानें.', '3. हर clause में सही tense और verb form लगाएँ.', '4. Final sentence natural और logically complete है या नहीं देखें.'],
+    6: ['1. Main clause और supporting clause अलग करें.', '2. Connector जैसे although/relative/contrast पहचानें.', '3. Tense और clause structure बनाएं.', '4. Vocabulary का exact meaning रखें.', '5. अंत में पूरा translation मूल meaning से मिलाएँ.'],
+  };
+
+  return { ...item, buildSteps: buildStepsByLevel[level] ?? buildStepsByLevel[6] };
 };
 
 const exampleSubjects = ['Riya', 'Kabir', 'Sana', 'Vivek', 'Anu', 'Dev'];
