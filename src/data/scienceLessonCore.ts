@@ -1281,6 +1281,8 @@ function buildPages(b: Blueprint): ContentBlock[][] {
       paragraph("अब notes बंद करने की कोशिश करें और नीचे के points बिना देखे दोहराएँ।"),
       list(b.recall),
       callout("important", "अंतिम recall", b.recall.join(" ")),
+      heading("एक application याद रखें", 3),
+      paragraph(b.examples[0]?.text ?? "इस अध्याय की पहली practical application अपने शब्दों में दोहराएँ।"),
       heading("तीन शब्दों में अध्याय", 3),
       paragraph(b.keyTerms.slice(0, 3).map((x) => x.term).join(" → ")),
     ],
