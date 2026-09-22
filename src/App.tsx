@@ -1071,7 +1071,7 @@ const AssessmentRunner = ({
 
   if (!started) {
     return <Shell>
-      <div className="assessment-shell">
+      <div className={`assessment-shell${isScienceAssessment ? " science-assessment-shell" : ""}`}>
         <div className="assessment-breadcrumb"><Link to={backTo}>← {backLabel}</Link><span>{badge}</span></div>
         <section className="assessment-start-hero">
           <div>
