@@ -1,6 +1,7 @@
 import type { Lesson } from '../../types';
 import { scienceDeepDive } from '../sciencePrep';
 import { scienceLessonEnhancements } from '../scienceLessonEnhancements';
+import { scienceLessonCore } from '../scienceLessonCore';
 
 const scienceLessonsBase: Lesson[] = [
   {
@@ -222,7 +223,7 @@ const scienceLessonsBase: Lesson[] = [
 export const scienceLessonsData: Lesson[] = scienceLessonsBase.map((lesson) => ({
   ...lesson,
   content: [
-    ...lesson.content,
+    ...(scienceLessonCore[lesson.topicId] ?? lesson.content),
     ...(scienceDeepDive[lesson.topicId] ?? []),
     ...(scienceLessonEnhancements[lesson.topicId] ?? []),
   ],
