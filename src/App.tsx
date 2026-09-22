@@ -732,15 +732,28 @@ const LessonPage = () => {
 
     {isScience && <ScienceVisual topicId={l.topicId} />}
 
+    {isScience && <nav className="science-lesson-outline" aria-label="पाठ के अध्ययन भाग">
+      <div className="science-outline-head">
+        <span className="science-panel-label">LESSON MAP</span>
+        <b>{scienceChapter?.title ?? l.title}</b>
+        <small>हर भाग का उद्देश्य और क्रम स्पष्ट है</small>
+      </div>
+      <div className="science-outline-list">
+        {scienceSections.map((title, i) => <button key={title + i} className={i === page ? 'active' : ''} aria-current={i === page ? 'step' : undefined} onClick={() => setPage(i)}>
+          <span>{String(i + 1).padStart(2, '0')}</span><b>{title}</b>
+        </button>)}
+      </div>
+    </nav>}
+
     <Card className="lesson-card">
       <div className="study-reader">
         <div className="study-reader-head">
-          <div><b>टॉपिक-पाठ</b><span>पृष्ठ {page + 1} / {pages.length}</span></div>
+          <div><b>{isScience ? 'Science Study Section' : 'टॉपिक-पाठ'}</b><span>{isScience ? (page + 1) + ' / ' + pages.length : 'पृष्ठ ' + (page + 1) + ' / ' + pages.length}</span></div>
           <div className="study-progress"><span style={{width: progressPercent + '%'}} /></div>
         </div>
-        <div className="study-page-nav" aria-label="अध्ययन पृष्ठ">
+        {!isScience && <div className="study-page-nav" aria-label="अध्ययन पृष्ठ">
           {pages.map((_, i) => <button key={i} className={i === page ? 'active' : ''} aria-current={i === page ? 'page' : undefined} aria-label={`पृष्ठ ${i + 1}`} onClick={() => setPage(i)}>{i + 1}</button>)}
-        </div>
+        </div>}
       </div>
 
       <div className="objectives">
