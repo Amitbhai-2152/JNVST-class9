@@ -180,12 +180,43 @@ const MathSubjectOverview = () => {
       </Card>
     </div>
 
+    <section className="math-chapter-map">
+      <div className="math-mastery-head">
+        <div>
+          <span className="eyebrow">5 CHAPTERS • 11 OFFICIAL UNITS</span>
+          <h3>पूरा गणित Study Roadmap</h3>
+          <p>हर chapter के अंदर सभी official units हैं। पहले concept पढ़ें, फिर topic practice, फिर Smart Practice और अंत में Math Mock।</p>
+        </div>
+      </div>
+      <div className="math-chapter-grid">
+        {chapters.filter((chapter) => chapter.subjectId === 'sub_math').sort((a, b) => a.order - b.order).map((chapter) => {
+          const chapterTopics = chapter.topicIds.map((id) => topics.find((topic) => topic.id === id)).filter(Boolean) as typeof topics;
+          const chapterPerformance = chapterTopics.map((topic) => performances.find((item) => item.topicId === topic.id));
+          const mastered = chapterPerformance.filter((item) => item?.attempts && item.accuracy >= 80).length;
+          const attempted = chapterPerformance.filter((item) => item?.attempts).length;
+          const pct = chapterTopics.length ? Math.round((mastered / chapterTopics.length) * 100) : 0;
+          return <Card className="math-chapter-card" key={chapter.id}>
+            <div className="math-chapter-card-head"><span className="math-unit-number">{String(chapter.order).padStart(2, '0')}</span><div><h4>{chapter.title}</h4><small>{chapterTopics.length} इकाइयाँ · {attempted} practiced · {mastered} mastered</small></div></div>
+            <div className="math-progress"><span style={{ width: pct + '%' }} /></div>
+            <div className="math-chapter-topics">
+              {chapterTopics.map((topic) => {
+                const performance = performances.find((item) => item.topicId === topic.id);
+                const done = performance?.attempts && performance.accuracy >= 80;
+                return <Link to={`/practice/${topic.id}`} key={topic.id} className={`math-mini-topic ${done ? 'done' : ''}`}><span>{done ? '✓' : '•'}</span><span>{topic.title}</span></Link>;
+              })}
+            </div>
+            <div className="actions"><Link className="btn" to={`/chapters/${chapter.id}`}>Chapter खोलें</Link><Link className="btn primary" to={`/chapters/${chapter.id}/study`}>पूरा अध्ययन</Link></div>
+          </Card>;
+        })}
+      </div>
+    </section>
+
     <section className="math-mastery">
       <div className="math-mastery-head">
         <div>
           <span className="eyebrow">COMPLETE JNVST MATH SYLLABUS MAP</span>
           <h3>11 इकाइयों की Mastery Checklist</h3>
-          <p>हर इकाई में क्या पढ़ना है, क्या याद रखना है और परीक्षा में कहाँ गलती होती है—सब एक जगह।</p>
+          <p>हर इकाई में क्या पढ़ना है, क्या याद रखना है, कौन-से formulas जरूरी हैं और exam में कहाँ गलती होती है—सब एक जगह।</p>
         </div>
         <Link className="btn" to="/math-formulas">सूत्र-पत्र →</Link>
       </div>
