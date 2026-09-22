@@ -49,37 +49,14 @@ const questionMappingProblems = scienceQuestions
   })
   .filter(Boolean);
 
-const chapterOrderProblems = scienceChapters
-  .sort((a, b) => a.order - b.order)
-  .filter((chapter, index) => chapter.order !== index + 1 || chapter.topicIds.length !== 1 || chapter.topicIds[0] !== scienceTopics.sort((x, y) => x.id.localeCompare(y.id)).find(() => false)?.id)
-  .map((chapter) => ({ chapterId: chapter.id, order: chapter.order, topicCount: chapter.topicIds.length }));
-
-const scienceMcqCount = scienceQuestions.filter((question) => question.type === 'mcq').length;
-const scienceJnvstCount = scienceQuestions.filter((question) =>
-  question.type === 'mcq' && question.options.length === 4 && question.correctOptionIds.length === 1,
-).length;
-
-const contentCoverage = Object.fromEntries(scienceTopics.map((topic) => {
-  const lesson = scienceLessonsData.find((item) => item.topicId === topic.id);
-  const blocks = lesson?.content ?? [];
-  return [topic.id, {
-    blocks: blocks.length,
-    hasTable: blocks.some((block) => block.type === 'table'),
-    hasGuidedSteps: blocks.some((block) => block.type === 'step-by-step'),
-    hasExamCallout: blocks.some((block) => block.type === 'callout' && ['warning','important','example'].includes(block.style)),
-  }];
-}));
-
-const shortLessons = scienceTopics
-  .filter((topic) => (contentCoverage[topic.id]?.blocks ?? 0) < minimumLessonBlocks)
-  .map((topic) => ({ topicId: topic.id, blocks: contentCoverage[topic.id]?.blocks ?? 0 }));
-
-const missingGuidedLayers = scienceTopics
-  .filter((topic) => {
-    const row = contentCoverage[topic.id];
-    return !row?.hasTable || !row?.hasGuidedSteps || !row?.hasExamCallout;
-  })
-  .map((topic) => ({ topicId: topic.id, coverage: contentCoverage[topic.id] }));
+const orderedScienceChapters = scienceChapters.slice().sort((a, b) => a.order - b.order);
+const chapterOrderProblems = orderedScienceChapters
+  .filter((chapter, index) =>
+    chapter.order !== index + 1 ||
+    chapter.topicIds.length !== 1 ||
+    !scienceTopics.some((topic) => topic.id === chapter.topicIds[0] && topic.chapterId === chapter.id),
+  )
+  .map((chapter) => ({ chapterId: chapter.id, order: chapter.order, topicIds: chapter.topicIds }));
 
 
 export const jnvstScienceQualityAudit = {
