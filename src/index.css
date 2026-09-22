@@ -1799,3 +1799,133 @@ a { color: inherit; text-decoration: none; }
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Maths chapter reader content overflow fix */
+.math-study-page .science-study-content-card .lesson-content {
+  width: 100%;
+  max-width: 850px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.math-study-page .science-study-content-card .lesson-content > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.math-study-page .science-study-content-card .lesson-content p,
+.math-study-page .science-study-content-card .lesson-content li,
+.math-study-page .science-study-content-card .lesson-content h2,
+.math-study-page .science-study-content-card .lesson-content h3,
+.math-study-page .science-study-content-card .lesson-content h4 {
+  overflow-wrap: anywhere;
+}
+
+.math-study-page .science-study-content-card .lesson-content .formula-block {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.math-study-page .science-study-content-card .lesson-content .math-display {
+  display: block;
+  width: max-content;
+  min-width: 0;
+  max-width: none;
+  overflow: visible;
+}
+
+.math-study-page .science-study-content-card .lesson-content .math-inline {
+  display: inline-block;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  vertical-align: middle;
+  -webkit-overflow-scrolling: touch;
+}
+
+.math-study-page .science-study-content-card .lesson-content .katex {
+  max-width: none;
+}
+
+.math-study-page .science-study-content-card .lesson-content .table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.math-study-page .science-study-content-card .lesson-content .table-wrap table {
+  width: max-content;
+  min-width: 560px;
+}
+
+.math-study-page .science-study-content-card .lesson-content .steps,
+.math-study-page .science-study-content-card .lesson-content .callout {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 700px) {
+  .math-study-page .science-study-content-card {
+    overflow: hidden;
+  }
+
+  .math-study-page .science-study-content-card .lesson-content {
+    padding: 14px 15px 18px;
+    font-size: 15px;
+    line-height: 1.72;
+  }
+
+  .math-study-page .science-study-content-card .lesson-content > h2 {
+    font-size: 22px;
+    line-height: 1.3;
+    margin-top: 24px;
+  }
+
+  .math-study-page .science-study-content-card .lesson-content > h3 {
+    font-size: 18px;
+    line-height: 1.35;
+  }
+
+  .math-study-page .science-study-content-card .lesson-content > ul,
+  .math-study-page .science-study-content-card .lesson-content > ol {
+    padding-left: 20px;
+  }
+
+  .math-study-page .science-study-content-card .lesson-content .step {
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 9px;
+  }
+
+  .math-study-page .science-study-content-card .lesson-content .step > span {
+    width: 30px;
+    height: 30px;
+  }
+
+  .math-study-page .science-study-content-card .lesson-content .formula-block {
+    margin: 14px 0;
+    padding: 12px 13px;
+    border-left-width: 3px;
+  }
+}
+
+@media (max-width: 420px) {
+  .math-study-page .science-study-content-card .lesson-content {
+    padding-left: 12px;
+    padding-right: 12px;
+    font-size: 14px;
+  }
+
+  .math-study-page .science-study-content-card .lesson-content .formula-block {
+    padding: 10px 11px;
+  }
+}
