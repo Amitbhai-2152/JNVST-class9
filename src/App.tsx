@@ -476,6 +476,7 @@ const ScienceRevisionPage = () => (
         <div className="actions"><Link className="btn" to={`/chapters/${topics.find((topic) => topic.id === unit.topicId)?.chapterId ?? ""}/study`}>अध्याय अध्ययन</Link><Link className="btn primary" to={`/practice/${unit.topicId}`}>अभ्यास</Link></div>
       </Card>)}
     </div>
+    </div>
   </Shell>
 );
 
