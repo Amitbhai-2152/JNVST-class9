@@ -337,9 +337,10 @@ const vocabularyExpansion: Array<{
   {level:'challenge',word:'objective',meaning:'निष्पक्ष / उद्देश्य',synonym:'impartial',antonym:'biased'},
 ];
 
+const vocabularyCoreWords = new Set(vocabularyCoreItems.map((item) => item.word.toLowerCase()));
 export const vocabularyLabItems: VocabularyItem[] = [
   ...vocabularyCoreItems,
-  ...vocabularyExpansion.map((entry, index) => ({
+  ...vocabularyExpansion.filter((entry) => !vocabularyCoreWords.has(entry.word.toLowerCase())).map((entry, index) => ({
     id: 'v_' + String(101 + index).padStart(3, '0'),
     level: entry.level,
     word: entry.word,
