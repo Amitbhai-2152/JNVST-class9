@@ -349,6 +349,7 @@ const ScienceSubjectOverview = () => {
           <Link className="btn primary" to="/science-revision">🧠 त्वरित पुनरावृत्ति</Link>
           <Link className="btn" to="/science-smart-practice">🎯 स्मार्ट विज्ञान अभ्यास</Link>
           <Link className="btn" to="/science-mock-test">⏱ विज्ञान Mock</Link>
+          <Link className="btn challenger" to="/chapters/chap_sci_01/challenger">⚡ CHALLENGER MODE</Link>
         </div>
       </div>
       <div className="science-hub-badge"><b>35</b><span>प्रश्न</span><small>JNVST विज्ञान</small></div>
