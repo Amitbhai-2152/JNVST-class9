@@ -1,6 +1,29 @@
 import type { ContentBlock, Lesson } from '../../types';
+import { mathMasteryUnitMap } from '../mathMastery';
 
 const c = (blocks: ContentBlock[]): ContentBlock[] => blocks;
+
+
+
+const addJnvstMastery = (topicId: string, content: ContentBlock[]): ContentBlock[] => {
+  const unit = mathMasteryUnitMap.get(topicId);
+  if (!unit) return content;
+
+  return [
+    ...content,
+    { type: 'heading', level: 2, text: 'JNVST Mastery Check — ' + unit.title },
+    { type: 'paragraph', text: 'इस section को lesson के अंत में checklist की तरह इस्तेमाल करें। यदि नीचे के सभी बिंदु बिना सहायता के समझ में आ रहे हैं, तो topic practice पर जाएँ।' },
+    { type: 'heading', level: 3, text: 'Core skills' },
+    { type: 'list', style: 'bullet', items: unit.coreSkills },
+    { type: 'heading', level: 3, text: 'Must Know' },
+    { type: 'list', style: 'bullet', items: unit.mustKnow },
+    { type: 'heading', level: 3, text: 'मुख्य सूत्र एक नज़र में' },
+    ...unit.formulaFacts.map((expression): ContentBlock => ({ type: 'formula', expression })),
+    { type: 'heading', level: 3, text: 'Exam Traps' },
+    { type: 'list', style: 'bullet', items: unit.examTraps },
+    { type: 'callout', style: 'important', title: 'Topic Complete?', text: 'पहले concept → फिर formula recall → फिर बिना देखे 5 प्रश्न → फिर गलत प्रश्न की explanation पढ़ें।' },
+  ];
+};
 
 const mathLessonContent: Record<string, ContentBlock[]> = {
   top_math_01_01: c([
@@ -246,43 +269,43 @@ export const mathLessonsData: Lesson[] = [
     id: 'les_math_01_01_01', topicId: 'top_math_01_01', title: 'परिमेय संख्याएँ',
     objectives: ['परिमेय संख्याओं की पहचान और मानक रूप समझना', 'परिमेय संख्याओं के गुणधर्म लागू करना', 'प्रतिलोम और गणना आधारित प्रश्न हल करना'],
     estimatedMinutes: 35,
-    content: mathLessonContent.top_math_01_01
+    content: addJnvstMastery('top_math_01_01', mathLessonContent.top_math_01_01)
   },
   {
     id: 'les_math_03_01_01', topicId: 'top_math_01_02', title: 'वर्ग और वर्गमूल',
     objectives: ['पूर्ण वर्ग पहचानना', 'वर्गमूल निकालना', 'पाइथागोरस त्रिक और पूर्ण वर्ग आधारित प्रश्न हल करना'],
     estimatedMinutes: 35,
-    content: mathLessonContent.top_math_01_02
+    content: addJnvstMastery('top_math_01_02', mathLessonContent.top_math_01_02)
   },
   {
     id: 'les_math_03_02_01', topicId: 'top_math_01_03', title: 'घन और घनमूल',
     objectives: ['पूर्ण घन पहचानना', 'अभाज्य गुणनखंडों से घनमूल निकालना', 'दशमलव और ऋणात्मक संख्याओं पर प्रश्न हल करना'],
     estimatedMinutes: 30,
-    content: mathLessonContent.top_math_01_03
+    content: addJnvstMastery('top_math_01_03', mathLessonContent.top_math_01_03)
   },
   {
     id: 'les_math_01_02_01', topicId: 'top_math_01_04', title: 'घातांक और घात',
     objectives: ['घातांक के नियम समझना', 'शून्य और ऋणात्मक घात का प्रयोग करना', 'मानक रूप में संख्याएँ लिखना'],
     estimatedMinutes: 35,
-    content: mathLessonContent.top_math_01_04
+    content: addJnvstMastery('top_math_01_04', mathLessonContent.top_math_01_04)
   },
   {
     id: 'les_math_03_04_01', topicId: 'top_math_02_01', title: 'प्रत्यक्ष और प्रतिलोम समानुपात',
     objectives: ['प्रत्यक्ष समानुपात की पहचान', 'प्रतिलोम समानुपात की पहचान', 'दैनिक जीवन की समानुपाती समस्याएँ हल करना'],
     estimatedMinutes: 35,
-    content: mathLessonContent.top_math_02_01
+    content: addJnvstMastery('top_math_02_01', mathLessonContent.top_math_02_01)
   },
   {
     id: 'les_math_03_03_01', topicId: 'top_math_02_02', title: 'प्रतिशत, लाभ-हानि, छूट और ब्याज',
     objectives: ['प्रतिशत की गणना', 'लाभ, हानि और छूट निकालना', 'साधारण और चक्रवृद्धि ब्याज के मूल प्रश्न हल करना'],
     estimatedMinutes: 45,
-    content: mathLessonContent.top_math_02_02
+    content: addJnvstMastery('top_math_02_02', mathLessonContent.top_math_02_02)
   },
   {
     id: 'les_math_02_02_01', topicId: 'top_math_03_01', title: 'बीजीय व्यंजक और सर्वसमिकाएँ',
     objectives: ['पद और सजातीय पद पहचानना', 'सर्वसमिकाओं का उपयोग करना', 'सरलीकरण और विस्तार करना'],
     estimatedMinutes: 40,
-    content: mathLessonContent.top_math_03_01
+    content: addJnvstMastery('top_math_03_01', mathLessonContent.top_math_03_01)
   },
   {
     id: 'les_math_02_03_01', topicId: 'top_math_03_01', title: 'गुणनखंडन',
@@ -306,13 +329,13 @@ export const mathLessonsData: Lesson[] = [
     id: 'les_math_02_01_01', topicId: 'top_math_03_02', title: 'एक चर वाले रैखिक समीकरण',
     objectives: ['सरल और कोष्ठक वाले समीकरण हल करना', 'भिन्न वाले समीकरण हल करना', 'शाब्दिक समस्याओं को समीकरण में बदलना'],
     estimatedMinutes: 40,
-    content: mathLessonContent.top_math_03_02
+    content: addJnvstMastery('top_math_03_02', mathLessonContent.top_math_03_02)
   },
   {
     id: 'les_math_04_01_01', topicId: 'top_math_04_01', title: 'चतुर्भुजों को समझना',
     objectives: ['मुख्य चतुर्भुजों की पहचान करना', 'उनके गुणों का प्रयोग करना', 'कोण और property आधारित प्रश्न हल करना'],
     estimatedMinutes: 40,
-    content: mathLessonContent.top_math_04_01
+    content: addJnvstMastery('top_math_04_01', mathLessonContent.top_math_04_01)
   },
   {
     id: 'les_math_04_02_01', topicId: 'top_math_04_02', title: 'ठोस आकृतियों का दृश्यांकन',
@@ -338,13 +361,13 @@ export const mathLessonsData: Lesson[] = [
     id: 'les_math_05_01_01', topicId: 'top_math_04_02', title: 'क्षेत्रमिति',
     objectives: ['समतल आकृतियों का क्षेत्रफल और परिमाप', 'घन, घनाभ और बेलन का पृष्ठीय क्षेत्रफल', 'घन, घनाभ और बेलन का आयतन तथा इकाई रूपांतरण'],
     estimatedMinutes: 45,
-    content: mathLessonContent.top_math_04_02
+    content: addJnvstMastery('top_math_04_02', mathLessonContent.top_math_04_02)
   },
   {
     id: 'les_math_06_01_01', topicId: 'top_math_05_01', title: 'आँकड़ों को व्यवस्थित करना',
     objectives: ['आँकड़े तालिका में व्यवस्थित करना', 'बार ग्राफ और वृत्त आलेख पढ़ना', 'माध्य जैसे सरल निष्कर्ष निकालना'],
     estimatedMinutes: 35,
-    content: mathLessonContent.top_math_05_01
+    content: addJnvstMastery('top_math_05_01', mathLessonContent.top_math_05_01)
   },
   {
     id: 'les_math_06_02_01', topicId: 'top_math_05_01', title: 'प्रायिकता',
