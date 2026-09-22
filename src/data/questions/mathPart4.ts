@@ -18,10 +18,10 @@ difficulty: 'challenge', tags: ['comparing-quantities', 'depreciation']
 },
 {
 id: 'q_math_b2_07_001', type: 'mcq', subjectId: 'sub_math', chapterId: 'chap_math_03', topicId: 'top_math_03_01',
-textPlain: "एकपदीय (Monomial) और द्विपदीय (Binomial) व्यंजक का गुणनफल क्या होता है?",
-options: [{ id: 'opt_1', text: 'हमेशा एकपदीय' }, { id: 'opt_2', text: 'हमेशा द्विपदीय' }, { id: 'opt_3', text: 'त्रिपदीय' }, { id: 'opt_4', text: 'बहुपदीय' }],
-correctOptionIds: ['opt_2'],
-explanationPlain: "a(b+c)=ab+ac होता है, जो द्विपदीय व्यंजक है, बशर्ते सजातीय पद जुड़कर एक न हो जाएँ।",
+textPlain: "यदि a एकपदीय व्यंजक है और (b+c) एक द्विपदीय व्यंजक है, तो a(b+c) का विस्तारित रूप क्या होगा?",
+options: [{ id: 'opt_1', text: 'ab + ac' }, { id: 'opt_2', text: 'a + b + c' }, { id: 'opt_3', text: 'ab + bc' }, { id: 'opt_4', text: 'a² + bc' }],
+correctOptionIds: ['opt_1'],
+explanationPlain: "वितरण गुणधर्म से a(b+c)=ab+ac। इसलिए सही उत्तर ab+ac है।",
 difficulty: 'easy', tags: ['algebra', 'basics']
 },
 {
