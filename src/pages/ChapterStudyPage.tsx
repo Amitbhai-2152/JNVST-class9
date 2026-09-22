@@ -1,6 +1,5 @@
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
-import { useProgressStore } from "../store/progress";
 import { chapters, getSubject, topics } from "../data";
 import { scienceLessonLens } from "../data/scienceLessonCore";
 import { scienceMasteryUnits } from "../data/sciencePrep";
@@ -84,15 +83,7 @@ export default function ChapterStudyPage() {
   const pages = isScience ? sciencePages : genericPages;
 
   const [page, setPage] = useState(0);
-  const completeLesson = useProgressStore((state) => state.completeLesson);
-  const markInProgress = useProgressStore((state) => state.markInProgress);
-  const studyId = chapter ? "chapter-study:" + chapter.id : "";
-  useEffect(() => {
-    setPage(0);
-    if (chapter && studyId) {
-      markInProgress(studyId, chapter.title + " — अध्याय अध्ययन");
-    }
-  }, [chapterId, markInProgress, studyId, chapter]);
+  useEffect(() => setPage(0), [chapterId]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -234,7 +225,7 @@ export default function ChapterStudyPage() {
                 </div>
                 {page < pages.length - 1
                   ? <button className="btn primary" onClick={() => setPage((p) => p + 1)}>अगला पृष्ठ →</button>
-                  : <button className="btn primary" onClick={() => studyId && completeLesson(studyId, chapter.title + " — अध्याय अध्ययन")}>अध्ययन पूरा करें →</button>}
+                  : <Link className="btn primary" to={"/practice/" + topic?.id}>अब प्रश्न हल करें →</Link>}
               </div>
             </article>
 
