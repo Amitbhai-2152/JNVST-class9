@@ -502,6 +502,7 @@ const ScienceMockTestPage = () => {
   const answersRef = useRef<Record<string, ID[]>>({});
   const [finished, setFinished] = useState(false);
   const [timeLeft, setTimeLeft] = useState(50 * 60);
+  const [markedForReview, setMarkedForReview] = useState<Set<ID>>(new Set());
   const scienceTopics = topics.filter((topic) => topic.chapterId.startsWith('chap_sci_')).sort((a,b) => (chapters.find((c) => c.id === a.chapterId)?.order ?? 0) - (chapters.find((c) => c.id === b.chapterId)?.order ?? 0) || a.order - b.order);
   const q = qs[index];
 
@@ -519,6 +520,15 @@ const ScienceMockTestPage = () => {
     p.recordAttempts(qs.map((question) => ({id:question.id,attempt:{selectedOptionIds:currentAnswers[question.id] || [],isCorrect:sameAnswer(currentAnswers[question.id] || [],question.correctOptionIds),timestamp:now,mode:'mock-test'}})));
     p.saveMockResult(result);
     setFinished(true);
+  };
+
+  const toggleMarked = (questionId: ID) => {
+    setMarkedForReview((current) => {
+      const next = new Set(current);
+      if (next.has(questionId)) next.delete(questionId);
+      else next.add(questionId);
+      return next;
+    });
   };
 
   useEffect(() => {
@@ -546,22 +556,27 @@ const ScienceMockTestPage = () => {
       const topicCorrect = topicQuestions.filter((question) => sameAnswer(answers[question.id] || [], question.correctOptionIds)).length;
       return { ...topic, count:topicQuestions.length, correct:topicCorrect };
     });
+    const focusTopics = topicStats
+      .filter((topic) => topic.count > 0)
+      .sort((a, b) => (a.correct / a.count) - (b.correct / b.count) || a.correct - b.correct)
+      .slice(0, 3);
     return <Shell>
       <div className="page-head"><Link to="/subjects/sub_sci">← विज्ञान तैयारी केंद्र</Link><h1>विज्ञान Mock Test परिणाम</h1><p>यह 35-प्रश्न Science-only practice test था। परिणाम आपकी progress में सुरक्षित है।</p></div>
       <section className="science-result-hero"><span>आपका स्कोर</span><strong>{score} / {qs.length}</strong><b>{Math.round((score/qs.length)*100)}% accuracy</b></section>
-      <div className="science-result-grid"><Card><b>{answeredCount}</b><span>attempted</span></Card><Card><b>{qs.length-answeredCount}</b><span>unanswered</span></Card><Card><b>{Math.round((score/qs.length)*100)}%</b><span>accuracy</span></Card></div>
+      <div className="science-result-grid"><Card><b>{answeredCount}</b><span>attempted</span></Card><Card><b>{qs.length-answeredCount}</b><span>unanswered</span></Card><Card><b>{markedForReview.size}</b><span>review marked</span></Card><Card><b>{Math.round((score/qs.length)*100)}%</b><span>accuracy</span></Card></div>
+      <Card className="science-focus-card"><div className="science-section-head"><span className="eyebrow">NEXT REVISION</span><h2>अब किन अध्यायों पर लौटें?</h2><p>यह आपकी test performance के आधार पर revision सहायता है, कोई official cutoff नहीं।</p></div><div className="science-focus-grid">{focusTopics.map((topic) => <div className="science-focus-item" key={topic.id}><div><span>{String(topic.order).padStart(2,'0')}</span><b>{topic.title}</b></div><strong>{Math.round((topic.correct/topic.count)*100)}%</strong><div className="actions"><Link className="btn" to={'/chapters/' + topic.chapterId + '/study'}>फिर पढ़ें</Link><Link className="btn primary" to={'/practice/' + topic.id}>प्रश्न</Link></div></div>)}</div></Card>
       <Card><div className="science-section-head"><h2>इकाई-वार प्रदर्शन</h2><p>सभी 18 Science units से कम-से-कम 1 प्रश्न इस paper में है; बाकी प्रश्न seeded variety के लिए चुने जाते हैं।</p></div>
         <div className="science-result-topics">{topicStats.map((topic) => <div className="science-result-topic" key={topic.id}><div><b>{topic.title}</b><span>{topic.correct} / {topic.count} सही</span></div><span>{topic.count ? Math.round((topic.correct/topic.count)*100) + '%' : '—'}</span></div>)}</div>
       </Card>
-      <div className="actions"><button className="btn primary" onClick={() => {answersRef.current={};setMockNumber((n)=>n+1);setStarted(false);setFinished(false);setIndex(0);setAnswers({});setTimeLeft(50*60);}}>नया विज्ञान Mock</button><Link className="btn" to="/science-smart-practice">गलतियों पर Smart Practice</Link><Link className="btn" to="/science-revision">त्वरित पुनरावृत्ति</Link></div>
+      <div className="actions"><button className="btn primary" onClick={() => {answersRef.current={};setMockNumber((n)=>n+1);setStarted(false);setFinished(false);setIndex(0);setAnswers({});setMarkedForReview(new Set());setTimeLeft(50*60);}}>नया विज्ञान Mock</button><Link className="btn" to="/science-smart-practice">गलतियों पर Smart Practice</Link><Link className="btn" to="/science-revision">त्वरित पुनरावृत्ति</Link></div>
     </Shell>;
   }
 
   return <Shell>
     <div className="page-head"><Link to="/subjects/sub_sci">← विज्ञान तैयारी केंद्र</Link><h1>⏱ विज्ञान Mock Test</h1><p>35 प्रश्न · 35 अंक · केवल विज्ञान · सभी 18 units की कम-से-कम 1-question coverage</p>{!started && <div className="actions"><button className="btn primary" onClick={() => {answersRef.current={};setAnswers({});setTimeLeft(50*60);setStarted(true);}}>टेस्ट शुरू करें</button></div>}</div>
-    {!started ? <Card className="science-mock-intro"><h2>टेस्ट से पहले</h2><div className="pattern"><div><b>35</b><span>प्रश्न</span></div><div><b>35</b><span>अंक</span></div><div><b>50 min</b><span>recommended practice time</span></div><div><b>18</b><span>इकाइयाँ</span></div><div><b>1+</b><span>प्रश्न/इकाई</span></div><div><b>4</b><span>विकल्प/प्रश्न</span></div></div><ul><li>यह Science-only practice mock है; यह आधिकारिक अलग Science परीक्षा-समय नहीं है।</li><li>हर प्रश्न चार विकल्प और एक सही उत्तर वाले MCQ pool से आता है।</li><li>Question navigator से किसी भी प्रश्न पर जा सकते हैं; खाली प्रश्न बाद में कर सकते हैं।</li><li>50 मिनट recommended practice limit है; पूरा JNVST Selection Test आधिकारिक रूप से 150 मिनट का है।</li></ul></Card>
-    : q && <div className="science-mock-layout"><Card className="question-card"><div className="progressline"><span>प्रश्न {index+1} / {qs.length}</span><span>{topics.find((topic) => topic.id === q.topicId)?.title ?? 'विज्ञान'} · {difficultyLabel[q.difficulty]}</span><span className={timeLeft<=300 ? 'mock-timer danger' : 'mock-timer'}>⏱ {formatTime(timeLeft)}</span></div><div className="question-text">{questionTextBlocks(q).map((b,idx)=><ContentRenderer key={idx} blocks={[b]} />)}</div><div className="options">{q.options.map((o)=><button key={o.id} className={'option ' + (answers[q.id]?.includes(o.id) ? 'selected' : '')} onClick={()=>choose(o.id)}><InlineText text={o.text}/></button>)}</div><div className="study-reader-actions"><button className="btn" disabled={index===0} onClick={()=>setIndex(x=>x-1)}>← पिछला</button>{index===qs.length-1?<button className="btn primary" onClick={finish}>टेस्ट जमा करें</button>:<button className="btn primary" onClick={()=>setIndex(x=>x+1)}>अगला प्रश्न →</button>}</div></Card>
-      <Card className="science-mock-palette"><h3>Question Navigator</h3><p>{answeredCount} / {qs.length} answered</p><div className="science-palette-grid">{qs.map((question,qi)=><button key={question.id} className={(answers[question.id]?.length ? 'answered ' : '') + (qi===index ? 'current' : '')} onClick={()=>setIndex(qi)}>{qi+1}</button>)}</div></Card></div>}
+    {!started ? <Card className="science-mock-intro"><h2>टेस्ट से पहले</h2><div className="pattern"><div><b>35</b><span>प्रश्न</span></div><div><b>35</b><span>अंक</span></div><div><b>50 min</b><span>recommended practice time</span></div><div><b>18</b><span>इकाइयाँ</span></div><div><b>1+</b><span>प्रश्न/इकाई</span></div><div><b>4</b><span>विकल्प/प्रश्न</span></div></div><ul><li>यह Science-only practice mock है; यह आधिकारिक अलग Science परीक्षा-समय नहीं है।</li><li>हर प्रश्न चार विकल्प और एक सही उत्तर वाले MCQ pool से आता है।</li><li>Paper में 18 chapters की coverage और project-level difficulty balance रखा जाता है; यह कोई official chapter-wise distribution नहीं है।</li><li>Question navigator से किसी भी प्रश्न पर जा सकते हैं; खाली प्रश्न बाद में कर सकते हैं।</li><li>50 मिनट recommended practice limit है; पूरा JNVST Selection Test आधिकारिक रूप से 150 मिनट का है।</li></ul></Card>
+    : q && <div className="science-mock-layout"><Card className="question-card"><div className="progressline"><span>प्रश्न {index+1} / {qs.length}</span><span>{topics.find((topic) => topic.id === q.topicId)?.title ?? 'विज्ञान'} · {difficultyLabel[q.difficulty]}</span><span>{markedForReview.size} review</span><span className={timeLeft<=300 ? 'mock-timer danger' : 'mock-timer'}>⏱ {formatTime(timeLeft)}</span></div><div className="question-text">{questionTextBlocks(q).map((b,idx)=><ContentRenderer key={idx} blocks={[b]} />)}</div><div className="options">{q.options.map((o)=><button key={o.id} className={'option ' + (answers[q.id]?.includes(o.id) ? 'selected' : '')} onClick={()=>choose(o.id)}><InlineText text={o.text}/></button>)}</div><div className="science-mock-actions"><button className={'btn ' + (markedForReview.has(q.id) ? 'review-active' : '')} onClick={()=>toggleMarked(q.id)}>{markedForReview.has(q.id) ? '★ Review में चिन्हित' : '☆ Review के लिए रखें'}</button><div className="science-mock-nav-actions"><button className="btn" disabled={index===0} onClick={()=>setIndex(x=>x-1)}>← पिछला</button>{index===qs.length-1?<button className="btn primary" onClick={finish}>टेस्ट जमा करें</button>:<button className="btn primary" onClick={()=>setIndex(x=>x+1)}>अगला प्रश्न →</button>}</div></div></Card>
+      <Card className="science-mock-palette"><h3>Question Navigator</h3><p>{answeredCount} / {qs.length} answered</p><div className="science-palette-legend"><span>● answered</span><span>★ review</span><span>○ unanswered</span></div><div className="science-palette-grid">{qs.map((question,qi)=><button key={question.id} className={(answers[question.id]?.length ? 'answered ' : '') + (markedForReview.has(question.id) ? 'marked ' : '') + (qi===index ? 'current' : '')} onClick={()=>setIndex(qi)}>{markedForReview.has(question.id) ? '★' : qi+1}</button>)}</div></Card></div>}
   </Shell>;
 };
 
