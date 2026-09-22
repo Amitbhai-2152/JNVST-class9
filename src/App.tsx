@@ -597,6 +597,7 @@ const ChapterPage = () => {
     const next = chapters.find((item) => item.subjectId === 'sub_sci' && item.order === c.order + 1);
     const lesson = lessonId ? getLesson(lessonId) : undefined;
     const pageCount = lesson ? getScienceStudyPages(lesson.content).length : 0;
+    const contentBlockCount = lesson?.content.length ?? 0;
 
     return <Shell>
       <section className="science-chapter-shell">
@@ -619,13 +620,13 @@ const ChapterPage = () => {
           <div className="science-chapter-index">
             <span>CHAPTER</span>
             <strong>{String(c.order).padStart(2, '0')}</strong>
-            <small>{pageCount ? pageCount + ' study sections' : 'study sections'}</small>
+            <small>{pageCount ? pageCount + ' sections · ' + contentBlockCount + ' learning blocks' : 'learning content'}</small>
           </div>
         </div>
 
         <div className="science-chapter-stats">
           <Card><b>{questionCountForChapter}</b><span>अभ्यास प्रश्न</span></Card>
-          <Card><b>{pageCount || '—'}</b><span>Study sections</span></Card>
+          <Card><b>{pageCount || '—'}</b><span>अध्ययन भाग</span></Card>
           <Card><b>{performance?.attempts ?? 0}</b><span>आपके प्रयास</span></Card>
           <Card><b>{performance?.attempts ? accuracyForChapter + '%' : '—'}</b><span>आपकी सटीकता</span></Card>
         </div>
