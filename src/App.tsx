@@ -12,6 +12,7 @@ import { mathMasteryUnits, mathMasteryUnitMap } from './data/mathMastery';
 import { scienceMasteryUnits } from './data/sciencePrep';
 import { scienceLessonCore } from './data/scienceLessonCore';
 import { englishMasteryUnits, englishMasteryUnitMap } from './data/englishPrep';
+import { EnglishTranslationLabPage, EnglishVocabularyLabPage } from './pages/EnglishLabsPage';
 
 const examSections = [
   { id: 'sub_hin', title: 'हिंदी', questions: 15 },
@@ -367,6 +368,8 @@ const EnglishSubjectOverview = () => {
           <Link className="btn" to="/english-smart-practice">🎯 स्मार्ट English अभ्यास</Link>
           <Link className="btn" to="/english-mock-test">⏱ English Mock</Link>
           <Link className="btn challenger" to="/chapters/chap_eng_01/challenger">⚡ Challenger Mode</Link>
+          <Link className="btn" to="/english-translation-lab">↔ Translation Lab</Link>
+          <Link className="btn" to="/english-vocabulary-lab">📚 Vocabulary Lab</Link>
         </div>
       </div>
       <div className="english-hub-badge"><b>15</b><span>प्रश्न</span><small>English practice section</small></div>
@@ -1767,4 +1770,4 @@ const MockTestsPage = () => {
   </Shell>;
 };
 
-export default function App() { return <HashRouter><Routes><Route path="/" element={<Dashboard />} /><Route path="/subjects" element={<SubjectsPage />} /><Route path="/subjects/:subjectId" element={<SubjectPage />} /><Route path="/chapters/:chapterId" element={<ChapterPage />} /><Route path="/chapters/:chapterId/study" element={<ChapterStudyPage />} /><Route path="/chapters/:chapterId/challenger" element={<ChapterChallengerPage />} /><Route path="/topics/:topicId/challenger" element={<TopicChallengerPage />} /><Route path="/lessons/:lessonId" element={<LessonPage />} /><Route path="/math-formulas" element={<Shell><MathFormulaSheet /></Shell>} /><Route path="/english-revision" element={<EnglishRevisionPage />} /><Route path="/english-smart-practice" element={<EnglishSmartPracticePage />} /><Route path="/english-mock-test" element={<EnglishMockTestPage />} /><Route path="/science-revision" element={<ScienceRevisionPage />} /><Route path="/science-smart-practice" element={<ScienceSmartPracticePage />} /><Route path="/science-mock-test" element={<ScienceMockTestPage />} /><Route path="/practice/:topicId" element={<PracticePage />} /><Route path="/smart-practice" element={<SmartPracticePage />} /><Route path="/math-smart-practice" element={<MathSmartPracticePage />} /><Route path="/bookmarks" element={<BookmarksPage />} /><Route path="/mock-tests" element={<MockTestsPage />} /><Route path="/math-mock-test" element={<MathMockTestPage />} /><Route path="*" element={<Dashboard />} /></Routes></HashRouter>; }
+export default function App() { return <HashRouter><Routes><Route path="/" element={<Dashboard />} /><Route path="/subjects" element={<SubjectsPage />} /><Route path="/subjects/:subjectId" element={<SubjectPage />} /><Route path="/chapters/:chapterId" element={<ChapterPage />} /><Route path="/chapters/:chapterId/study" element={<ChapterStudyPage />} /><Route path="/chapters/:chapterId/challenger" element={<ChapterChallengerPage />} /><Route path="/topics/:topicId/challenger" element={<TopicChallengerPage />} /><Route path="/lessons/:lessonId" element={<LessonPage />} /><Route path="/math-formulas" element={<Shell><MathFormulaSheet /></Shell>} /><Route path="/english-revision" element={<EnglishRevisionPage />} /><Route path="/english-smart-practice" element={<EnglishSmartPracticePage />} /><Route path="/english-mock-test" element={<EnglishMockTestPage />} /><Route path="/english-translation-lab" element={<EnglishTranslationLabPage />} /><Route path="/english-vocabulary-lab" element={<EnglishVocabularyLabPage />} /><Route path="/science-revision" element={<ScienceRevisionPage />} /><Route path="/science-smart-practice" element={<ScienceSmartPracticePage />} /><Route path="/science-mock-test" element={<ScienceMockTestPage />} /><Route path="/practice/:topicId" element={<PracticePage />} /><Route path="/smart-practice" element={<SmartPracticePage />} /><Route path="/math-smart-practice" element={<MathSmartPracticePage />} /><Route path="/bookmarks" element={<BookmarksPage />} /><Route path="/mock-tests" element={<MockTestsPage />} /><Route path="/math-mock-test" element={<MathMockTestPage />} /><Route path="*" element={<Dashboard />} /></Routes></HashRouter>; }
