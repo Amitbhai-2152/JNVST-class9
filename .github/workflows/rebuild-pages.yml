@@ -1,6 +1,11 @@
 name: Rebuild and Publish Pages
 
 on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "assets/**"
+      - "index.html"
   workflow_dispatch:
 
 permissions:
