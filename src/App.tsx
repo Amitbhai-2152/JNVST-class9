@@ -1103,7 +1103,7 @@ const ChapterChallengerPage = () => {
     title={'⚡ ' + chapter.title + ' — Challenger Questions'}
     backTo={'/chapters/' + chapter.id}
     backLabel="अध्याय"
-    description="20-प्रश्न Challenger set — कठिन और Challenge-level JNVST-style MCQs, हर प्रश्न में चार वास्तविक विकल्प। उत्तर बीच में नहीं दिखेगा; marks और पूरा answer review केवल टेस्ट के अंत में मिलेगा।"
+    description="20-प्रश्न Challenger set — पहले Challenge/Hard प्रश्न, फिर chapter coverage से 20 तक। हर प्रश्न में चार वास्तविक विकल्प; सही उत्तर बीच में नहीं दिखेगा और review केवल टेस्ट के अंत में मिलेगा।"
     badge="CHALLENGER MODE"
     bannerLink={{ to: '/chapters/' + chapter.id + '/study', label: '📖 अध्याय अध्ययन →' }}
     emptyTitle="इस अध्याय में अभी Challenger Questions उपलब्ध नहीं हैं"
