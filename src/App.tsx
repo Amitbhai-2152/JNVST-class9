@@ -483,7 +483,104 @@ const SubjectPage = () => {
 
 const ChapterPage = () => { const { chapterId } = useParams(); const c = chapters.find(x => x.id === chapterId); const s = c ? getSubject(c.subjectId) : undefined; if (!c || !s) return <Shell><Card className="empty"><h1>अध्याय नहीं मिला</h1></Card></Shell>; const pageCount = getChapterStudyPages(c, allLessons, 12).length; return <Shell><div className="page-head"><Link to={`/subjects/${s.id}`}>← {s.title}</Link><h1>{c.title}</h1><p>{pageCount} पृष्ठ का अध्याय अध्ययन पाठ उपलब्ध है।</p><div className="actions"><Link className="btn primary" to={`/chapters/${c.id}/study`}>📖 अध्याय पढ़ें · {pageCount}+ पृष्ठ</Link></div></div><div className="grid">{c.topicIds.map(id => <TopicCard key={id} topicId={id} />)}</div></Shell>; };
 
-const LessonPage = () => { const { lessonId } = useParams(); const l = getLesson(lessonId || ''); const p = useProgressStore(); const pages = useMemo(() => l ? getStudyPages(l.content) : [], [l]); const [page, setPage] = useState(0); useEffect(() => setPage(0), [lessonId]); if (!l) return <Shell><Card className="empty"><h1>पाठ नहीं मिला</h1></Card></Shell>; const t = topics.find(x => x.id === l.topicId); const c = t ? chapters.find(x => x.id === t.chapterId) : undefined; const done = p.lessonActivity[l.id]?.status === 'completed'; return <Shell><div className="page-head"><Link to={c ? `/chapters/${c.id}` : '/subjects'}>← अध्याय</Link><h1>{l.title}</h1><div className="lesson-meta"><span>⏱ {l.estimatedMinutes} मिनट</span><span>{done ? '✅ पूरा हुआ' : '📖 सीख रहे हैं'}</span></div></div><Card className="lesson-card"><div className="study-reader"><div className="study-reader-head"><div><b>टॉपिक-पाठ</b><span>पृष्ठ {page + 1} / {pages.length}</span></div><div className="study-progress"><span style={{width: `${((page + 1) / Math.max(1, pages.length)) * 100}%`}} /></div></div><div className="study-page-nav">{pages.map((_, i) => <button key={i} className={i === page ? 'active' : ''} onClick={() => setPage(i)}>{i + 1}</button>)}</div></div><div className="objectives"><h3>इस पाठ के बाद आप</h3><ul>{l.objectives.map(x => <li key={x}>{x}</li>)}</ul></div><ContentRenderer blocks={pages[page] || l.content}/><div className="study-reader-actions"><button className="btn" disabled={page === 0} onClick={() => setPage(x => x - 1)}>← पिछला पृष्ठ</button>{page < pages.length - 1 ? <button className="btn primary" onClick={() => setPage(x => x + 1)}>अगला पृष्ठ →</button> : <button className="btn primary" onClick={() => { p.completeLesson(l.id, l.title); }}>पाठ पूरा करें</button>}</div><div className="actions"><Link className="btn" to={`/practice/${l.topicId}`}>टॉपिक अभ्यास</Link></div></Card></Shell>; };
+const LessonPage = () => {
+  const { lessonId } = useParams();
+  const l = getLesson(lessonId || '');
+  const p = useProgressStore();
+  const pages = useMemo(() => l ? getStudyPages(l.content) : [], [l]);
+  const [page, setPage] = useState(0);
+
+  useEffect(() => setPage(0), [lessonId]);
+
+  if (!l) return <Shell><Card className="empty"><h1>पाठ नहीं मिला</h1></Card></Shell>;
+
+  const t = topics.find((x) => x.id === l.topicId);
+  const c = t ? chapters.find((x) => x.id === t.chapterId) : undefined;
+  const done = p.lessonActivity[l.id]?.status === 'completed';
+  const isScience = l.topicId.startsWith('top_sci_');
+  const mastery = isScience ? scienceMasteryUnits.find((unit) => unit.topicId === l.topicId) : undefined;
+  const progressPercent = ((page + 1) / Math.max(1, pages.length)) * 100;
+
+  return <Shell>
+    <div className="page-head">
+      <Link to={c ? `/chapters/${c.id}` : '/subjects'}>← अध्याय</Link>
+      {isScience && <span className="eyebrow">SCIENCE • NCERT-ALIGNED SELF-LEARNING</span>}
+      <h1>{l.title}</h1>
+      <div className="lesson-meta">
+        <span>⏱ {l.estimatedMinutes} मिनट</span>
+        <span>{pages.length} अध्ययन पृष्ठ</span>
+        <span>{done ? '✅ पूरा हुआ' : '📖 सीख रहे हैं'}</span>
+      </div>
+    </div>
+
+    {isScience && mastery && <section className="science-lesson-companion">
+      <div className="science-source-note">
+        <b>अध्ययन आधार</b>
+        <span>कक्षा VIII Science concepts + JNVST Class IX lateral-entry scope. यह पाठ समझ, अभ्यास और exam recall के लिए बनाया गया है।</span>
+      </div>
+      <div className="science-lesson-companion-grid">
+        <div className="science-lesson-companion-panel">
+          <span className="science-panel-label">CORE SKILLS</span>
+          <div className="science-skill-chips">{mastery.coreSkills.map((item) => <span key={item}>{item}</span>)}</div>
+        </div>
+        <div className="science-lesson-companion-panel">
+          <span className="science-panel-label">QUICK RECALL</span>
+          <ul>{mastery.quickFacts.slice(0, 3).map((item) => <li key={item}>{item}</li>)}</ul>
+        </div>
+        <div className="science-lesson-companion-panel">
+          <span className="science-panel-label">EXAM TRAPS</span>
+          <ul>{mastery.examTraps.slice(0, 2).map((item) => <li key={item}>{item}</li>)}</ul>
+        </div>
+        <div className="science-lesson-companion-panel science-lesson-companion-action">
+          <span className="science-panel-label">NEXT STEP</span>
+          <p>पहले पूरा concept पढ़ें, फिर उसी unit के प्रश्न लगाएँ।</p>
+          <div className="actions">
+            <Link className="btn" to={`/practice/${l.topicId}`}>Unit Practice</Link>
+            <Link className="btn primary" to="/science-smart-practice">Smart Practice</Link>
+          </div>
+        </div>
+      </div>
+    </section>}
+
+    <Card className="lesson-card">
+      <div className="study-reader">
+        <div className="study-reader-head">
+          <div><b>टॉपिक-पाठ</b><span>पृष्ठ {page + 1} / {pages.length}</span></div>
+          <div className="study-progress"><span style={{width: progressPercent + '%'}} /></div>
+        </div>
+        <div className="study-page-nav" aria-label="अध्ययन पृष्ठ">
+          {pages.map((_, i) => <button key={i} className={i === page ? 'active' : ''} aria-current={i === page ? 'page' : undefined} aria-label={`पृष्ठ ${i + 1}`} onClick={() => setPage(i)}>{i + 1}</button>)}
+        </div>
+      </div>
+
+      <div className="objectives">
+        <h3>इस पाठ के बाद आप</h3>
+        <ul>{l.objectives.map((x) => <li key={x}>{x}</li>)}</ul>
+      </div>
+
+      <ContentRenderer blocks={pages[page] || l.content}/>
+
+      <div className="study-reader-actions">
+        <button className="btn" disabled={page === 0} onClick={() => setPage((x) => x - 1)}>← पिछला पृष्ठ</button>
+        {page < pages.length - 1
+          ? <button className="btn primary" onClick={() => setPage((x) => x + 1)}>अगला पृष्ठ →</button>
+          : <button className="btn primary" onClick={() => { p.completeLesson(l.id, l.title); }}>पाठ पूरा करें</button>}
+      </div>
+
+      <div className="science-lesson-actions">
+        <div>
+          <b>{isScience ? 'अब अपनी समझ जाँचें' : 'अब अभ्यास करें'}</b>
+          <span>{isScience ? 'Lesson के तुरंत बाद practice करने से recall मजबूत होता है।' : 'पाठ के बाद उसी topic के प्रश्न हल करें।'}</span>
+        </div>
+        <div className="actions">
+          <Link className="btn" to={`/practice/${l.topicId}`}>टॉपिक अभ्यास</Link>
+          {isScience && <Link className="btn" to="/science-revision">Quick Revision</Link>}
+          {isScience && <Link className="btn primary" to="/science-mock-test">35Q Science Mock</Link>}
+        </div>
+      </div>
+    </Card>
+  </Shell>;
+};
 
 const PracticePage = () => { const { topicId } = useParams(); const qs = useMemo(() => getQuestionsByTopic(topicId || ''), [topicId]); const [i,setI] = useState(0); const [selected,setSelected] = useState<ID[]>([]); const [checked,setChecked] = useState(false); const p = useProgressStore(); if (!qs.length) return <Shell><Card className="empty"><h1>इस टॉपिक में प्रश्न उपलब्ध नहीं हैं</h1></Card></Shell>; const q = qs[i]; const correct = sameAnswer(selected, q.correctOptionIds); const choose = (id: ID) => { if (checked) return; if (q.type === 'multiple-select') setSelected(v => v.includes(id) ? v.filter(x => x !== id) : [...v, id]); else setSelected([id]); }; const check = () => { if (!selected.length) return; setChecked(true); p.recordAttempt(q.id, { selectedOptionIds: selected, isCorrect: correct, timestamp: Date.now(), mode: 'practice' }); }; return <Shell><div className="page-head"><Link to={`/chapters/${q.chapterId}`}>← अध्याय</Link><div className="progressline"><span>प्रश्न {i + 1} / {qs.length}</span></div><h1>अभ्यास</h1></div><Card className="question-card"><div className="question-body"><div className="question-text">{questionTextBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div><div className="options">{q.options.map((o) => <button key={o.id} className={`option ${selected.includes(o.id) ? 'selected' : ''} ${checked && q.correctOptionIds.includes(o.id) ? 'correct' : ''}`} onClick={() => choose(o.id)}><InlineText text={o.text} /></button>)}</div>{checked && <div className={`answer ${correct ? 'correct' : 'wrong'}`}><b>{correct ? 'सही उत्तर ✅' : 'उत्तर की जाँच करें'}</b><div>{questionExplanationBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div></div>}<div className="study-reader-actions">{!checked ? <button className="btn primary" onClick={check}>उत्तर जाँचें</button> : <button className="btn primary" onClick={() => { setI((x) => (x + 1) % qs.length); setSelected([]); setChecked(false); }}>अगला प्रश्न →</button>}</div></div></Card></Shell>; };
 
