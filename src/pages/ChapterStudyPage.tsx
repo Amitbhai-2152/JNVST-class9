@@ -2,6 +2,7 @@ import { Link, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { chapters, getSubject, topics } from "../data";
 import { scienceLessonLens } from "../data/scienceLessonCore";
+import { mathMasteryUnitMap } from "../data/mathMastery";
 import { scienceMasteryUnits } from "../data/sciencePrep";
 import { getScienceChapterStudyPages, getChapterStudyPages } from "../data/lessons/chapterStudy";
 import { allLessons } from "../data";
@@ -68,8 +69,10 @@ export default function ChapterStudyPage() {
   const chapter = chapters.find((x) => x.id === chapterId);
   const subject = chapter ? getSubject(chapter.subjectId) : undefined;
   const isScience = chapter?.subjectId === "sub_sci";
-  const topic = isScience && chapter ? topics.find((x) => x.id === chapter.topicIds[0]) : undefined;
+  const isMath = chapter?.subjectId === "sub_math";
+  const topic = (isScience || isMath) && chapter ? topics.find((x) => x.id === chapter.topicIds[0]) : undefined;
   const mastery = isScience && topic ? scienceMasteryUnits.find((x) => x.topicId === topic.id) : undefined;
+  const mathMastery = isMath && topic ? mathMasteryUnitMap.get(topic.id) : undefined;
   const lens = isScience && topic ? scienceLessonLens[topic.id] : undefined;
 
   const sciencePages = useMemo(
@@ -104,7 +107,7 @@ export default function ChapterStudyPage() {
     );
   }
 
-  if (!isScience) {
+  if (!isScience && !isMath) {
     const current = pages[page] ?? [];
     return (
       <div className="app-shell">
@@ -132,6 +135,115 @@ export default function ChapterStudyPage() {
                 : <Link className="btn primary" to={"/chapters/" + chapter.id}>अध्याय पूरा करें →</Link>}
             </div>
           </section>
+        </main>
+      </div>
+    );
+  }
+
+  if (isMath) {
+    const current = pages[page] ?? [];
+    const stageIndex = stageForPage(page);
+    const stage = STAGES[stageIndex];
+    const progress = Math.round(((page + 1) / pages.length) * 100);
+    const currentTitle = cleanPageTitle(current, stage.name);
+    const mathChapters = chapters.filter((x) => x.subjectId === "sub_math");
+    const nextChapter = mathChapters.find((x) => x.order === chapter.order + 1);
+    const prevChapter = mathChapters.find((x) => x.order === chapter.order - 1);
+
+    const jumpStage = (index: number) => {
+      const starts = [0, 2, 3, 5, 8, 10];
+      setPage(starts[index] ?? 0);
+    };
+
+    return (
+      <div className="app-shell">
+        <header className="topbar">
+          <Link to="/" className="brand">JNVST कक्षा 9</Link>
+          <nav><Link to="/">डैशबोर्ड</Link><Link to="/subjects">विषय</Link><Link to="/bookmarks">बुकमार्क</Link><Link to="/mock-tests">मॉक टेस्ट</Link></nav>
+        </header>
+
+        <main className="shell science-study-page">
+          <div className="science-study-breadcrumb">
+            <Link to="/subjects/sub_math">← गणित तैयारी केंद्र</Link>
+            <span>अध्याय {String(chapter.order).padStart(2, "0")} / {mathChapters.length}</span>
+            <span className="science-study-keyhint">⌨️ ← → पृष्ठ</span>
+          </div>
+
+          <section className="science-study-hero">
+            <div>
+              <span className="eyebrow">MATHEMATICS • CHAPTER STUDY</span>
+              <h1>{chapter.title}</h1>
+              <p>12 पृष्ठों का एक ही learning path: पहले concept, फिर method, फिर application, फिर JNVST recall।</p>
+            </div>
+            <div className="science-study-hero-progress">
+              <strong>{progress}%</strong>
+              <span>पृष्ठ पूरे</span>
+            </div>
+          </section>
+
+          <div className="science-study-layout">
+            <aside className="science-study-sidebar">
+              <div className="science-study-side-card">
+                <span className="science-panel-label">STUDY ROADMAP</span>
+                <div className="science-study-stage-list">
+                  {STAGES.map((item, index) => (
+                    <button key={item.id} className={index === stageIndex ? "active" : ""} onClick={() => jumpStage(index)}>
+                      <span className="science-study-stage-icon">{item.icon}</span>
+                      <span><b>{item.name}</b><small>पृष्ठ {item.pages} · {item.hint}</small></span>
+                      <em>{index < stageIndex ? "✓" : index === stageIndex ? "●" : String(index + 1)}</em>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {mathMastery && <div className="science-study-side-card">
+                <span className="science-panel-label">आज का लक्ष्य</span>
+                <ul className="science-side-list">{mathMastery.coreSkills.slice(0, 3).map((item) => <li key={item}>{item}</li>)}</ul>
+                <Link className="btn primary full" to={"/practice/" + topic?.id}>अध्याय के प्रश्न →</Link>
+              </div>}
+
+              {mathMastery && <div className="science-study-side-card science-study-flow-card">
+                <span className="science-panel-label">अध्याय की सोच</span>
+                <b>इस अध्याय में concept से method और method से answer तक जाएँ।</b>
+                <div className="science-mini-flow">
+                  {mathMastery.mustKnow.slice(0, 3).map((item, index) => (
+                    <div key={item}><span>{"CHECK " + (index + 1)}</span><strong>{item}</strong></div>
+                  ))}
+                </div>
+              </div>}
+            </aside>
+
+            <section className="science-study-main">
+              <div className="science-study-pagebar">
+                <div><span>{stage.icon} {stage.name}</span><strong>पृष्ठ {page + 1} / {pages.length}</strong></div>
+                <div className="science-study-progress-track"><span style={{ width: progress + "%" }} /></div>
+              </div>
+
+              <article className="science-study-content-card">
+                <div className="science-study-content-head">
+                  <div><span className="science-panel-label">PAGE {String(page + 1).padStart(2, "0")} · {topic?.title}</span><h2>{currentTitle}</h2></div>
+                  <span className="science-study-page-chip">{stageIndex < 2 ? "CONCEPT" : stageIndex < 4 ? "APPLICATION" : stageIndex === 4 ? "EXAM" : "RECALL"}</span>
+                </div>
+
+                <Content blocks={current.filter((b, index) => !(index === 0 && b.type === "heading"))} />
+
+                <div className="science-study-page-actions">
+                  <button className="btn" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>← पिछला</button>
+                  <div className="science-study-dots" aria-label="पृष्ठ चयन">
+                    {pages.map((_, index) => <button key={index} className={index === page ? "active" : ""} onClick={() => setPage(index)} aria-label={"पृष्ठ " + (index + 1)}><span /></button>)}
+                  </div>
+                  {page < pages.length - 1
+                    ? <button className="btn primary" onClick={() => setPage((p) => p + 1)}>अगला पृष्ठ →</button>
+                    : <Link className="btn primary" to={"/practice/" + topic?.id}>अब प्रश्न हल करें →</Link>}
+                </div>
+              </article>
+
+              <div className="science-study-bottom-nav">
+                {prevChapter ? <Link to={"/chapters/" + prevChapter.id} className="science-study-chapter-link">← {String(prevChapter.order).padStart(2, "0")} · {prevChapter.title}</Link> : <span />}
+                {nextChapter ? <Link to={"/chapters/" + nextChapter.id} className="science-study-chapter-link next">{String(nextChapter.order).padStart(2, "0")} · {nextChapter.title} →</Link> : <span />}
+              </div>
+            </section>
+          </div>
         </main>
       </div>
     );
