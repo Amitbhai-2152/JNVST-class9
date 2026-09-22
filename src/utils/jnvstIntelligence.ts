@@ -137,27 +137,6 @@ export const getSmartRecommendations = (progress: ProgressState, limit = 4): Sma
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
 
-export const getSmartPracticeQuestions = (progress: ProgressState, limit = 10): Question[] => {
-  const weakTopicIds = new Set(getWeakTopics(progress, 4).map((topic) => topic.topicId));
-
-  return jnvstExamQuestions
-    .map((question) => {
-      const attempts = progress.questionAttempts?.[question.id] ?? [];
-      const latest = attempts[attempts.length - 1];
-      let score = 0;
-
-      if (!attempts.length) score += 40;
-      if (weakTopicIds.has(question.topicId)) score += 45;
-      if (latest && !latest.isCorrect) score += 35;
-      if (question.difficulty === 'hard' || question.difficulty === 'challenge') score += 5;
-
-      return { question, score };
-    })
-    .sort((a, b) => b.score - a.score || a.question.id.localeCompare(b.question.id))
-    .slice(0, limit)
-    .map(({ question }) => question);
-};
-
 const stableHash = (value: string): number => {
   let hash = 2166136261;
   for (let index = 0; index < value.length; index += 1) {
@@ -166,6 +145,75 @@ const stableHash = (value: string): number => {
   }
   return hash >>> 0;
 };
+
+const topicOrder = new Map(topics.map((topic) => [topic.id, topic.order]));
+
+const buildDiversifiedPractice = (
+  progress: ProgressState,
+  candidates: Question[],
+  limit: number,
+  seed: string,
+): Question[] => {
+  const weakTopicIds = new Set(
+    getWeakTopics(progress, Math.max(4, topics.length))
+      .map((topic) => topic.topicId),
+  );
+
+  const scored = candidates.map((question) => {
+    const attempts = progress.questionAttempts?.[question.id] ?? [];
+    const latest = attempts[attempts.length - 1];
+    const daysSinceAttempt = latest ? (Date.now() - latest.timestamp) / (24 * 60 * 60 * 1000) : Infinity;
+    let score = stableHash(seed + question.id) % 25;
+
+    if (!attempts.length) score += 70;
+    if (weakTopicIds.has(question.topicId)) score += 55;
+    if (latest && !latest.isCorrect) score += 65;
+    if (latest?.isCorrect) score += 12;
+    if (daysSinceAttempt >= 7) score += 20;
+    if (question.difficulty === 'hard') score += 8;
+    if (question.difficulty === 'challenge') score += 12;
+
+    return { question, score };
+  }).sort((a, b) => b.score - a.score || a.question.id.localeCompare(b.question.id));
+
+  const result: Question[] = [];
+  const used = new Set<string>();
+  const perTopic = new Map<ID, number>();
+
+  // First pass: breadth. Never let one weak topic consume the whole set.
+  for (const item of scored) {
+    if (result.length >= limit) break;
+    const count = perTopic.get(item.question.topicId) ?? 0;
+    if (count >= 2) continue;
+    result.push(item.question);
+    used.add(item.question.id);
+    perTopic.set(item.question.topicId, count + 1);
+  }
+
+  // Second pass: fill remaining slots using the strongest unseen candidates.
+  for (const item of scored) {
+    if (result.length >= limit) break;
+    if (used.has(item.question.id)) continue;
+    result.push(item.question);
+  }
+
+  return result;
+};
+
+export const getSmartPracticeQuestionsForSubject = (
+  progress: ProgressState,
+  subjectId: ID,
+  limit = 10,
+): Question[] => {
+  const candidates = jnvstExamQuestions.filter((question) => question.subjectId === subjectId);
+  return buildDiversifiedPractice(progress, candidates, limit, 'jnvst-smart-' + subjectId);
+};
+
+export const getSmartPracticeQuestions = (progress: ProgressState, limit = 10): Question[] =>
+  buildDiversifiedPractice(progress, jnvstExamQuestions, limit, 'jnvst-smart-all');
+
+export const getMathSmartPracticeQuestions = (progress: ProgressState, limit = 12): Question[] =>
+  getSmartPracticeQuestionsForSubject(progress, 'sub_math', limit);
 
 export const buildJnvstMockPaper = (seed = 'jnvst-2027'): Question[] => {
   const sectionTargets: Record<string, number> = {
@@ -183,6 +231,28 @@ export const buildJnvstMockPaper = (seed = 'jnvst-2027'): Question[] => {
   );
 };
 
+export const buildMathMockPaper = (seed = 'jnvst-math-2027'): Question[] => {
+  const mathTopics = topics
+    .filter((topic) => topic.chapterId.startsWith('chap_math_'))
+    .sort((a, b) => topicOrder.get(a.id)! - topicOrder.get(b.id)!);
+
+  const buckets = mathTopics.map((topic) => {
+    const questions = jnvstExamQuestions
+      .filter((question) => question.topicId === topic.id)
+      .sort((a, b) => stableHash(seed + topic.id + a.id) - stableHash(seed + topic.id + b.id));
+    return questions.slice(0, 3);
+  });
+
+  const base = buckets.flat();
+  const used = new Set(base.map((question) => question.id));
+  const extras = jnvstExamQuestions
+    .filter((question) => question.subjectId === 'sub_math' && !used.has(question.id))
+    .sort((a, b) => stableHash(seed + ':extra:' + a.id) - stableHash(seed + ':extra:' + b.id))
+    .slice(0, 35 - base.length);
+
+  return [...base, ...extras];
+};
+
 export const getPerformanceSummary = (progress: ProgressState) => {
   const attempts = Object.values(progress.questionAttempts ?? {}).flat();
   const correct = attempts.filter((attempt) => attempt.isCorrect).length;
@@ -198,7 +268,6 @@ export const getPerformanceSummary = (progress: ProgressState) => {
   };
 };
 
-
 export const jnvstClass9Phase4Complete = {
   चरण: 'चरण 4 — व्यक्तिगत तैयारी बुद्धिमत्ता',
   स्थिति: 'पूरा',
@@ -209,6 +278,7 @@ export const jnvstClass9Phase4Complete = {
     'व्यक्तिगत अगला-अध्ययन सुझाव',
     'गलत और अनदेखे प्रश्नों पर लक्षित स्मार्ट अभ्यास',
     'JNVST वितरण के अनुसार 100-प्रश्न मॉक पेपर निर्माण',
+    'विषय-विशेष स्मार्ट अभ्यास और गणित-only 35-प्रश्न मॉक पेपर',
   ],
-  निर्णय_नियम: 'सुझाव प्रयास, सटीकता, अनदेखे प्रश्न और पिछली पुनरावृत्ति के समय पर आधारित हैं।',
+  निर्णय_नियम: 'सुझाव प्रयास, सटीकता, अनदेखे प्रश्न, पिछली पुनरावृत्ति के समय और topic-breadth पर आधारित हैं।',
 };
