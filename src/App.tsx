@@ -283,15 +283,6 @@ const SmartPracticePage = () => {
     if (checked) return;
     setSelected(q.type === 'multiple-select' ? (selected.includes(id) ? selected.filter(x => x !== id) : [...selected, id]) : [id]);
   };
-  const regenerate = () => {
-    const nextSet = setNumber + 1;
-    setSetNumber(nextSet);
-    setQs(getMathSmartPracticeQuestions(useProgressStore.getState(), 12, 'jnvst-math-smart-' + nextSet));
-    setI(0);
-    setSelected([]);
-    setChecked(false);
-  };
-
   const check = () => {
     if (!selected.length) return;
     setChecked(true);
@@ -323,6 +314,15 @@ const MathSmartPracticePage = () => {
   const topic = topics.find((item) => item.id === q.topicId);
   const correct = sameAnswer(selected, q.correctOptionIds);
   const choose = (id: ID) => { if (!checked) setSelected([id]); };
+  const regenerate = () => {
+    const nextSet = setNumber + 1;
+    setSetNumber(nextSet);
+    setQs(getMathSmartPracticeQuestions(useProgressStore.getState(), 12, 'jnvst-math-smart-' + nextSet));
+    setI(0);
+    setSelected([]);
+    setChecked(false);
+  };
+
   const check = () => {
     if (!selected.length) return;
     setChecked(true);
@@ -345,7 +345,7 @@ const MathSmartPracticePage = () => {
       <div className="options">{q.options.map(o => <button key={o.id} className={'option ' + (selected.includes(o.id) ? 'selected' : '') + ' ' + (checked && q.correctOptionIds.includes(o.id) ? 'correct' : '')} onClick={() => choose(o.id)}><InlineText text={o.text} /></button>)}</div>
       {checked && <div className={'answer ' + (correct ? 'correct' : 'wrong')}><b>{correct ? 'सही उत्तर ✅' : 'गलत उत्तर — समाधान पढ़ें'}</b><div>{questionExplanationBlocks(q).map((b, idx) => <ContentRenderer key={idx} blocks={[b]} />)}</div></div>}
       <div className="study-reader-actions">
-        {!checked ? <button className="btn primary" onClick={check}>उत्तर जाँचें</button> : <button className="btn primary" onClick={() => { setI((x) => (x + 1) % qs.length); setSelected([]); setChecked(false); }}>{i === qs.length - 1 ? 'नया Smart Set →' : 'अगला प्रश्न →'}</button>}
+        {!checked ? <button className="btn primary" onClick={check}>उत्तर जाँचें</button> : <button className="btn primary" onClick={() => { if (i === qs.length - 1) regenerate(); else { setI((x) => x + 1); setSelected([]); setChecked(false); } }}>{i === qs.length - 1 ? 'नया Smart Set →' : 'अगला प्रश्न →'}</button>}
       </div>
     </div></Card>
   </Shell>;
