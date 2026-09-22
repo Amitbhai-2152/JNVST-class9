@@ -36,7 +36,13 @@ const make = (
     correctOptionIds: [`opt_${target + 1}`],
     explanationPlain: explanation,
     difficulty: 'challenge',
-    tags: [...tags, 'application', 'reasoning', 'multi-step', 'challenger'],
+    tags: [...new Set([
+      ...tags,
+      ...(new Set(['पहले','फिर','बाद','शेष','वापस','हटा','जगह','बदल','बढ़ा','घटा','मूल','नया','साथ','क्रमशः','निकाला','रखा'].filter((word) => text.includes(word))).size >= 2 || (text.match(/[+−\-×÷=]/g) ?? []).length >= 3 ? ['multi-step'] : []),
+      ...(/यदि|मान लें|अंतर|तुलना|क्यों|कितना अधिक|कितना कम|सशर्त/.test(text) ? ['reasoning'] : []),
+      ...(/विद्यार्थी|मजदूर|मशीन|कार|नल|टंकी|राशि|दुकानदार|मैदान|आयत|वर्ग|वृत्त|घन|पासा|सिक्का|थैला|बार ग्राफ|pie chart/.test(text) ? ['application'] : []),
+      'challenger',
+    ])],
   });
 };
 
