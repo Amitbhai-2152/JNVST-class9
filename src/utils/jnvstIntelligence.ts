@@ -278,6 +278,17 @@ export const buildJnvstMockPaper = (seed = 'jnvst-2027'): Question[] => {
   );
 };
 
+export const getChapterChallengerQuestions = (
+  chapterId: ID,
+  limit = 10,
+  seed = 'jnvst-challenger',
+): Question[] => {
+  const candidates = jnvstExamQuestions
+    .filter((question) => question.chapterId === chapterId && question.difficulty === 'challenge')
+    .sort((a, b) => stableHash(seed + ':' + chapterId + ':' + a.id) - stableHash(seed + ':' + chapterId + ':' + b.id) || a.id.localeCompare(b.id));
+  return candidates.slice(0, limit);
+};
+
 export const buildMathMockPaper = (seed = 'jnvst-math-2027'): Question[] => {
   const mathTopics = topics
     .filter((topic) => topic.chapterId.startsWith('chap_math_'))
