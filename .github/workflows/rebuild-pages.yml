@@ -19,6 +19,8 @@ concurrency:
 
 jobs:
   build-and-sync:
+    environment:
+      name: github-pages
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
