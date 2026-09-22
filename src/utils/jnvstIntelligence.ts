@@ -147,6 +147,7 @@ const stableHash = (value: string): number => {
 };
 
 const topicOrder = new Map(topics.map((topic) => [topic.id, topic.order]));
+const chapterOrder = new Map(chapters.map((chapter) => [chapter.id, chapter.order]));
 
 const buildDiversifiedPractice = (
   progress: ProgressState,
@@ -212,8 +213,54 @@ export const getSmartPracticeQuestionsForSubject = (
 export const getSmartPracticeQuestions = (progress: ProgressState, limit = 10): Question[] =>
   buildDiversifiedPractice(progress, jnvstExamQuestions, limit, 'jnvst-smart-all');
 
-export const getMathSmartPracticeQuestions = (progress: ProgressState, limit = 12): Question[] =>
-  getSmartPracticeQuestionsForSubject(progress, 'sub_math', limit);
+export const getMathSmartPracticeQuestions = (progress: ProgressState, limit = 12): Question[] => {
+  const mathTopics = topics
+    .filter((topic) => chapterOrder.has(topic.chapterId))
+    .filter((topic) => topic.chapterId.startsWith('chap_math_'))
+    .sort((a, b) => (chapterOrder.get(a.chapterId)! - chapterOrder.get(b.chapterId)!) || (a.order - b.order));
+
+  const candidates = jnvstExamQuestions.filter((question) => question.subjectId === 'sub_math');
+  const scored = candidates.map((question) => {
+    const attempts = progress.questionAttempts?.[question.id] ?? [];
+    const latest = attempts[attempts.length - 1];
+    const daysSinceAttempt = latest ? (Date.now() - latest.timestamp) / (24 * 60 * 60 * 1000) : Infinity;
+    let score = stableHash('jnvst-math-smart:' + question.id) % 30;
+
+    if (!attempts.length) score += 80;
+    if (latest && !latest.isCorrect) score += 90;
+    if (daysSinceAttempt >= 7) score += 25;
+    if (question.difficulty === 'hard') score += 8;
+    if (question.difficulty === 'challenge') score += 12;
+
+    const topicPerformance = getTopicPerformances(progress).find((topic) => topic.topicId === question.topicId);
+    if (topicPerformance?.attempts && topicPerformance.accuracy < 80) score += 55;
+    if (!topicPerformance?.attempts) score += 20;
+
+    return { question, score };
+  }).sort((a, b) => b.score - a.score || a.question.id.localeCompare(b.question.id));
+
+  const result: Question[] = [];
+  const used = new Set<ID>();
+
+  // First guarantee: every official Math unit gets one adaptive question.
+  for (const topic of mathTopics) {
+    const item = scored.find((entry) => entry.question.topicId === topic.id && !used.has(entry.question.id));
+    if (!item) continue;
+    result.push(item.question);
+    used.add(item.question.id);
+    if (result.length >= limit) return result;
+  }
+
+  // Then use the remaining slots for the student's weakest/recently wrong questions.
+  for (const item of scored) {
+    if (result.length >= limit) break;
+    if (used.has(item.question.id)) continue;
+    result.push(item.question);
+    used.add(item.question.id);
+  }
+
+  return result;
+};
 
 export const buildJnvstMockPaper = (seed = 'jnvst-2027'): Question[] => {
   const sectionTargets: Record<string, number> = {
@@ -234,7 +281,7 @@ export const buildJnvstMockPaper = (seed = 'jnvst-2027'): Question[] => {
 export const buildMathMockPaper = (seed = 'jnvst-math-2027'): Question[] => {
   const mathTopics = topics
     .filter((topic) => topic.chapterId.startsWith('chap_math_'))
-    .sort((a, b) => topicOrder.get(a.id)! - topicOrder.get(b.id)!);
+    .sort((a, b) => (chapterOrder.get(a.chapterId)! - chapterOrder.get(b.chapterId)!) || (topicOrder.get(a.id)! - topicOrder.get(b.id)!));
 
   const buckets = mathTopics.map((topic) => {
     const questions = jnvstExamQuestions
