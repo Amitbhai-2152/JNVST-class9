@@ -122,6 +122,15 @@ const getScienceSectionTitle = (blocks: ContentBlock[], index: number): string =
   return 'अध्ययन भाग ' + (index + 1);
 };
 
+const scienceStageMeta = [
+  { label: 'समझें', hint: 'बड़ा विचार और अध्याय का संदर्भ' },
+  { label: 'जोड़ें', hint: 'मुख्य अवधारणाएँ और शब्दावली' },
+  { label: 'समझाएँ', hint: 'कैसे और क्यों — कारण से परिणाम तक' },
+  { label: 'देखें', hint: 'उदाहरण, प्रयोग और रोज़मर्रा की सोच' },
+  { label: 'परखें', hint: 'तुलना, भ्रम और JNVST फोकस' },
+  { label: 'दोहराएँ', hint: '60-सेकंड recall और self-check' },
+];
+
 
 const Shell = ({ children }: { children: React.ReactNode }) => <div className="app-shell"><header className="topbar"><Link to="/" className="brand">JNVST कक्षा 9</Link><nav><Link to="/">डैशबोर्ड</Link><Link to="/subjects">विषय</Link><Link to="/bookmarks">बुकमार्क</Link><Link to="/smart-practice">स्मार्ट अभ्यास</Link><Link to="/mock-tests">मॉक टेस्ट</Link></nav></header><main className="shell">{children}</main></div>;
 const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => <div className={`card ${className}`}>{children}</div>;
@@ -712,7 +721,7 @@ const LessonPage = () => {
         {isScience && scienceChapter
           ? <span>अध्याय {String(scienceChapter.order).padStart(2, '0')} / 18</span>
           : <span>{pages.length} अध्ययन पृष्ठ</span>}
-        {isScience && <span>{pages.length} study sections</span>}
+        {isScience && <span>{pages.length} learning stages</span>}
         <span>{done ? '✅ पूरा हुआ' : '📖 सीख रहे हैं'}</span>
       </div>
     </div>
@@ -756,7 +765,7 @@ const LessonPage = () => {
       </div>
       <div className="science-outline-list">
         {scienceSections.map((title, i) => <button key={title + i} className={i === page ? 'active' : ''} aria-current={i === page ? 'step' : undefined} onClick={() => goToScienceSection(i)}>
-          <span>{String(i + 1).padStart(2, '0')}</span><b>{title}</b>
+          <span>{String(i + 1).padStart(2, '0')} · {scienceStageMeta[i]?.label ?? 'चरण'}</span><b>{title}</b><small>{scienceStageMeta[i]?.hint ?? 'अध्ययन का अगला चरण'}</small>
         </button>)}
       </div>
     </nav>}
@@ -764,7 +773,7 @@ const LessonPage = () => {
     <Card className="lesson-card" >
       <div className="study-reader" ref={lessonTopRef}>
         <div className="study-reader-head">
-          <div><b>{isScience ? 'Science Study Section' : 'टॉपिक-पाठ'}</b><span>{isScience ? (page + 1) + ' / ' + pages.length : 'पृष्ठ ' + (page + 1) + ' / ' + pages.length}</span></div>
+          <div><b>{isScience ? (scienceStageMeta[page]?.label ?? 'Science Study') : 'टॉपिक-पाठ'}</b><span>{isScience ? 'चरण ' + (page + 1) + ' / ' + pages.length : 'पृष्ठ ' + (page + 1) + ' / ' + pages.length}</span></div>
           <div className="study-progress"><span style={{width: progressPercent + '%'}} /></div>
         </div>
         {!isScience && <div className="study-page-nav" aria-label="अध्ययन पृष्ठ">
