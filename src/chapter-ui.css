@@ -3340,6 +3340,18 @@
 @media(max-width:380px){.english-lab-levels,.english-lab-levels.vocabulary{grid-template-columns:1fr}.english-lab-question-head{align-items:flex-start;flex-direction:column}}
 
 
+.english-lab-build {
+  margin-top: 12px;
+  padding: 13px 14px;
+  border: 1px solid #d9e4f0;
+  border-radius: 12px;
+  background: #f8fbff;
+}
+.english-lab-build b { display: block; margin-bottom: 6px; color: #294a73; }
+.english-lab-build p { margin: 5px 0 0; color: #53677f; line-height: 1.65; }
+.english-lab-build ol { margin: 5px 0 0 20px; padding: 0; color: #53677f; }
+.english-lab-build li { margin: 5px 0; line-height: 1.55; }
+
 /* =========================================================
    English Unseen Passage Lab
    ========================================================= */
