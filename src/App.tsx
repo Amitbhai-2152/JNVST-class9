@@ -722,6 +722,7 @@ const LessonPage = () => {
   const l = getLesson(lessonId || '');
   const p = useProgressStore();
   const isScience = l?.topicId.startsWith('top_sci_') ?? false;
+  const isMath = l?.topicId.startsWith('top_math_') ?? false;
   const pages = useMemo(() => l ? (isScience ? getScienceStudyPages(l.content) : getStudyPages(l.content)) : [], [l, isScience]);
   const [page, setPage] = useState(0);
   const lessonTopRef = useRef<HTMLDivElement>(null);
@@ -744,7 +745,7 @@ const LessonPage = () => {
 
   const t = topics.find((x) => x.id === l.topicId);
   const c = t ? chapters.find((x) => x.id === t.chapterId) : undefined;
-  if (isScience && c) return <Navigate to={"/chapters/" + c.id + "/study"} replace />;
+  if ((isScience || isMath) && c) return <Navigate to={"/chapters/" + c.id + "/study"} replace />;
 
   const done = p.lessonActivity[l.id]?.status === 'completed';
   const mastery = isScience ? scienceMasteryUnits.find((unit) => unit.topicId === l.topicId) : undefined;
