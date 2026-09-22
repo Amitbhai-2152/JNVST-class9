@@ -14,8 +14,12 @@
     vocabRound:1,
     vocabOrder:[],
     transSeen:new Set(),
+    currentTrans:null,
     answer:'',
-    checked:false
+    checked:false,
+    vocabMode:'meaning',
+    vocabSelected:'',
+    vocabChecked:false
   };
 
   const subjects=[
@@ -242,7 +246,11 @@
     const wrap=document.getElementById('jel-content');
     const card=document.createElement('div');card.className='jel-card';
     const activeLevel=state.level===0?((state.transIndex%6)+1):state.level;
-    const item=getTranslation(activeLevel,state.transIndex,state.direction);
+    if(!state.currentTrans || state.currentTrans.index!==state.transIndex || state.currentTrans.level!==activeLevel || state.currentTrans.direction!==state.direction){
+      const generated=getTranslation(activeLevel,state.transIndex,state.direction);
+      state.currentTrans={...generated,index:state.transIndex,level:activeLevel,direction:state.direction};
+    }
+    const item=state.currentTrans;
     if(state.mode==='learn'){
       card.innerHTML=`
         <div class="jel-counter">EXAMPLE ${state.transIndex+1} · ${state.level===0?'ALL LEVELS':'LEVEL '+activeLevel} · NO-REPEAT</div>
@@ -256,11 +264,11 @@
       `;
     }else{
       card.innerHTML=`
-        <div class="jel-counter">QUESTION ${state.transIndex+1} · ${state.level===0?'ALL LEVELS':'LEVEL '+activeLevel}</div>
+        <div class="jel-counter">QUESTION ${state.transIndex+1} · ${state.level===0?'ALL LEVELS':'LEVEL '+activeLevel} · PRACTICE PAGE</div>
         <div class="jel-source"><small>${state.direction==='hi-en'?'इसका English translation लिखें':'इसका Hindi translation लिखें'}</small><h2>${esc(state.direction==='hi-en'?item.hi:item.en)}</h2></div>
-        <textarea class="jel-input" id="jel-trans-answer" placeholder="अपना answer यहाँ लिखें…">${esc(state.answer)}</textarea>
-        <div class="jel-row" style="margin-top:12px"><button class="jel-btn" data-jel="hint">💡 Hint</button><button class="jel-btn primary" data-jel="check-trans">उत्तर जाँचें</button></div>
-        <div id="jel-trans-feedback"></div>
+        <textarea class="jel-input" id="jel-trans-answer" placeholder="अपना answer यहाँ लिखें…" ${state.checked?'disabled':''}>${esc(state.answer)}</textarea>
+        <div class="jel-row" style="margin-top:12px">${state.checked?'<button class="jel-btn primary" data-jel="next-trans">अगला प्रश्न →</button>':'<button class="jel-btn" data-jel="hint">💡 Hint</button><button class="jel-btn primary" data-jel="check-trans">उत्तर जाँचें</button>'}</div>
+        <div id="jel-trans-feedback">${state.checked?'<div class="jel-feedback jel-wrong"><b>सही उत्तर:</b><p>${esc(state.direction==='hi-en'?item.en:item.hi)}</p><p><b>Grammar:</b> ${esc(item.gp)}</p><p>${esc(item.ex)}</p></div>':''}</div>
       `;
       card.dataset.answer=item.en;card.dataset.hi=item.hi;card.dataset.gp=item.gp;card.dataset.ex=item.ex;card.dataset.hint=item.hint;
     }
@@ -271,7 +279,6 @@
     const wrap=document.getElementById('jel-content');
     const card=document.createElement('div');card.className='jel-card';
     const chosen=state.level==='all'?VOCAB:VOCAB.filter(x=>x.level===state.level);
-    if(state.level==='all'&&state.vocabIndex>=chosen.length){state.vocabRound++;state.vocabOrder=shuffle(chosen.map((_,i)=>i));state.vocabIndex=0;}
     if(!state.vocabOrder.length)state.vocabOrder=shuffle(chosen.map((_,i)=>i));
     const item=vocabItem();
     if(!item){card.innerHTML='<p>इस level में अभी words उपलब्ध नहीं हैं।</p>';wrap.appendChild(card);return;}
@@ -286,15 +293,25 @@
         <div class="jel-row" style="margin-top:14px"><button class="jel-btn primary" data-jel="next-vocab">अगला word →</button><a class="jel-btn" href="#/english-vocabulary-practice">🎯 Practice Page</a></div>
       `;
     }else{
-      const opts=shuffle([item.meaning,...shuffle(chosen.filter(x=>x.word!==item.word).map(x=>x.meaning)).slice(0,3)]);
+      const mode=state.vocabMode||'meaning';
+      const getTarget=(m)=>{
+        if(m==='meaning')return {prompt:item.word,target:item.meaning,kind:'meaning',label:'इस शब्द का हिन्दी अर्थ चुनें',pool:chosen.map(x=>x.meaning)};
+        if(m==='reverse')return {prompt:item.meaning,target:item.word,kind:'word',label:'इस हिन्दी अर्थ के लिए सही English word चुनें',pool:chosen.map(x=>x.word)};
+        if(m==='synonym')return {prompt:item.word,target:item.synonyms[0]||item.word,kind:'synonym',label:'सही synonym चुनें',pool:chosen.flatMap(x=>x.synonyms)};
+        if(m==='antonym')return {prompt:item.word,target:item.antonyms[0]||'—',kind:'antonym',label:'सही antonym चुनें',pool:chosen.flatMap(x=>x.antonyms).filter(Boolean)};
+        return {prompt:vocabExample(item,state.vocabIndex+state.vocabRound),target:item.meaning,kind:'context',label:'Sentence में दिए word का contextual meaning चुनें',pool:chosen.map(x=>x.meaning)};
+      };
+      const q=getTarget(mode);
+      const pool=[q.target,...q.pool.filter(x=>x&&x!==q.target)];
+      const opts=shuffle([...new Set(pool)],state.vocabIndex*1009+state.vocabRound*97).slice(0,4);
       card.innerHTML=`
-        <div class="jel-counter">QUESTION ${state.vocabIndex+1} · 4 OPTIONS · NO-REPEAT</div>
-        <div class="jel-word" style="font-size:42px">${esc(item.word)}</div>
-        <div class="jel-context"><b>सही हिन्दी meaning चुनें</b></div>
-        <div class="jel-row" style="margin-top:12px">${opts.map(o=>'<button class="jel-btn" data-jel="vopt" data-val="'+esc(o)+'">'+esc(o)+'</button>').join('')}</div>
-        <div id="jel-v-feedback"></div>
+        <div class="jel-counter">QUESTION ${state.vocabIndex+1} · 4 OPTIONS · ${mode.toUpperCase()} · NO-REPEAT</div>
+        <div class="jel-source"><small>${q.label}</small><h2>${esc(q.prompt)}</h2></div>
+        <div class="jel-row" style="margin-top:12px">${opts.map(o=>'<button class="jel-btn '+(state.vocabSelected===o?'active':'')+'" data-jel="vopt" data-val="'+esc(o)+'">'+esc(o)+'</button>').join('')}</div>
+        <div class="jel-row" style="margin-top:12px">${state.vocabChecked?'<button class="jel-btn primary" data-jel="next-vocab">अगला प्रश्न →</button>':'<button class="jel-btn primary" data-jel="check-vocab" '+(state.vocabSelected?'':'disabled')+'>उत्तर जाँचें</button>'}</div>
+        <div id="jel-v-feedback">${state.vocabChecked?'<div class="jel-feedback '+(norm(state.vocabSelected)===norm(q.target)?'jel-correct':'jel-wrong')+'"><b>'+(norm(state.vocabSelected)===norm(q.target)?'✓ सही':'अभी सही नहीं')+'</b><p><b>सही उत्तर:</b> '+esc(q.target)+'</p><p>Example context में answer का प्रयोग पहचानना सीखें.</p></div>':''}</div>
       `;
-      card.dataset.correct=item.meaning;
+      card.dataset.correct=q.target;card.dataset.prompt=q.prompt;
     }
     wrap.appendChild(card);
   };
@@ -302,24 +319,35 @@
   document.addEventListener('click',e=>{
     const el=e.target.closest&&e.target.closest('[data-jel]');if(!el)return;
     const act=el.dataset.jel;
-    if(act==='mode'){state.mode=el.dataset.val;state.answer='';state.checked=false;mount();return;}
-    if(act==='dir'){state.direction=el.dataset.val;state.transIndex=0;state.transSeen.clear();mount();return;}
-    if(act==='level'){state.level=Number(el.dataset.val);state.transIndex=0;state.transSeen.clear();mount();return;}
-    if(act==='vlevel'){state.level=el.dataset.val;resetVocabulary();mount();return;}
-    if(act==='next-trans'){state.transIndex++;state.answer='';state.checked=false;mount();return;}
-    if(act==='next-vocab'){state.vocabIndex++;mount();return;}
+    if(act==='mode'){state.mode=el.dataset.val;state.answer='';state.checked=false;state.vocabSelected='';state.vocabChecked=false;mount();return;}
+    if(act==='dir'){state.direction=el.dataset.val;state.transIndex=0;state.transSeen.clear();state.currentTrans=null;state.answer='';state.checked=false;mount();return;}
+    if(act==='level'){state.level=Number(el.dataset.val);state.transIndex=0;state.transSeen.clear();state.currentTrans=null;state.answer='';state.checked=false;mount();return;}
+    if(act==='vlevel'){state.level=el.dataset.val;resetVocabulary();state.vocabSelected='';state.vocabChecked=false;mount();return;}
+    if(act==='vpractice'){state.vocabMode=el.dataset.val;state.vocabSelected='';state.vocabChecked=false;mount();return;}
+    if(act==='next-trans'){state.transIndex++;state.currentTrans=null;state.answer='';state.checked=false;mount();return;}
+    if(act==='next-vocab'){state.vocabIndex++;state.vocabSelected='';state.vocabChecked=false;mount();return;}
     if(act==='hint'){const card=el.closest('.jel-card');card.querySelector('#jel-trans-feedback').innerHTML='<div class="jel-feedback">💡 '+esc(card.dataset.hint)+'</div>';return;}
     if(act==='check-trans'){
       const card=el.closest('.jel-card');const input=card.querySelector('#jel-trans-answer');state.answer=input.value;
       const answer=state.direction==='hi-en'?card.dataset.answer:card.dataset.hi;
       const ok=norm(input.value)===norm(answer);
-      card.querySelector('#jel-trans-feedback').innerHTML='<div class="jel-feedback '+(ok?'jel-correct':'jel-wrong')+'"><b>'+(ok?'✓ सही':'अभी सही नहीं')+'</b><p><b>सही उत्तर:</b> '+esc(answer)+'</p><p><b>Grammar:</b> '+esc(card.dataset.gp)+'</p><p>'+esc(card.dataset.ex)+'</p></div>';
+      state.checked=true;
+      card.querySelector('#jel-trans-feedback').innerHTML='<div class="jel-feedback '+(ok?'jel-correct':'jel-wrong')+'"><b>'+(ok?'✓ सही':'अभी सही नहीं')+'</b><p><b>सही उत्तर:</b> '+esc(answer)+'</p><p><b>Grammar:</b> '+esc(card.dataset.gp)+'</p><p>'+esc(card.dataset.ex)+'</p></div><div class="jel-row" style="margin-top:10px"><button class="jel-btn primary" data-jel="next-trans">अगला प्रश्न →</button></div>';
+      card.querySelector('#jel-trans-answer').disabled=true;
+      el.disabled=true;
       return;
     }
-    if(act==='vopt'){
-      const card=el.closest('.jel-card');const val=el.dataset.val;card.querySelectorAll('[data-jel="vopt"]').forEach(x=>x.classList.remove('active'));el.classList.add('active');
-      const ok=norm(val)===norm(card.dataset.correct);
-      card.querySelector('#jel-v-feedback').innerHTML='<div class="jel-feedback '+(ok?'jel-correct':'jel-wrong')+'"><b>'+(ok?'✓ सही':'अभी सही नहीं')+'</b><p><b>सही meaning:</b> '+esc(card.dataset.correct)+'</p><p>Example context में इसी meaning को पहचानना सीखें।</p></div>';
+    if(act==='vopt'&&!state.vocabChecked){
+      const card=el.closest('.jel-card');state.vocabSelected=el.dataset.val;card.querySelectorAll('[data-jel="vopt"]').forEach(x=>x.classList.remove('active'));el.classList.add('active');return;
+    }
+    if(act==='check-vocab'){
+      const card=el.closest('.jel-card');state.vocabChecked=true;
+      const ok=norm(state.vocabSelected)===norm(card.dataset.correct);
+      card.querySelector('#jel-v-feedback').innerHTML='<div class="jel-feedback '+(ok?'jel-correct':'jel-wrong')+'"><b>'+(ok?'✓ सही':'अभी सही नहीं')+'</b><p><b>सही उत्तर:</b> '+esc(card.dataset.correct)+'</p><p>Example context में इसी meaning को पहचानना सीखें।</p></div>';
+      card.querySelectorAll('[data-jel="vopt"]').forEach(x=>x.disabled=true);
+      el.disabled=true;
+      const row=card.querySelector('[data-jel="check-vocab"]')?.parentElement;if(row)row.innerHTML='<button class="jel-btn primary" data-jel="next-vocab">अगला प्रश्न →</button>';
+      return;
     }
   },true);
 
