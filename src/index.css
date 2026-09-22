@@ -590,3 +590,7 @@ a { color: inherit; text-decoration: none; }
 @media (max-width:520px) {
   .science-outline-list button { flex-basis:155px; }
 }
+
+
+/* Lesson reader anchor */
+.study-reader { scroll-margin-top: 88px; }
