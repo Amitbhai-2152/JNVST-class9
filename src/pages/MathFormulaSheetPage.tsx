@@ -138,6 +138,8 @@ const MathFormulaSheet = () => (
       <p>JNVST कक्षा 9 गणित की मुख्य इकाइयों के सूत्र, उपयोग और परीक्षा-जाँच एक जगह।</p>
     </div>
 
+    <div className="actions"><Link className="btn" to="/math-smart-practice">🎯 स्मार्ट गणित अभ्यास</Link><Link className="btn primary" to="/math-mock-test">⏱ 35 प्रश्न गणित Mock</Link></div>
+
     <section className="hero">
       <div>
         <span className="eyebrow">JNVST MATHEMATICS</span>
