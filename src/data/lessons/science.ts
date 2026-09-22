@@ -222,6 +222,7 @@ const scienceLessonsBase: Lesson[] = [
 
 export const scienceLessonsData: Lesson[] = scienceLessonsBase.map((lesson) => ({
   ...lesson,
+  estimatedMinutes: Math.max(35, lesson.estimatedMinutes),
   content: [
     ...(scienceLessonCore[lesson.topicId] ?? lesson.content),
     ...(scienceDeepDive[lesson.topicId] ?? []),
