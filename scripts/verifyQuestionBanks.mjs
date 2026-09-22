@@ -46,8 +46,9 @@ for (const file of files) {
   }
 
   if (file === 'sciencePart14.ts' || file === 'sciencePart15.ts') {
+    const batchPrefix = file === 'sciencePart15.ts' ? 'b4' : 'b3';
     for (const match of source.matchAll(/\bmake\(\s*['\"]([^'\"]+)['\"]/g)) {
-      const id = `q_sci_b3_${match[1]}`;
+      const id = `q_sci_${batchPrefix}_${match[1]}`;
       if (ids.has(id)) throw new Error(`Duplicate question ID: ${id}`);
       ids.add(id);
       counts.sci += 1;
