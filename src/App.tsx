@@ -417,8 +417,7 @@ const ScienceSubjectOverview = () => {
             <div className="science-progress"><span style={{width: accuracyForUnit + '%'}} /></div>
             {attemptsForUnit > 0 && <div className="science-learning-accuracy">{attemptsForUnit} प्रश्न-प्रयास दर्ज हैं</div>}
             <div className="actions">
-              <Link className="btn primary" to={`/chapters/${chapters.find((chapter) => chapter.subjectId === 'sub_sci' && chapter.topicIds.includes(unit.topicId))?.id ?? ''}`}>अध्याय देखें</Link>
-              {lessonId && <Link className="btn" to={`/lessons/${lessonId}`}>पाठ पढ़ें</Link>}
+              <Link className="btn primary" to={`/chapters/${chapters.find((chapter) => chapter.subjectId === 'sub_sci' && chapter.topicIds.includes(unit.topicId))?.id ?? ''}/study`}>अध्याय अध्ययन</Link>
               <Link className="btn" to={`/practice/${unit.topicId}`}>अभ्यास करें</Link>
             </div>
           </Card>;
@@ -440,7 +439,7 @@ const ScienceSubjectOverview = () => {
               <div><h4>Must Know</h4><ul>{unit.mustKnow.map((item) => <li key={item}>{item}</li>)}</ul></div>
               <div><h4>Quick Facts</h4><div className="science-fact-chips">{unit.quickFacts.map((item) => <span key={item}>{item}</span>)}</div></div>
               <div><h4>Exam Traps</h4><ul>{unit.examTraps.map((item) => <li key={item}>{item}</li>)}</ul></div>
-              <div className="actions">{topic?.lessonIds[0] && <Link className="btn" to={`/lessons/\${topic.lessonIds[0]}`}>पाठ पढ़ें</Link>}<Link className="btn primary" to={`/practice/\${unit.topicId}`}>प्रश्न हल करें</Link></div>
+              <div className="actions"><Link className="btn" to={`/chapters/${topic?.chapterId ?? ''}/study`}>अध्याय अध्ययन</Link><Link className="btn primary" to={`/practice/${unit.topicId}`}>प्रश्न हल करें</Link></div>
             </div>
           </details>;
         })}
@@ -623,9 +622,8 @@ const ChapterPage = () => {
             <h1>{c.title}</h1>
             <p>{mastery?.coreSkills.slice(0, 3).join(' · ') ?? 'इस अध्याय के मुख्य Science concepts और अभ्यास।'}</p>
             <div className="actions">
-              {lessonId && <Link className="btn primary" to={`/lessons/${lessonId}`}>📖 पाठ पढ़ें</Link>}
+              <Link className="btn primary" to={`/chapters/${c.id}/study`}>📖 अध्याय अध्ययन शुरू करें</Link>
               <Link className="btn" to={`/practice/${topic?.id ?? ''}`}>🎯 {questionCountForChapter} प्रश्न हल करें</Link>
-              <Link className="btn" to={`/chapters/${c.id}/study`}>अध्याय अध्ययन</Link>
             </div>
           </div>
           <div className="science-chapter-index">
