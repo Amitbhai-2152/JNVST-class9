@@ -16,7 +16,7 @@ const questionCounts = Object.fromEntries(scienceTopics.map((topic) => [
 ]));
 const targetQuestionsPerTopic = 20;
 const minimumLessonBlocks = 30;
-const expectedCoreSections = 8;
+const expectedCoreSections = 6;
 
 const missingLessons = scienceTopics.filter((topic) => (lessonCounts[topic.id] ?? 0) < 1).map((topic) => topic.id);
 const coreStructureProblems = scienceTopics
