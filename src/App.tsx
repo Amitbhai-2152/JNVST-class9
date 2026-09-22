@@ -438,7 +438,6 @@ const ScienceSubjectOverview = () => {
         <div><span>04</span><b>Science Mock</b><p>35 प्रश्नों में पूरी Science readiness जाँचें।</p></div>
       </div>
     </section>
-    </section>
   </section>;
 };
 
