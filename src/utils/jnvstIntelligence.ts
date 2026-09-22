@@ -278,15 +278,66 @@ export const buildJnvstMockPaper = (seed = 'jnvst-2027'): Question[] => {
   );
 };
 
+const challengerOptionIsMeaningful = (text: string): boolean => {
+  const normalized = text.trim().replace(/^[A-D](?:[.)\\-:]|\\s)+/i, '').trim();
+  return normalized.length >= 2 && !/^[A-D]$/i.test(normalized);
+};
+
+const arrangeChallengerOptions = (question: Question, index: number, seed: string): Question => {
+  const correct = question.options.find((option) => question.correctOptionIds.includes(option.id));
+  if (!correct) return question;
+
+  const distractors = question.options
+    .filter((option) => option.id !== correct.id)
+    .slice()
+    .sort((a, b) => stableHash(seed + ':' + question.id + ':' + a.id) - stableHash(seed + ':' + question.id + ':' + b.id));
+
+  // Deliberately rotate the correct answer through A → B → C → D.
+  // This removes the "correct answer is always A" shortcut without changing correctness.
+  const targetIndex = index % 4;
+  const arranged: Question['options'] = new Array(4);
+  arranged[targetIndex] = correct;
+  let distractorIndex = 0;
+  for (let optionIndex = 0; optionIndex < 4; optionIndex += 1) {
+    if (optionIndex === targetIndex) continue;
+    arranged[optionIndex] = distractors[distractorIndex];
+    distractorIndex += 1;
+  }
+
+  return { ...question, options: arranged };
+};
+
 export const getChapterChallengerQuestions = (
   chapterId: ID,
-  limit = 10,
+  limit = 20,
   seed = 'jnvst-challenger',
 ): Question[] => {
+  const target = Math.max(20, limit);
+  const difficultyRank: Record<Question['difficulty'], number> = {
+    challenge: 0,
+    hard: 1,
+    medium: 2,
+    easy: 3,
+  };
+
   const candidates = allQuestions
-    .filter((question) => question.chapterId === chapterId && question.difficulty === 'challenge')
-    .sort((a, b) => stableHash(seed + ':' + chapterId + ':' + a.id) - stableHash(seed + ':' + chapterId + ':' + b.id) || a.id.localeCompare(b.id));
-  return candidates.slice(0, limit);
+    .filter((question) =>
+      question.chapterId === chapterId &&
+      question.type === 'mcq' &&
+      question.options.length === 4 &&
+      question.correctOptionIds.length === 1 &&
+      question.options.every((option) => challengerOptionIsMeaningful(option.text)) &&
+      new Set(question.options.map((option) => option.text.trim().toLowerCase())).size === 4
+    )
+    .sort((a, b) =>
+      difficultyRank[a.difficulty] - difficultyRank[b.difficulty] ||
+      stableHash(seed + ':' + chapterId + ':' + a.id) - stableHash(seed + ':' + chapterId + ':' + b.id) ||
+      a.id.localeCompare(b.id)
+    );
+
+  return candidates
+    .slice(0, target)
+    .map((question, index) => arrangeChallengerOptions(question, index, seed + ':' + chapterId));
 };
 
 export const buildMathMockPaper = (seed = 'jnvst-math-2027'): Question[] => {
