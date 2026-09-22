@@ -92,7 +92,7 @@ export const scienceDeepDive: Record<ID, ContentBlock[]> = Object.fromEntries([
   ]],
   ['top_sci_01_01', [
     {type:'heading',level:2,text:'गहरी समझ: दाब में क्षेत्रफल का खेल'},
-    {type:'formula',expression:'$$P=\\\\frac{F}{A}$$'},
+    {type:'formula',expression:'$$P=\\frac{F}{A}$$'},
     {type:'table',headers:['स्थिति','परिणाम'],rows:[['समान बल, कम क्षेत्रफल','अधिक दाब'],['समान बल, अधिक क्षेत्रफल','कम दाब'],['अधिक बल, समान क्षेत्रफल','अधिक दाब']]},
     {type:'step-by-step',steps:['बल F पहचानें।','संपर्क क्षेत्रफल A की इकाई देखें।','P=F/A लगाएँ।','उत्तर की SI इकाई Pa रखें।']},
     {type:'callout',style:'example',title:'जीवन से उदाहरण',text:'नुकीली कील का सिरा बहुत कम क्षेत्रफल देता है, इसलिए समान बल में उसका दाब अधिक हो सकता है।'}
@@ -105,7 +105,7 @@ export const scienceDeepDive: Record<ID, ContentBlock[]> = Object.fromEntries([
   ['top_sci_01_03', [
     {type:'heading',level:2,text:'गहरी समझ: amplitude बनाम frequency'},
     {type:'table',headers:['राशि','क्या बदलता है?'],rows:[['Amplitude','ध्वनि की प्रबलता/लाउडनेस से जुड़ा'],['Frequency','तारत्व/pitch से जुड़ा'],['Time period','एक vibration cycle का समय']]},
-    {type:'formula',expression:'$$f=\\\\frac{1}{T}$$'},
+    {type:'formula',expression:'$$f=\\frac{1}{T}$$'},
     {type:'paragraph',text:'यदि समय अवधि T घटती है तो आवृत्ति f बढ़ती है। लेकिन अधिक आवृत्ति का अर्थ अपने-आप अधिक तेज ध्वनि नहीं है।'}
   ]],
   ['top_sci_01_04', [
