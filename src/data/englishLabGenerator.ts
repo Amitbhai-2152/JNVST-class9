@@ -94,6 +94,20 @@ const advanced = (seed:number, direction:TranslationDirection): TranslationItem 
     : {id:`gen-tr-${seed}`,level:6,direction,prompt:en,acceptableAnswers:[hi],displayAnswer:hi,hint:'although = हालाँकि; remained = बना/रहा।',explanation:'Although contrast दिखाता है। फिर main clause का action और manner phrase हिन्दी में रखें.',grammarPoint:'Contrast + past action + adverb' };
 };
 
+const makeTranslation = (
+  seed: number,
+  level: TranslationItem['level'],
+  direction: TranslationDirection,
+  hi: string,
+  en: string,
+  hint: string,
+  explanation: string,
+  grammarPoint: string,
+  buildSteps: string[],
+): TranslationItem => direction === 'hi-en'
+  ? { id: 'gen-tr-' + level + '-' + seed, level, direction, prompt: hi, acceptableAnswers: [en], displayAnswer: en, hint, explanation, grammarPoint, buildSteps }
+  : { id: 'gen-tr-' + level + '-' + seed, level, direction, prompt: en, acceptableAnswers: [hi], displayAnswer: hi, hint, explanation, grammarPoint, buildSteps };
+
 type TranslationFactory = (seed: number, direction: TranslationDirection, level: TranslationItem['level']) => TranslationItem;
 
 const genderFor = (name: string): Gender => hindiGender[name];
@@ -205,12 +219,211 @@ const scenarioFactories: Record<number, TranslationFactory> = {
   6: (seed, direction, level) => scenarioFactory(level, scenarioBanks[6], seed, direction),
 };
 
-export const generateTranslationItem = (level: number, direction: TranslationDirection, seed: number): TranslationItem => {
+
+type VastSubject = { en: string; hi: string; gender: Gender };
+type VastAction = {
+  enBase: string;
+  enThird: string;
+  enIng: string;
+  enPast: string;
+  hiPresentM: string;
+  hiPresentF: string;
+  hiPastM: string;
+  hiPastF: string;
+};
+const vastSubjects: VastSubject[] = [
+  {en:'Ravi',hi:'रवि',gender:'m'},{en:'Meena',hi:'मीना',gender:'f'},{en:'Arjun',hi:'अर्जुन',gender:'m'},{en:'Nita',hi:'नीता',gender:'f'},
+  {en:'Aman',hi:'अमन',gender:'m'},{en:'Tara',hi:'तारा',gender:'f'},{en:'Rohan',hi:'रोहन',gender:'m'},{en:'Priya',hi:'प्रिया',gender:'f'},
+  {en:'Kabir',hi:'कबीर',gender:'m'},{en:'Sana',hi:'सना',gender:'f'},{en:'Vivek',hi:'विवेक',gender:'m'},{en:'Anu',hi:'अनु',gender:'f'},
+  {en:'Dev',hi:'देव',gender:'m'},{en:'Kavya',hi:'काव्या',gender:'f'},{en:'Mohan',hi:'मोहन',gender:'m'},{en:'Pooja',hi:'पूजा',gender:'f'},
+  {en:'Rahul',hi:'राहुल',gender:'m'},{en:'Neha',hi:'नेहा',gender:'f'},{en:'Karan',hi:'करण',gender:'m'},{en:'Isha',hi:'ईशा',gender:'f'},
+];
+const vastActions: VastAction[] = [
+  {enBase:'read the book',enThird:'reads the book',enIng:'reading the book',enPast:'read the book',hiPresentM:'किताब पढ़ता है',hiPresentF:'किताब पढ़ती है',hiPastM:'किताब पढ़ा',hiPastF:'किताब पढ़ी'},
+  {enBase:'write a letter',enThird:'writes a letter',enIng:'writing a letter',enPast:'wrote a letter',hiPresentM:'एक पत्र लिखता है',hiPresentF:'एक पत्र लिखती है',hiPastM:'एक पत्र लिखा',hiPastF:'एक पत्र लिखी'},
+  {enBase:'solve the problem',enThird:'solves the problem',enIng:'solving the problem',enPast:'solved the problem',hiPresentM:'समस्या हल करता है',hiPresentF:'समस्या हल करती है',hiPastM:'समस्या हल की',hiPastF:'समस्या हल की'},
+  {enBase:'check the answer',enThird:'checks the answer',enIng:'checking the answer',enPast:'checked the answer',hiPresentM:'उत्तर जाँचता है',hiPresentF:'उत्तर जाँचती है',hiPastM:'उत्तर जाँचा',hiPastF:'उत्तर जाँचा'},
+  {enBase:'open the door',enThird:'opens the door',enIng:'opening the door',enPast:'opened the door',hiPresentM:'दरवाज़ा खोलता है',hiPresentF:'दरवाज़ा खोलती है',hiPastM:'दरवाज़ा खोला',hiPastF:'दरवाज़ा खोला'},
+  {enBase:'close the box',enThird:'closes the box',enIng:'closing the box',enPast:'closed the box',hiPresentM:'डिब्बा बंद करता है',hiPresentF:'डिब्बा बंद करती है',hiPastM:'डिब्बा बंद किया',hiPastF:'डिब्बा बंद किया'},
+  {enBase:'clean the room',enThird:'cleans the room',enIng:'cleaning the room',enPast:'cleaned the room',hiPresentM:'कमरा साफ़ करता है',hiPresentF:'कमरा साफ़ करती है',hiPastM:'कमरा साफ़ किया',hiPastF:'कमरा साफ़ किया'},
+  {enBase:'carry the bag',enThird:'carries the bag',enIng:'carrying the bag',enPast:'carried the bag',hiPresentM:'बैग ले जाता है',hiPresentF:'बैग ले जाती है',hiPastM:'बैग ले गया',hiPastF:'बैग ले गई'},
+  {enBase:'answer the question',enThird:'answers the question',enIng:'answering the question',enPast:'answered the question',hiPresentM:'प्रश्न का उत्तर देता है',hiPresentF:'प्रश्न का उत्तर देती है',hiPastM:'प्रश्न का उत्तर दिया',hiPastF:'प्रश्न का उत्तर दिया'},
+  {enBase:'watch the film',enThird:'watches the film',enIng:'watching the film',enPast:'watched the film',hiPresentM:'फिल्म देखता है',hiPresentF:'फिल्म देखती है',hiPastM:'फिल्म देखी',hiPastF:'फिल्म देखी'},
+  {enBase:'visit the library',enThird:'visits the library',enIng:'visiting the library',enPast:'visited the library',hiPresentM:'पुस्तकालय जाता है',hiPresentF:'पुस्तकालय जाती है',hiPastM:'पुस्तकालय गया',hiPastF:'पुस्तकालय गई'},
+  {enBase:'practise the exercise',enThird:'practises the exercise',enIng:'practising the exercise',enPast:'practised the exercise',hiPresentM:'अभ्यास करता है',hiPresentF:'अभ्यास करती है',hiPastM:'अभ्यास किया',hiPastF:'अभ्यास किया'},
+  {enBase:'help the teacher',enThird:'helps the teacher',enIng:'helping the teacher',enPast:'helped the teacher',hiPresentM:'शिक्षक की मदद करता है',hiPresentF:'शिक्षक की मदद करती है',hiPastM:'शिक्षक की मदद की',hiPastF:'शिक्षक की मदद की'},
+  {enBase:'study the lesson',enThird:'studies the lesson',enIng:'studying the lesson',enPast:'studied the lesson',hiPresentM:'पाठ पढ़ता है',hiPresentF:'पाठ पढ़ती है',hiPastM:'पाठ पढ़ा',hiPastF:'पाठ पढ़ा'},
+  {enBase:'explain the example',enThird:'explains the example',enIng:'explaining the example',enPast:'explained the example',hiPresentM:'उदाहरण समझाता है',hiPresentF:'उदाहरण समझाती है',hiPastM:'उदाहरण समझाया',hiPastF:'उदाहरण समझाया'},
+  {enBase:'compare the answers',enThird:'compares the answers',enIng:'comparing the answers',enPast:'compared the answers',hiPresentM:'उत्तर की तुलना करता है',hiPresentF:'उत्तर की तुलना करती है',hiPastM:'उत्तर की तुलना की',hiPastF:'उत्तर की तुलना की'},
+  {enBase:'choose the option',enThird:'chooses the option',enIng:'choosing the option',enPast:'chose the option',hiPresentM:'विकल्प चुनता है',hiPresentF:'विकल्प चुनती है',hiPastM:'विकल्प चुना',hiPastF:'विकल्प चुना'},
+  {enBase:'collect the papers',enThird:'collects the papers',enIng:'collecting the papers',enPast:'collected the papers',hiPresentM:'कागज़ इकट्ठे करता है',hiPresentF:'कागज़ इकट्ठे करती है',hiPastM:'कागज़ इकट्ठे किए',hiPastF:'कागज़ इकट्ठे किए'},
+  {enBase:'prepare the notebook',enThird:'prepares the notebook',enIng:'preparing the notebook',enPast:'prepared the notebook',hiPresentM:'कॉपी तैयार करता है',hiPresentF:'कॉपी तैयार करती है',hiPastM:'कॉपी तैयार की',hiPastF:'कॉपी तैयार की'},
+  {enBase:'arrange the books',enThird:'arranges the books',enIng:'arranging the books',enPast:'arranged the books',hiPresentM:'किताबें व्यवस्थित करता है',hiPresentF:'किताबें व्यवस्थित करती है',hiPastM:'किताबें व्यवस्थित कीं',hiPastF:'किताबें व्यवस्थित कीं'},
+  {enBase:'complete the task',enThird:'completes the task',enIng:'completing the task',enPast:'completed the task',hiPresentM:'काम पूरा करता है',hiPresentF:'काम पूरा करती है',hiPastM:'काम पूरा किया',hiPastF:'काम पूरा किया'},
+  {enBase:'revise the chapter',enThird:'revises the chapter',enIng:'revising the chapter',enPast:'revised the chapter',hiPresentM:'अध्याय दोहराता है',hiPresentF:'अध्याय दोहराती है',hiPastM:'अध्याय दोहराया',hiPastF:'अध्याय दोहराया'},
+  {enBase:'draw the picture',enThird:'draws the picture',enIng:'drawing the picture',enPast:'drew the picture',hiPresentM:'चित्र बनाता है',hiPresentF:'चित्र बनाती है',hiPastM:'चित्र बनाया',hiPastF:'चित्र बनाया'},
+  {enBase:'discuss the story',enThird:'discusses the story',enIng:'discussing the story',enPast:'discussed the story',hiPresentM:'कहानी पर चर्चा करता है',hiPresentF:'कहानी पर चर्चा करती है',hiPastM:'कहानी पर चर्चा की',hiPastF:'कहानी पर चर्चा की'},
+];
+const vastTimes = [
+  {en:'every morning',hi:'हर सुबह'},{en:'every evening',hi:'हर शाम'},{en:'after school',hi:'स्कूल के बाद'},{en:'on Sundays',hi:'रविवार को'},
+  {en:'before dinner',hi:'रात के खाने से पहले'},{en:'at the library',hi:'पुस्तकालय में'},{en:'during the lesson',hi:'पाठ के दौरान'},{en:'in the afternoon',hi:'दोपहर में'},
+  {en:'on weekdays',hi:'कामकाजी दिनों में'},{en:'before the exam',hi:'परीक्षा से पहले'},{en:'after breakfast',hi:'नाश्ते के बाद'},{en:'in the evening',hi:'शाम को'},
+];
+const vastPlaces = [
+  {en:'the school',hi:'स्कूल'},{en:'the library',hi:'पुस्तकालय'},{en:'the classroom',hi:'कक्षा'},{en:'the market',hi:'बाज़ार'},
+  {en:'the playground',hi:'खेल का मैदान'},{en:'the village',hi:'गाँव'},{en:'the station',hi:'स्टेशन'},{en:'the park',hi:'पार्क'},
+  {en:'the laboratory',hi:'प्रयोगशाला'},{en:'the reading room',hi:'पठन कक्ष'},{en:'the hall',hi:'सभागार'},{en:'the office',hi:'कार्यालय'},
+];
+const vastAdjectives = [
+  {en:'careful',hiM:'सावधान',hiF:'सावधान'},{en:'honest',hiM:'ईमानदार',hiF:'ईमानदार'},{en:'patient',hiM:'धैर्यवान',hiF:'धैर्यवान'},
+  {en:'curious',hiM:'जिज्ञासु',hiF:'जिज्ञासु'},{en:'active',hiM:'सक्रिय',hiF:'सक्रिय'},{en:'confident',hiM:'आत्मविश्वासी',hiF:'आत्मविश्वासी'},
+  {en:'focused',hiM:'एकाग्र',hiF:'एकाग्र'},{en:'helpful',hiM:'मददगार',hiF:'मददगार'},{en:'regular',hiM:'नियमित',hiF:'नियमित'},{en:'calm',hiM:'शांत',hiF:'शांत'},
+];
+const vastPick = <T,>(items:T[], index:number):T => items[((index % items.length)+items.length)%items.length];
+const vastIndices = (n:number, lengths:number[]) => lengths.map((len, i) => Math.floor(n / lengths.slice(0,i).reduce((a,b)=>a*b,1)) % len);
+const vastBuild = (
+  level: TranslationItem['level'],
+  direction: TranslationDirection,
+  family: number,
+  n: number,
+): TranslationItem => {
+  const subject = vastPick(vastSubjects, n);
+  const action = vastPick(vastActions, Math.floor(n / vastSubjects.length));
+  const time = vastPick(vastTimes, Math.floor(n / (vastSubjects.length * vastActions.length)));
+  const place = vastPick(vastPlaces, Math.floor(n / 17));
+  const adj = vastPick(vastAdjectives, Math.floor(n / 19));
+  const secondAction = vastPick(vastActions, Math.floor(n / 23) + 7);
+  const hiPresent = subject.gender === 'f' ? action.hiPresentF : action.hiPresentM;
+  const hiPast = subject.gender === 'f' ? action.hiPastF : action.hiPastM;
+  const hiAdj = subject.gender === 'f' ? adj.hiF : adj.hiM;
+  let en = '';
+  let hi = '';
+  let grammarPoint = '';
+  let hint = '';
+  let explanation = '';
+  let steps: string[] = [];
+  switch (family) {
+    case 0:
+      en = subject.en + ' ' + action.enThird + ' ' + time.en + '.';
+      hi = subject.hi + ' ' + hiPresent + ' ' + time.hi + '।';
+      grammarPoint = 'Simple Present: subject + V-s/es + phrase';
+      hint = 'Habit/frequency clue पहचानें; singular name के साथ V-s/es आता है।';
+      explanation = 'यह habitual action है। English में singular subject के साथ verb का s/es form और time phrase सही जगह रखा गया है।';
+      steps = ['1. Subject पहचानें।','2. Habit/time clue पहचानें।','3. Singular subject के लिए V-s/es चुनें।','4. बाकी phrase जोड़ें।'];
+      break;
+    case 1:
+      en = subject.en + ' does not ' + action.enBase + ' ' + time.en + '.';
+      hi = subject.hi + ' ' + time.hi + ' ' + hiPresent.replace(/(ता|ती) है$/, '').trim() + ' नहीं करता/करती।';
+      grammarPoint = 'Simple Present Negative: does not + V1';
+      hint = 'Negative + singular subject में does not के बाद V1 रखें।';
+      explanation = 'Does not already tense carries करता है, इसलिए main verb base form में रहता है।';
+      steps = ['1. Negative पहचानें।','2. Singular subject देखें।','3. Does not लगाएँ।','4. Main verb V1 रखें।'];
+      break;
+    case 2:
+      en = 'Does ' + subject.en + ' ' + action.enBase + ' ' + time.en + '?';
+      hi = 'क्या ' + subject.hi + ' ' + hiPresent.replace(/(ता|ती) है$/, '').trim() + ' ' + time.hi + '?';
+      grammarPoint = 'Simple Present Question: Does + subject + V1?';
+      hint = 'क्या... करता/करती है? = Does + subject + V1';
+      explanation = 'Does question का tense mark है, इसलिए main verb base form में रहता है।';
+      steps = ['1. Question पहचानें।','2. Does लगाएँ।','3. Subject रखें।','4. Main verb V1 रखें।'];
+      break;
+    case 3:
+      en = subject.en + ' is ' + action.enIng + ' ' + time.en + '.';
+      hi = subject.hi + ' ' + time.hi + ' ' + (subject.gender === 'f' ? action.hiPresentF.replace(/ता|ती/,'रही') : action.hiPresentM.replace(/ता|ते/,'रहा')) + '।';
+      grammarPoint = 'Present Continuous: is + V-ing';
+      hint = 'अभी/इस समय चल रहे काम के लिए is + V-ing।';
+      explanation = 'Singular subject के साथ is और main verb का -ing form ongoing action दिखाता है।';
+      steps = ['1. Ongoing action पहचानें।','2. Singular subject के लिए is रखें।','3. Main verb में -ing लगाएँ।','4. Time phrase जोड़ें।'];
+      break;
+    case 4:
+      en = subject.en + ' ' + action.enPast + ' yesterday.';
+      hi = subject.hi + ' ने कल ' + hiPast + '।';
+      grammarPoint = 'Simple Past: V2';
+      hint = 'Yesterday past-time clue है; main verb का past form चुनें।';
+      explanation = 'यह completed past action है। English में V2 और हिन्दी में “ने” वाला past structure है।';
+      steps = ['1. Past clue पहचानें।','2. V2 चुनें।','3. Subject + past action बनाएँ।','4. Time clue जोड़ें।'];
+      break;
+    case 5:
+      en = subject.en + ' will ' + action.enBase + ' ' + time.en + '.';
+      hi = subject.hi + ' ' + time.hi + ' ' + (subject.gender === 'f' ? 'यह काम करेगी' : 'यह काम करेगा') + '।';
+      grammarPoint = 'Future: will + V1';
+      hint = 'Future result/action में will + V1 रखें।';
+      explanation = 'Will के बाद base verb आता है। हिन्दी अर्थ को भविष्यकाल के स्वाभाविक रूप में रखें।';
+      steps = ['1. Future clue पहचानें।','2. Will लगाएँ।','3. Main verb V1 रखें।','4. Time phrase जोड़ें।'];
+      break;
+    case 6:
+      en = subject.en + ' has ' + 'already ' + action.enPast + '.';
+      hi = subject.hi + ' पहले ही ' + hiPast + ' है।';
+      grammarPoint = 'Present Perfect: has + V3';
+      hint = '“पहले ही/already” completed result का clue है।';
+      explanation = 'Singular subject के साथ has + past participle (V3) present relevance बताता है।';
+      steps = ['1. Completed result पहचानें।','2. Has चुनें।','3. V3 रखें।','4. Already की जगह जाँचें।'];
+      break;
+    case 7:
+      en = subject.en + ' should ' + action.enBase + ' ' + time.en + '.';
+      hi = subject.hi + ' को ' + time.hi + ' ' + hiPresent.replace(/(ता|ती) है$/, '').trim() + ' चाहिए।';
+      grammarPoint = 'Modal: should + V1';
+      hint = 'चाहिए = should; इसके बाद V1 आता है।';
+      explanation = 'Should advice/recommendation दिखाता है और उसके बाद main verb base form में रहता है।';
+      steps = ['1. Advice पहचानें।','2. Should रखें।','3. Main verb V1 रखें।','4. बाकी phrase जोड़ें।'];
+      break;
+    case 8:
+      en = subject.en + ' ' + action.enPast + ' because ' + subject.en.toLowerCase() + ' wanted to improve.';
+      hi = subject.hi + ' ने ' + hiPast + ' क्योंकि ' + (subject.gender === 'f' ? 'वह' : 'वह') + ' सुधार करना ' + (subject.gender === 'f' ? 'चाहती' : 'चाहता') + ' था।';
+      grammarPoint = 'Because + clause';
+      hint = 'क्योंकि = because; कारण वाला clause बाद में आ सकता है।';
+      explanation = 'Main action के बाद कारण बताने के लिए because-clause जोड़ा गया है।';
+      steps = ['1. Main action पहचानें।','2. कारण पहचानें।','3. Because से reason clause जोड़ें।','4. दोनों clauses का tense मिलाएँ।'];
+      break;
+    case 9:
+      en = 'If ' + subject.en + ' ' + action.enThird + ', ' + subject.en + ' will ' + secondAction.enBase + ' tomorrow.';
+      hi = 'यदि ' + subject.hi + ' ' + hiPresent + ', तो ' + subject.hi + ' कल ' + (subject.gender === 'f' ? 'यह काम करेगी' : 'यह काम करेगा') + '।';
+      grammarPoint = 'First Conditional: If + Present, will + V1';
+      hint = 'यदि/if condition में present, result में will।';
+      explanation = 'First Conditional condition और उसका future result दिखाता है।';
+      steps = ['1. If-clause अलग करें।','2. Condition में Simple Present रखें।','3. Result में will + V1 रखें।','4. Cause → result जाँचें।'];
+      break;
+    case 10:
+      en = 'Although ' + subject.en + ' was ' + adj.en + ', ' + subject.en + ' ' + action.enPast + '.';
+      hi = 'हालाँकि ' + subject.hi + ' ' + (subject.gender === 'f' ? 'थकी' : 'थका') + ' हुई/हुआ था, फिर भी ' + subject.hi + ' ने ' + hiPast + '।';
+      grammarPoint = 'Although + contrast clause';
+      hint = 'हालाँकि = although; contrast के बाद main result देखें।';
+      explanation = 'Although दो ideas में contrast बनाता है; main action past tense में रखा गया है।';
+      steps = ['1. Contrast पहचानें।','2. Although-clause बनाएँ।','3. Main clause में past action रखें।','4. दोनों ideas का संबंध जाँचें।'];
+      break;
+    default:
+      en = 'When ' + subject.en + ' arrived at ' + place.en + ', ' + subject.en + ' was ' + action.enIng + '.';
+      hi = 'जब ' + subject.hi + ' ' + place.hi + ' पहुँचा/पहुँची, तब ' + subject.hi + ' ' + (subject.gender === 'f' ? '...' : '...') + '।';
+      grammarPoint = 'When + Simple Past, Past Continuous';
+      hint = 'एक past event हुआ और दूसरा action उस समय चल रहा था।';
+      explanation = 'When-clause completed past event दिखाता है; दूसरे clause में Past Continuous background action दिखाता है।';
+      steps = ['1. दोनों past actions अलग करें।','2. When-clause में Simple Past रखें।','3. Ongoing action में was + V-ing रखें।','4. दोनों clauses जोड़ें।'];
+      break;
+  }
+  return makeTranslation('' + family + '-' + n, level, direction, hi, en, hint, explanation, grammarPoint, steps);
+};
+
+const vastFamilyMap: Record<number, number[]> = {
+  1:[0,1,2,4],
+  2:[0,1,2,3,4],
+  3:[0,3,4,5,6,7],
+  4:[3,4,5,6,7,8,9],
+  5:[4,5,6,7,8,10],
+  6:[4,6,7,8,9,10,11],
+};
+
+const generateVastTranslationItem = (level: number, direction: TranslationDirection, seed: number): TranslationItem => {
   const safeLevel = Math.min(6, Math.max(1, Math.floor(level))) as TranslationItem['level'];
+  const families = vastFamilyMap[safeLevel];
   const sequence = Math.max(0, Math.floor(seed));
-  const families = [...levelTranslationFactories[safeLevel], scenarioFactories[safeLevel]];
-  const family = families[sequence % families.length];
-  return family(sequence, direction, safeLevel);
+  const familyPos = sequence % families.length;
+  const family = families[familyPos];
+  const n = Math.floor(sequence / families.length);
+  return vastBuild(safeLevel, direction, family, n);
+};
+
+export const generateTranslationItem = (level: number, direction: TranslationDirection, seed: number): TranslationItem => {
+  return generateVastTranslationItem(level, direction, seed);
 };
 
 const exampleSubjects = ['Riya', 'Kabir', 'Sana', 'Vivek', 'Anu', 'Dev'];
