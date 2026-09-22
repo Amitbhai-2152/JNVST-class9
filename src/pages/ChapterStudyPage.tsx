@@ -147,6 +147,10 @@ export default function ChapterStudyPage() {
             <div><span className="eyebrow">ENGLISH • HINDI-FIRST CHAPTER STUDY</span><h1>{chapter.title}</h1><p>पहले हिन्दी में concept समझें, फिर English examples पढ़ें, फिर बिना मदद के वही rule लागू करें।</p></div>
             <div className="english-study-hero-progress"><strong>{progress}%</strong><span>पृष्ठ पढ़े</span></div>
           </section>
+          {chapter.id === "chap_eng_01" && <div className="english-unseen-launch">
+            <div><span className="science-panel-label">DEDICATED PRACTICE LAB</span><h2>📖 Unseen Passage Lab</h2><p>10 original passages · 50 MCQs · हर question के साथ answer, evidence और step-by-step solving method.</p></div>
+            <Link className="btn primary" to="/english-unseen-passage">Unseen Passage खोलें →</Link>
+          </div>}
           <div className="english-study-layout">
             <aside className="english-study-sidebar">
               <div className="english-study-side-card"><span className="science-panel-label">STUDY ROADMAP</span><div className="english-study-stage-list">{englishStages.map((item, index) => <button key={item.name} className={index === stageIndex ? "active" : ""} onClick={() => jumpStage(index)}><span className="english-study-stage-icon">{item.icon}</span><span><b>{item.name}</b><small>पृष्ठ {item.pages} · {item.hint}</small></span><em>{index < stageIndex ? "✓" : index === stageIndex ? "●" : String(index + 1)}</em></button>)}</div></div>
