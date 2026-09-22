@@ -353,7 +353,8 @@ const MathSmartPracticePage = () => {
 
 const MathMockTestPage = () => {
   const p = useProgressStore();
-  const qs = useMemo(() => buildMathMockPaper(), []);
+  const [mockNumber, setMockNumber] = useState(0);
+  const qs = useMemo(() => buildMathMockPaper('jnvst-math-' + mockNumber + '-' + Date.now()), [mockNumber]);
   const mathTopics = topics.filter((topic) => topic.chapterId.startsWith('chap_math_')).sort((a, b) => a.order - b.order);
   const [started, setStarted] = useState(false);
   const [index, setIndex] = useState(0);
@@ -427,7 +428,7 @@ const MathMockTestPage = () => {
           {topicStats.map((topic) => <div className="math-result-topic" key={topic.id}><div><b>{topic.title}</b><span>{topic.correct} / {topic.count} सही</span></div><span className="count">{topic.count ? Math.round((topic.correct / topic.count) * 100) + '%' : '—'}</span></div>)}
         </div>
       </Card>
-      <div className="actions"><button className="btn primary" onClick={() => { setStarted(false); setFinished(false); setIndex(0); setAnswers({}); }}>नया गणित Mock</button><Link className="btn" to="/math-smart-practice">गलतियों पर स्मार्ट अभ्यास</Link><Link className="btn" to="/math-formulas">सूत्र-पत्र</Link></div>
+      <div className="actions"><button className="btn primary" onClick={() => { setMockNumber((value) => value + 1); setStarted(false); setFinished(false); setIndex(0); setAnswers({}); setTimeLeft(53 * 60); }}>नया गणित Mock</button><Link className="btn" to="/math-smart-practice">गलतियों पर स्मार्ट अभ्यास</Link><Link className="btn" to="/math-formulas">सूत्र-पत्र</Link></div>
     </Shell>;
   }
 
