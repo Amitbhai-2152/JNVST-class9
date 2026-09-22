@@ -7,7 +7,7 @@ import MathFormulaSheet from './pages/MathFormulaSheetPage';
 import { MathAwareText, MathText } from './components/MathText';
 import { useProgressStore } from './store/progress';
 import type { ContentBlock, ID, MockTestResult, Question } from './types';
-import { buildJnvstMockPaper, getPerformanceSummary, getRevisionTopics, getSmartPracticeQuestions, getSmartRecommendations, getWeakTopics } from './utils/jnvstIntelligence';
+import { buildJnvstMockPaper, getPerformanceSummary, getRevisionTopics, getSmartPracticeQuestions, getSmartRecommendations, getWeakTopics, getTopicPerformances } from './utils/jnvstIntelligence';
 
 const examSections = [
   { id: 'sub_hin', title: 'हिंदी', questions: 15 },
@@ -127,7 +127,73 @@ const SubjectsPage = () => <Shell><div className="page-head"><h1>विषय</h
 
 const TopicCard = ({ topicId }: { topicId: ID }) => { const t = topics.find(x => x.id === topicId)!; const qCount = getQuestionsByTopic(t.id).length; const lessonId = t.lessonIds[0]; const lesson = lessonId ? getLesson(lessonId) : undefined; const chapter = chapters.find(x => x.id === t.chapterId); const topicPages = lesson ? getStudyPages(lesson.content).length : 0; const chapterPages = chapter ? getChapterStudyPages(chapter, allLessons, 12).length : 12; return <Card className="topic-card"><div className="topic-top"><h3>{t.title}</h3><span className="count">{qCount} प्रश्न</span></div><div className="topic-meta"><span>📖 अध्याय अध्ययन: {chapterPages} पृष्ठ</span><span>⏱ विस्तृत पाठ</span></div><div className="actions">{lessonId && <Link className="btn" to={`/lessons/${lessonId}`}>टॉपिक पढ़ें{topicPages ? ` · ${topicPages} पृष्ठ` : ''}</Link>}<Link className="btn primary" to={`/chapters/${t.chapterId}/study`}>अध्याय पढ़ें</Link><Link className="btn" to={`/practice/${t.id}`}>अभ्यास करें</Link></div></Card>; };
 
-const SubjectPage = () => { const { subjectId } = useParams(); const s = getSubject(subjectId || ''); if (!s) return <Shell><Card className="empty"><h1>विषय नहीं मिला</h1><Link className="btn" to="/subjects">विषयों पर जाएँ</Link></Card></Shell>; const cs = chapters.filter(c => c.subjectId === s.id).sort((a,b) => a.order-b.order); return <Shell><div className="page-head"><Link to="/subjects">← सभी विषय</Link><h1>{s.iconRef} {s.title}</h1><p>{s.description}</p></div>{s.id === 'sub_math' && <Card className="chapter-section"><div className="topic-top"><div><h2>गणित त्वरित तैयारी</h2><p>11 मुख्य इकाइयों के सूत्र और परीक्षा-जाँच एक जगह।</p></div><span className="count">35 प्रश्न</span></div><div className="actions"><Link className="btn primary" to="/math-formulas">📐 सूत्र-पत्र खोलें</Link><Link className="btn" to="/smart-practice">स्मार्ट अभ्यास</Link><Link className="btn" to="/mock-tests">मॉक टेस्ट</Link></div></Card>}{cs.map(c => <Card key={c.id} className="chapter-section"><Link className="chapter-link" to={`/chapters/${c.id}`}><h2>{c.title} →</h2></Link><div className="grid">{c.topicIds.map(id => <TopicCard key={id} topicId={id} />)}</div></Card>)}</Shell>; };
+const MathSubjectOverview = () => {
+  const p = useProgressStore();
+  const performances = getTopicPerformances(p).filter((topic) => topic.subjectId === 'sub_math');
+  const mathAttempts = performances.reduce((sum, topic) => sum + topic.attempts, 0);
+  const mathCorrect = performances.reduce((sum, topic) => sum + topic.correct, 0);
+  const mathAccuracy = mathAttempts ? Math.round((mathCorrect / mathAttempts) * 100) : 0;
+  const completedLessons = Object.entries(p.lessonActivity ?? {}).filter(([id, activity]) => id.startsWith('les_math_') && activity.status === 'completed').length;
+  const masteredTopics = performances.filter((topic) => topic.attempts > 0 && topic.accuracy >= 80).length;
+
+  return <section className="math-hub">
+    <div className="math-hub-hero">
+      <div>
+        <span className="eyebrow">JNVST MATHS • PREPARATION CENTER</span>
+        <h2>गणित तैयारी केंद्र</h2>
+        <p>सिर्फ सूत्र याद नहीं करें—अवधारणा समझें, उदाहरण हल करें, फिर समयबद्ध अभ्यास से accuracy मजबूत करें।</p>
+        <div className="actions">
+          <Link className="btn primary" to="/math-formulas">📐 11 इकाइयों का सूत्र-पत्र</Link>
+          <Link className="btn" to="/smart-practice">🎯 स्मार्ट गणित अभ्यास</Link>
+          <Link className="btn" to="/mock-tests">⏱ JNVST मॉक टेस्ट</Link>
+        </div>
+      </div>
+      <div className="math-hub-badge">
+        <b>35</b>
+        <span>प्रश्न</span>
+        <small>JNVST में गणित</small>
+      </div>
+    </div>
+
+    <div className="math-stats">
+      <Card><b>11</b><span>आधिकारिक इकाइयाँ</span></Card>
+      <Card><b>110</b><span>अभ्यास प्रश्न</span></Card>
+      <Card><b>{completedLessons}</b><span>पूरे किए पाठ</span></Card>
+      <Card><b>{mathAttempts ? mathAccuracy + '%' : '—'}</b><span>गणित सटीकता</span></Card>
+    </div>
+
+    <div className="math-hub-grid">
+      <Card>
+        <div className="topic-top"><div><h3>आपकी गणित प्रगति</h3><p>{mathAttempts ? mathAttempts + ' प्रयास · ' + masteredTopics + ' इकाइयाँ 80%+ accuracy पर' : 'अभी गणित के प्रयास दर्ज नहीं हैं।'}</p></div><span className="count">{mathAttempts ? mathAccuracy + '%' : 'शुरू करें'}</span></div>
+        <div className="actions"><Link className="btn primary" to={mathAttempts ? "/smart-practice" : "/practice/top_math_01_01"}>{mathAttempts ? 'गलतियों पर अभ्यास' : 'पहला टॉपिक शुरू करें'}</Link></div>
+      </Card>
+      <Card>
+        <h3>हर टॉपिक का 3-स्टेप सिस्टम</h3>
+        <ol className="math-steps">
+          <li><b>पढ़ें</b> — परिभाषा, नियम और सूत्र समझें।</li>
+          <li><b>देखें</b> — हल किया हुआ उदाहरण और सामान्य गलती जाँचें।</li>
+          <li><b>लगाएँ</b> — JNVST-शैली प्रश्न करके तुरंत उत्तर जाँचें।</li>
+        </ol>
+      </Card>
+    </div>
+  </section>;
+};
+
+const SubjectPage = () => {
+  const { subjectId } = useParams();
+  const s = getSubject(subjectId || '');
+  if (!s) return <Shell><Card className="empty"><h1>विषय नहीं मिला</h1><Link className="btn" to="/subjects">विषयों पर जाएँ</Link></Card></Shell>;
+  const cs = chapters.filter(c => c.subjectId === s.id).sort((a,b) => a.order-b.order);
+  return <Shell>
+    <div className="page-head">
+      <Link to="/subjects">← सभी विषय</Link>
+      <h1>{s.iconRef} {s.title}</h1>
+      <p>{s.description}</p>
+    </div>
+    {s.id === 'sub_math' && <MathSubjectOverview />}
+    {cs.map(c => <Card key={c.id} className="chapter-section"><Link className="chapter-link" to={`/chapters/${c.id}`}><h2>{c.title} →</h2></Link><div className="grid">{c.topicIds.map(id => <TopicCard key={id} topicId={id} />)}</div></Card>)}
+  </Shell>;
+};
 
 const ChapterPage = () => { const { chapterId } = useParams(); const c = chapters.find(x => x.id === chapterId); const s = c ? getSubject(c.subjectId) : undefined; if (!c || !s) return <Shell><Card className="empty"><h1>अध्याय नहीं मिला</h1></Card></Shell>; const pageCount = getChapterStudyPages(c, allLessons, 12).length; return <Shell><div className="page-head"><Link to={`/subjects/${s.id}`}>← {s.title}</Link><h1>{c.title}</h1><p>{pageCount} पृष्ठ का अध्याय अध्ययन पाठ उपलब्ध है।</p><div className="actions"><Link className="btn primary" to={`/chapters/${c.id}/study`}>📖 अध्याय पढ़ें · {pageCount}+ पृष्ठ</Link></div></div><div className="grid">{c.topicIds.map(id => <TopicCard key={id} topicId={id} />)}</div></Shell>; };
 
