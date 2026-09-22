@@ -106,7 +106,47 @@ export const getChapterStudyPages = (chapter: Chapter, lessons: Lesson[], target
 
   const source = lessons.filter((l) => chapter.topicIds.includes(l.topicId));
   const rich = richChapterContent[chapter.id] ?? [];
-  const candidates = [...rich, ...source.flatMap((lesson) => lesson.content)];
+  const sourceBlocks = source.flatMap((lesson) => lesson.content);
+
+  // English Chapter 1 needs deliberate pedagogy rather than word-balanced pagination:
+  // keep each real passage visible as a coherent lesson section, followed by its
+  // worked question types. This prevents the passage from being split/hidden
+  // among arbitrary pages.
+  if (chapter.id === "chap_eng_01" && targetPages === 12 && rich.length) {
+    const headingIndex = (title: string) =>
+      rich.findIndex((block) => block.type === "heading" && block.level === 3 && block.text === title);
+
+    const sliceBetween = (startTitle: string, endTitle?: string): ContentBlock[] => {
+      const start = headingIndex(startTitle);
+      const end = endTitle ? headingIndex(endTitle) : rich.length;
+      if (start < 0 || end < 0 || end <= start) return [];
+      return rich.slice(start, end);
+    };
+
+    const guidedPages: ContentBlock[][] = [
+      sliceBetween("अपठित गद्यांश: पहले Passage, फिर Question", "Question 1 — मुख्य विचार (Main Idea)"),
+      sliceBetween("Question 1 — मुख्य विचार (Main Idea)", "Question 4 — Pronoun Reference"),
+      sliceBetween("Question 4 — Pronoun Reference", "Passage 2 — The Lost Wallet"),
+      sliceBetween("Passage 2 — The Lost Wallet", "Question 1 — Fact"),
+      sliceBetween("Question 1 — Fact", "Question 4 — Meaning from Context"),
+      sliceBetween("Question 4 — Meaning from Context", "एक Passage से कई skills क्यों सीखें?"),
+      sliceBetween("एक Passage से कई skills क्यों सीखें?", "Exam में पूरा Passage कैसे solve करें?"),
+      sliceBetween("Exam में पूरा Passage कैसे solve करें?", "एक बहुत महत्वपूर्ण नियम"),
+      sliceBetween("एक बहुत महत्वपूर्ण नियम"),
+    ].filter((blocks) => blocks.length);
+
+    const sourcePages = splitInto(sourceBlocks, 3).map((blocks, index) =>
+      blocks.length
+        ? blocks
+        : [{ type: "paragraph" as const, text: subjectGuides[subject][index % subjectGuides[subject].length] }],
+    );
+
+    return [...guidedPages, ...sourcePages]
+      .slice(0, 12)
+      .map((blocks, i) => [pageTitle(chapter, i + 1, chapter.title), ...blocks]);
+  }
+
+  const candidates = [...rich, ...sourceBlocks];
 
   if (!candidates.length) {
     const guide = subjectGuides[subject];
