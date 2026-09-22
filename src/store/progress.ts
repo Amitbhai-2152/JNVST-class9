@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { ID, MockTestResult, ProgressState, QuestionAttempt } from '../types';
+import type { ID, MockTestResult, ProgressState, QuestionAttempt, EnglishLabAttempt } from '../types';
 
 type Store = ProgressState & {
   completeLesson: (id: ID, title: string) => void;
@@ -11,6 +11,7 @@ type Store = ProgressState & {
   recordAttempts: (attempts: Array<{ id: ID; attempt: QuestionAttempt }>) => void;
   recordStudy: (id: ID, title: string, type: 'lesson' | 'topic') => void;
   saveMockResult: (result: MockTestResult) => void;
+  recordEnglishLabAttempt: (id: ID, attempt: EnglishLabAttempt) => void;
 };
 
 const initial: ProgressState = {
@@ -20,6 +21,7 @@ const initial: ProgressState = {
   revisionHistory: [],
   recentlyStudied: [],
   mockTestResults: [],
+  englishLabAttempts: {},
 };
 
 const recent = (current: ProgressState['recentlyStudied'], item: ProgressState['recentlyStudied'][number]) =>
@@ -74,10 +76,16 @@ export const useProgressStore = create<Store>()(
         mockTestResults: [result, ...(state.mockTestResults ?? []).filter((x) => x.id !== result.id)].slice(0, 20),
         revisionHistory: [...(state.revisionHistory ?? []), { entityType: 'mock-test', entityId: result.id, timestamp: result.timestamp }],
       })),
+      recordEnglishLabAttempt: (id, attempt) => set((state) => ({
+        englishLabAttempts: {
+          ...(state.englishLabAttempts ?? {}),
+          [id]: [...(state.englishLabAttempts?.[id] ?? []), attempt].slice(-30),
+        },
+      })),
     }),
     {
       name: 'jnvst-class9-progress-v2',
-      version: 2,
+      version: 3,
       migrate: (persistedState) => {
         const previous = (persistedState ?? {}) as Partial<ProgressState>;
         return {
@@ -92,6 +100,7 @@ export const useProgressStore = create<Store>()(
           revisionHistory: previous.revisionHistory ?? [],
           recentlyStudied: previous.recentlyStudied ?? [],
           mockTestResults: previous.mockTestResults ?? [],
+          englishLabAttempts: previous.englishLabAttempts ?? {},
         };
       },
     },
