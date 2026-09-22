@@ -19,7 +19,7 @@ const make = (
   textPlain: `${passage}\n\n${question}`,
   options: options.map((text, index) => ({ id: `opt_${index + 1}`, text })),
   correctOptionIds: [`opt_${correct + 1}`],
-  explanationPlain: '',
+  explanationPlain: `The passage supports this answer: ${options[correct]}`,
   difficulty,
   tags,
 });
