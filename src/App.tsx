@@ -386,7 +386,7 @@ const ScienceSubjectOverview = () => {
 
     <section className="science-learning-map">
       <div className="science-section-head">
-        <span className="eyebrow">18 अध्याय • NCERT क्रम</span>
+        <span className="eyebrow">18 अध्याय • NCERT क्रम • 20-प्रश्न Challenger</span>
         <h3>Science Chapters — सीधे अध्याय चुनें</h3>
         <p>अध्याय 01 से 18 तक क्रम में। हर card में पूरा अध्ययन और उसी chapter के प्रश्न तक सीधा रास्ता है।</p>
       </div>
@@ -422,7 +422,7 @@ const ScienceSubjectOverview = () => {
             <div className="actions">
               <Link className="btn primary" to={`/chapters/${chapters.find((chapter) => chapter.subjectId === 'sub_sci' && chapter.topicIds.includes(unit.topicId))?.id ?? ''}/study`}>अध्याय अध्ययन</Link>
               <Link className="btn" to={`/practice/${unit.topicId}`}>अभ्यास करें</Link>
-              <Link className="btn challenger" to={`/chapters/${chapters.find((chapter) => chapter.subjectId === 'sub_sci' && chapter.topicIds.includes(unit.topicId))?.id ?? ''}/challenger`}>⚡ Challenger · {(() => { const chapterId = chapters.find((chapter) => chapter.subjectId === 'sub_sci' && chapter.topicIds.includes(unit.topicId))?.id; return chapterId ? getChapterChallengerQuestions(chapterId, 100).length : 0; })()}</Link>
+              <Link className="btn challenger" to={`/chapters/${chapters.find((chapter) => chapter.subjectId === 'sub_sci' && chapter.topicIds.includes(unit.topicId))?.id ?? ''}/challenger`}>⚡ Challenger · {(() => { const chapterId = chapters.find((chapter) => chapter.subjectId === 'sub_sci' && chapter.topicIds.includes(unit.topicId))?.id; return chapterId ? getChapterChallengerQuestions(chapterId, 20).length : 0; })()}</Link>
             </div>
           </Card>;
         })}
@@ -578,7 +578,7 @@ const SubjectPage = () => {
     </div>
     {s.id === 'sub_math' && <MathSubjectOverview />}
     {s.id === 'sub_sci' && <ScienceSubjectOverview />}
-    {s.id !== 'sub_sci' && cs.map(c => <Card key={c.id} className="chapter-section"><div className="chapter-section-head"><Link className="chapter-link" to={`/chapters/${c.id}`}><h2>{c.title} →</h2></Link><Link className="btn challenger" to={`/chapters/${c.id}/challenger`}>⚡ Challenger · {getChapterChallengerQuestions(c.id, 100).length}</Link></div><div className="grid">{c.topicIds.map(id => <TopicCard key={id} topicId={id} />)}</div></Card>)}
+    {s.id !== 'sub_sci' && cs.map(c => <Card key={c.id} className="chapter-section"><div className="chapter-section-head"><Link className="chapter-link" to={`/chapters/${c.id}`}><h2>{c.title} →</h2></Link><Link className="btn challenger" to={`/chapters/${c.id}/challenger`}>⚡ Challenger · {getChapterChallengerQuestions(c.id, 20).length}</Link></div><div className="grid">{c.topicIds.map(id => <TopicCard key={id} topicId={id} />)}</div></Card>)}
   </Shell>;
 };
 
@@ -616,7 +616,7 @@ const ChapterPage = () => {
             <div className="actions">
               <Link className="btn primary" to={`/chapters/${c.id}/study`}>📖 अध्याय अध्ययन शुरू करें</Link>
               <Link className="btn" to={`/practice/${topic?.id ?? ''}`}>🎯 {questionCountForChapter} प्रश्न हल करें</Link>
-              <Link className="btn challenger" to={`/chapters/${c.id}/challenger`}>⚡ Challenger Questions · {getChapterChallengerQuestions(c.id, 100).length}</Link>
+              <Link className="btn challenger" to={`/chapters/${c.id}/challenger`}>⚡ Challenger Questions · {getChapterChallengerQuestions(c.id, 20).length}</Link>
             </div>
           </div>
           <div className="science-chapter-index">
@@ -666,7 +666,7 @@ const ChapterPage = () => {
   }
 
   const pageCount = getChapterStudyPages(c, allLessons, 12).length;
-  return <Shell><div className="page-head"><Link to={`/subjects/${s.id}`}>← {s.title}</Link><h1>{c.title}</h1><p>{pageCount} पृष्ठ का अध्याय अध्ययन पाठ उपलब्ध है।</p><div className="actions"><Link className="btn primary" to={`/chapters/${c.id}/study`}>📖 अध्याय पढ़ें · {pageCount}+ पृष्ठ</Link><Link className="btn challenger" to={`/chapters/${c.id}/challenger`}>⚡ Challenger Questions · {getChapterChallengerQuestions(c.id, 100).length}</Link></div></div><div className="grid">{c.topicIds.map(id => <TopicCard key={id} topicId={id} />)}</div></Shell>;
+  return <Shell><div className="page-head"><Link to={`/subjects/${s.id}`}>← {s.title}</Link><h1>{c.title}</h1><p>{pageCount} पृष्ठ का अध्याय अध्ययन पाठ उपलब्ध है।</p><div className="actions"><Link className="btn primary" to={`/chapters/${c.id}/study`}>📖 अध्याय पढ़ें · {pageCount}+ पृष्ठ</Link><Link className="btn challenger" to={`/chapters/${c.id}/challenger`}>⚡ Challenger Questions · {getChapterChallengerQuestions(c.id, 20).length}</Link></div></div><div className="grid">{c.topicIds.map(id => <TopicCard key={id} topicId={id} />)}</div></Shell>;
 };
 
 const LessonPage = () => {
@@ -1095,7 +1095,7 @@ const PracticePage = () => {
 const ChapterChallengerPage = () => {
   const { chapterId } = useParams();
   const chapter = chapters.find((item) => item.id === chapterId);
-  const questions = chapter ? getChapterChallengerQuestions(chapter.id, 10, 'jnvst-challenger-' + chapter.id) : [];
+  const questions = chapter ? getChapterChallengerQuestions(chapter.id, 20, 'jnvst-challenger-' + chapter.id) : [];
   if (!chapter) return <Shell><Card className="empty"><h1>अध्याय नहीं मिला</h1><Link className="btn" to="/subjects">विषयों पर जाएँ</Link></Card></Shell>;
 
   return <AssessmentRunner
@@ -1103,7 +1103,7 @@ const ChapterChallengerPage = () => {
     title={'⚡ ' + chapter.title + ' — Challenger Questions'}
     backTo={'/chapters/' + chapter.id}
     backLabel="अध्याय"
-    description="यह chapter का केवल Challenge-level question set है। प्रश्नों का उत्तर बीच में नहीं दिखेगा; marks और पूरा answer review केवल टेस्ट के अंत में मिलेगा।"
+    description="20-प्रश्न Challenger set — कठिन और Challenge-level JNVST-style MCQs, हर प्रश्न में चार वास्तविक विकल्प। उत्तर बीच में नहीं दिखेगा; marks और पूरा answer review केवल टेस्ट के अंत में मिलेगा।"
     badge="CHALLENGER MODE"
     bannerLink={{ to: '/chapters/' + chapter.id + '/study', label: '📖 अध्याय अध्ययन →' }}
     emptyTitle="इस अध्याय में अभी Challenger Questions उपलब्ध नहीं हैं"
