@@ -162,7 +162,7 @@ export default function ChapterStudyPage() {
           <nav><Link to="/">डैशबोर्ड</Link><Link to="/subjects">विषय</Link><Link to="/bookmarks">बुकमार्क</Link><Link to="/mock-tests">मॉक टेस्ट</Link></nav>
         </header>
 
-        <main className="shell science-study-page">
+        <main className="shell math-study-page">
           <div className="science-study-breadcrumb">
             <Link to="/subjects/sub_math">← गणित तैयारी केंद्र</Link>
             <span>अध्याय {String(chapter.order).padStart(2, "0")} / {mathChapters.length}</span>
