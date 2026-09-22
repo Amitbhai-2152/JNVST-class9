@@ -722,7 +722,7 @@
 }
 
 
-/* Science subject: mobile-safe responsive layer.
+/* Science subject: mobile-safe responsive layer. Rebuild marker.
  * No desktop/laptop geometry is changed; rules below activate only at narrow widths.
  */
 @media (max-width: 820px) {
