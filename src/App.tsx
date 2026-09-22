@@ -420,6 +420,7 @@ const ScienceSubjectOverview = () => {
             <div className="actions">
               <Link className="btn primary" to={`/chapters/${chapters.find((chapter) => chapter.subjectId === 'sub_sci' && chapter.topicIds.includes(unit.topicId))?.id ?? ''}/study`}>अध्याय अध्ययन</Link>
               <Link className="btn" to={`/practice/${unit.topicId}`}>अभ्यास करें</Link>
+              <Link className="btn challenger" to={`/chapters/${chapters.find((chapter) => chapter.subjectId === 'sub_sci' && chapter.topicIds.includes(unit.topicId))?.id ?? ''}/challenger`}>⚡ Challenger · {(() => { const chapterId = chapters.find((chapter) => chapter.subjectId === 'sub_sci' && chapter.topicIds.includes(unit.topicId))?.id; return chapterId ? getChapterChallengerQuestions(chapterId, 100).length : 0; })()}</Link>
             </div>
           </Card>;
         })}
@@ -575,7 +576,7 @@ const SubjectPage = () => {
     </div>
     {s.id === 'sub_math' && <MathSubjectOverview />}
     {s.id === 'sub_sci' && <ScienceSubjectOverview />}
-    {s.id !== 'sub_sci' && cs.map(c => <Card key={c.id} className="chapter-section"><Link className="chapter-link" to={`/chapters/${c.id}`}><h2>{c.title} →</h2></Link><div className="grid">{c.topicIds.map(id => <TopicCard key={id} topicId={id} />)}</div></Card>)}
+    {s.id !== 'sub_sci' && cs.map(c => <Card key={c.id} className="chapter-section"><div className="chapter-section-head"><Link className="chapter-link" to={`/chapters/${c.id}`}><h2>{c.title} →</h2></Link><Link className="btn challenger" to={`/chapters/${c.id}/challenger`}>⚡ Challenger · {getChapterChallengerQuestions(c.id, 100).length}</Link></div><div className="grid">{c.topicIds.map(id => <TopicCard key={id} topicId={id} />)}</div></Card>)}
   </Shell>;
 };
 
