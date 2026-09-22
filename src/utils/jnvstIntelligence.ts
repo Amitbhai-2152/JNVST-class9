@@ -330,10 +330,14 @@ export const getScienceSmartPracticeQuestions = (
   const result: Question[] = [];
   const used = new Set<ID>();
 
-  // First pass: ensure all 18 Science chapters contribute before adapting freely.
-  for (const chapter of scienceChaptersForSmartPractice()) {
+  // First pass: choose distinct chapters in a seeded rotation so short sets do not always favor the first chapters.
+  const rotatedChapters = scienceChaptersForSmartPractice()
+    .slice()
+    .sort((a, b) => stableHash(seed + ':chapter:' + a.id) - stableHash(seed + ':chapter:' + b.id));
+  for (const chapter of rotatedChapters) {
+    if (result.length >= limit) break;
     const item = scored.find((entry) => entry.question.chapterId === chapter.id && !used.has(entry.question.id));
-    if (!item || result.length >= limit) continue;
+    if (!item) continue;
     result.push(item.question);
     used.add(item.question.id);
   }
