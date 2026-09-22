@@ -138,10 +138,77 @@ const levelTranslationFactories: Record<number, TranslationFactory[]> = {
   ],
 };
 
+
+const scenarioFactory = (
+  level: TranslationItem['level'],
+  scenarios: Array<{ hi: string; en: string; hint: string; explanation: string; grammarPoint: string }>,
+  seed: number,
+  direction: TranslationDirection,
+): TranslationItem => {
+  const scenario = scenarios[Math.max(0, Math.floor(seed)) % scenarios.length];
+  const steps: Record<number, string[]> = {
+    1: ['1. Sentence का basic meaning समझें।', '2. Subject/verb/noun पहचानें।', '3. सही word order बनाएँ।', '4. Final sentence को meaning से मिलाएँ।'],
+    2: ['1. Tense clue पहचानें।', '2. Subject के अनुसार auxiliary/verb चुनें।', '3. Main verb का सही form रखें।', '4. Place/time phrase जोड़ें।'],
+    3: ['1. Time या modal clue पहचानें।', '2. Tense/modal structure चुनें।', '3. Main verb का सही form रखें।', '4. पूरे sentence को cross-check करें।'],
+    4: ['1. दोनों clauses/ideas अलग करें।', '2. Connector, voice या comparison पहचानें।', '3. हर हिस्से का grammar structure बनाएं।', '4. Final meaning verify करें।'],
+    5: ['1. Main clause और supporting clause अलग करें।', '2. Connector/relative/purpose structure पहचानें।', '3. Tense और verb form तय करें।', '4. Sentence को natural English में assemble करें।'],
+    6: ['1. Sentence को logical chunks में बाँटें।', '2. Clause relationship और advanced structure पहचानें।', '3. Tense/voice/modifier order तय करें।', '4. Vocabulary का exact meaning रखें।', '5. Final translation को source meaning से मिलाएँ।'],
+  };
+  return makeTranslation(seed, level, direction, scenario.hi, scenario.en, scenario.hint, scenario.explanation, scenario.grammarPoint, steps[level]);
+};
+
+const scenarioBanks: Record<number, Array<{ hi: string; en: string; hint: string; explanation: string; grammarPoint: string }>> = {
+  1: [
+    { hi:'मेरी बहन रोज़ सुबह जल्दी उठती है।', en:'My sister gets up early every morning.', hint:'रोज़ सुबह habit है; sister singular है।', explanation:'Simple Present में third-person singular subject के साथ get → gets होता है।', grammarPoint:'Simple Present + frequency phrase' },
+    { hi:'मेरे पिता के पास एक पुरानी घड़ी है।', en:'My father has an old watch.', hint:'“के पास” possession है।', explanation:'Singular subject father के साथ has आता है।', grammarPoint:'Possession: has' },
+    { hi:'बच्चे मैदान में हैं।', en:'The children are in the playground.', hint:'यह location sentence है।', explanation:'Plural subject children के साथ be verb are आता है।', grammarPoint:'Plural subject + are + place' },
+    { hi:'कृपया अपना बैग मेज़ पर रखो।', en:'Please put your bag on the table.', hint:'यह polite instruction है; “पर” के लिए on देखें।', explanation:'Imperative में base verb put आता है और surface के लिए on प्रयोग होता है।', grammarPoint:'Imperative + preposition on' },
+  ],
+  2: [
+    { hi:'मीना अभी अपना होमवर्क कर रही है।', en:'Meena is doing her homework now.', hint:'अभी/now = ongoing action.', explanation:'Present Continuous में is + doing आता है।', grammarPoint:'is + V-ing' },
+    { hi:'क्या तुम्हारा भाई हर दिन पढ़ता है?', en:'Does your brother study every day?', hint:'Present Simple question में Does + V1 देखें।', explanation:'Singular subject brother के साथ question में does और main verb study (V1) आता है।', grammarPoint:'Does + subject + V1?' },
+    { hi:'वे रविवार को स्कूल नहीं जाते हैं।', en:'They do not go to school on Sundays.', hint:'Plural present negative में do not + V1।', explanation:'They के साथ do not आता है और main verb go base form में रहता है।', grammarPoint:'do not + V1' },
+    { hi:'किताब कुर्सी के नीचे है।', en:'The book is under the chair.', hint:'“के नीचे” = under.', explanation:'Location relation बताने के लिए under preposition प्रयोग होता है।', grammarPoint:'is + under + noun' },
+  ],
+  3: [
+    { hi:'मैंने कल अपना कमरा साफ़ किया।', en:'I cleaned my room yesterday.', hint:'Yesterday past clue है।', explanation:'Simple Past में regular verb clean → cleaned होता है।', grammarPoint:'Simple Past: V2' },
+    { hi:'हम अगले महीने परीक्षा देंगे।', en:'We will take the examination next month.', hint:'अगले महीने future clue है।', explanation:'Future Simple में will + V1 आता है।', grammarPoint:'will + V1' },
+    { hi:'उसने अभी तक उत्तर नहीं दिया है।', en:'She has not answered yet.', hint:'“अभी तक” completed action not done = Present Perfect negative.', explanation:'She के साथ has not + V3 answer → answered आता है।', grammarPoint:'has not + V3' },
+    { hi:'क्या तुम्हें यह नियम समझना चाहिए?', en:'Should you understand this rule?', hint:'“चाहिए” = should.', explanation:'Modal question में Should + subject + V1 आता है।', grammarPoint:'Should + subject + V1?' },
+  ],
+  4: [
+    { hi:'जब बारिश शुरू हुई, बच्चे खेल रहे थे।', en:'When the rain started, the children were playing.', hint:'एक past event हुआ और दूसरा action चल रहा था।', explanation:'Started Simple Past है; were playing Past Continuous है।', grammarPoint:'When + Simple Past, Past Continuous' },
+    { hi:'यदि तुम ध्यान से पढ़ोगे, तो तुम गलती कम करोगे।', en:'If you read carefully, you will make fewer mistakes.', hint:'Condition present, result future.', explanation:'First Conditional में if-clause Simple Present और result will + V1 में होता है।', grammarPoint:'If + present, will + V1' },
+    { hi:'नियम रोज़ कक्षा में दोहराए जाते हैं।', en:'The rules are repeated in class every day.', hint:'Rules काम के receiver हैं और routine है।', explanation:'Present Passive = are + V3; plural subject rules के साथ are आता है।', grammarPoint:'Present Passive: are + V3' },
+    { hi:'यह कहानी उस कहानी से अधिक रोचक है।', en:'This story is more interesting than that story.', hint:'दो चीज़ों की तुलना है; interesting के साथ more आएगा।', explanation:'Long adjective interesting का comparative more interesting होता है।', grammarPoint:'more + adjective + than' },
+  ],
+  5: [
+    { hi:'जिस लड़के ने उत्तर दिया, वह बहुत आत्मविश्वासी था।', en:'The boy who answered the question was very confident.', hint:'“जिस लड़के...” person को describe करता है।', explanation:'Who relative clause boy के बारे में extra information देता है।', grammarPoint:'Noun + who-clause' },
+    { hi:'उसने दरवाज़ा बंद करने के बाद कमरे को साफ़ किया।', en:'After closing the door, he cleaned the room.', hint:'“करने के बाद” = after + V-ing.', explanation:'After closing पहले हुई action दिखाता है और main clause past action बताता है।', grammarPoint:'After + V-ing + main clause' },
+    { hi:'शिक्षक ने बताया कि परीक्षा शुक्रवार को होगी।', en:'The teacher said that the examination would be on Friday.', hint:'Past reporting verb said के बाद future-in-the-past would देखें।', explanation:'Reported Speech में will का backshift would हो सकता है।', grammarPoint:'said + that + would' },
+    { hi:'यह पुस्तक पढ़ने के लिए बहुत उपयोगी है।', en:'This book is very useful to read.', hint:'“के लिए” purpose/infinitive relation दिखा सकता है।', explanation:'Useful के बाद infinitive to read बताता है कि पुस्तक किस काम के लिए useful है।', grammarPoint:'adjective + to-infinitive' },
+  ],
+  6: [
+    { hi:'यदि मैंने निर्देश पहले पढ़े होते, तो मैं वही गलती नहीं करता।', en:'If I had read the instructions earlier, I would not have made the same mistake.', hint:'Unreal past condition में had + V3 और result में would have + V3।', explanation:'यह Third Conditional है, जो past hypothetical condition/result दिखाता है।', grammarPoint:'If + had + V3, would have + V3' },
+    { hi:'यह समझना महत्वपूर्ण है कि लेखक ने यह उदाहरण क्यों दिया।', en:'It is important to understand why the writer gave this example.', hint:'“यह समझना महत्वपूर्ण है” = It is important to understand.', explanation:'It is + adjective + to-infinitive के बाद why-clause reason/explanation देता है।', grammarPoint:'It is + adjective + to V1 + wh-clause' },
+    { hi:'गद्यांश स्पष्ट रूप से नहीं बताता कि समस्या कैसे शुरू हुई।', en:'The passage does not state clearly how the problem began.', hint:'Main clause negative है और how-clause embedded question है।', explanation:'Embedded question में statement word order रहता है: how the problem began, न कि how did the problem begin।', grammarPoint:'Negative main clause + embedded wh-clause' },
+    { hi:'परिचित शब्द देखकर अनुमान लगाने के बजाय, पाठक को पूरे संदर्भ पर ध्यान देना चाहिए।', en:'Instead of guessing from familiar words, the reader should focus on the full context.', hint:'“के बजाय” = instead of + V-ing; “चाहिए” = should.', explanation:'Instead of के बाद gerund guessing आता है और main clause में should + V1 रहता है।', grammarPoint:'Instead of + V-ing + should + V1' },
+  ],
+};
+
+const scenarioFactories: Record<number, TranslationFactory> = {
+  1: (seed, direction, level) => scenarioFactory(level, scenarioBanks[1], seed, direction),
+  2: (seed, direction, level) => scenarioFactory(level, scenarioBanks[2], seed, direction),
+  3: (seed, direction, level) => scenarioFactory(level, scenarioBanks[3], seed, direction),
+  4: (seed, direction, level) => scenarioFactory(level, scenarioBanks[4], seed, direction),
+  5: (seed, direction, level) => scenarioFactory(level, scenarioBanks[5], seed, direction),
+  6: (seed, direction, level) => scenarioFactory(level, scenarioBanks[6], seed, direction),
+};
+
 export const generateTranslationItem = (level: number, direction: TranslationDirection, seed: number): TranslationItem => {
   const safeLevel = Math.min(6, Math.max(1, Math.floor(level))) as TranslationItem['level'];
   const sequence = Math.max(0, Math.floor(seed));
-  const families = levelTranslationFactories[safeLevel];
+  const families = [...levelTranslationFactories[safeLevel], scenarioFactories[safeLevel]];
   const family = families[sequence % families.length];
   return family(sequence, direction, safeLevel);
 };
