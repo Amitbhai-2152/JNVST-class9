@@ -115,6 +115,13 @@ const challengerSourceRecords = (source) => {
   return records;
 };
 const topicChallengerRecordsData = (source) => challengerSourceRecords(source);
+const dedicatedHindiForStrengthCheck = [
+  ...challengerSourceRecords(fs.readFileSync(path.join(questionDir, 'hindiChapterChallengers.ts'), 'utf8')),
+  ...topicChallengerRecordsData(fs.readFileSync(path.join(questionDir, 'hindiTopicChallengers.ts'), 'utf8')),
+];
+const weakDedicatedHindi = dedicatedHindiForStrengthCheck.filter((record) => record.difficulty === 'easy' || record.difficulty === 'medium');
+assert(weakDedicatedHindi.length === 0, 'all 220 dedicated Hindi Challenger questions must be hard/challenge; weak count is ' + weakDedicatedHindi.length);
+
 
 // Phase 1–3 behavioral/source checks.
 const intelligenceSource = fs.readFileSync(path.join(root, 'src', 'utils', 'jnvstIntelligence.ts'), 'utf8');
