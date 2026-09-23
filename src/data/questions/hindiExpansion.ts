@@ -410,8 +410,6 @@ export const hindiExpansionQuestions: Question[] = [
     tags:['comprehension','purpose','vocabulary'],
     explanationPlain:"वह कठिन शब्दों को पहचानकर बाद में शब्दकोश में देखने के लिए निशान लगाती थी।"
   }),
-];
-
   make({
     id:'q_hin_x_08_005', chapterId:'chap_hin_04', topicId:'top_hin_04_02',
     textPlain:"'बारिश रुकी और बच्चे मैदान में गए।' को मिश्र वाक्य में बदलने का उपयुक्त रूप कौन-सा है?",
@@ -426,7 +424,7 @@ export const hindiExpansionQuestions: Question[] = [
     tags:['proverbs','context'],
     explanationPlain:"यह लोकोक्ति दूर की चीज़ को वास्तविकता से अधिक आकर्षक मान लेने की स्थिति में प्रयोग होती है।"
   }),
-
+];
 export const hindiExpansionAudit = {
   addedQuestionCount: hindiExpansionQuestions.length,
   topics: [...new Set(hindiExpansionQuestions.map((question) => question.topicId))],
