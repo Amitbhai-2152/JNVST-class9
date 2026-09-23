@@ -22,7 +22,7 @@ try {
   });
 
   if (exitCode !== 0) process.exitCode = exitCode;
-  await copyFile('src/data/notifications.json', 'dist/notifications.json');
+  else await copyFile('src/data/notifications.json', 'dist/notifications.json');
 } finally {
   await writeFile(targetPath, previous, 'utf8');
 }
