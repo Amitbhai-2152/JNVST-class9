@@ -30,7 +30,7 @@ export const getDeviceType = (): 'mobile' | 'tablet' | 'desktop' => {
 };
 
 export const getCampaignAttribution = (): Attribution => {
-  if (typeof window === 'undefined') return { source: null, medium: null, campaign: null, referrerHost: null };
+  if (typeof window === 'undefined') return { source: null, medium: null, campaign: null, content: null, term: null, referrerHost: null };
   let stored: Partial<Attribution> = {};
   try {
     stored = JSON.parse(localStorage.getItem(CAMPAIGN_KEY) || '{}');
