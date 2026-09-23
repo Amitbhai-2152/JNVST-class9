@@ -120,7 +120,7 @@ assert(expansionRecords.length === 55, 'Hindi expansion records must total 55');
 
 const validateCanonical = (record, kind) => {
   const optionsText = record.match(/options:\[([^\]]+)\]/)?.[1] ?? '';
-  const optionObjectTexts = [...record.matchAll(/\\btext:\s*['"]([^'"]*)['"]/g)].map((m) => m[1].trim().toLowerCase());
+  const optionObjectTexts = [...record.matchAll(/\btext:\s*['"]([^'"]*)['"]/g)].map((m) => m[1].trim().toLowerCase());
   const optionStringTexts = [...optionsText.matchAll(/'([^']*)'/g)].map((m) => m[1].trim().toLowerCase());
   const options = optionObjectTexts.length === 4 ? optionObjectTexts : optionStringTexts;
   assert(options.length === 4, kind + ' question must have exactly four options');
