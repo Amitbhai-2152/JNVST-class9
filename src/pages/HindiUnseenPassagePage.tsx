@@ -13,7 +13,31 @@ const getQuestionSeed = (id: string) => {
   return hash >>> 0;
 };
 
+const preferredCorrectPositions = [
+  1, 1, 0, 2, 0,
+  0, 3, 3, 0, 3,
+  2, 2, 1, 3, 1,
+  2, 1, 2, 1, 2,
+  0, 3, 3, 2, 1,
+  1, 1, 2, 0, 0,
+  1, 0, 3, 3, 3,
+  2, 0, 2, 2, 1,
+  3, 0, 1, 0, 3,
+  3, 2, 1, 0, 0,
+] as const;
+
+const getPreferredCorrectPosition = (id: string) => {
+  const match = id.match(/^hup-(\d+)-q(\d+)$/);
+  if (!match) return null;
+  const passageIndex = Number(match[1]) - 1;
+  const questionIndex = Number(match[2]) - 1;
+  const slot = passageIndex * 5 + questionIndex;
+  return preferredCorrectPositions[slot] ?? null;
+};
+
 const shuffleIndices = (id: string) => {
+  const correctSourceIndex = 0;
+  const targetPosition = getPreferredCorrectPosition(id);
   const indices = [0, 1, 2, 3];
   let seed = getQuestionSeed(id);
   const random = () => {
@@ -21,11 +45,26 @@ const shuffleIndices = (id: string) => {
     seed = Math.imul(seed ^ (seed >>> 13), 3266489917) >>> 0;
     return ((seed ^ (seed >>> 16)) >>> 0) / 4294967296;
   };
-  for (let index = indices.length - 1; index > 0; index -= 1) {
+
+  const sourceCorrect = correctSourceIndex;
+  const shuffledOthers = indices.filter((index) => index !== sourceCorrect);
+  for (let index = shuffledOthers.length - 1; index > 0; index -= 1) {
     const swapIndex = Math.floor(random() * (index + 1));
-    [indices[index], indices[swapIndex]] = [indices[swapIndex], indices[index]];
+    [shuffledOthers[index], shuffledOthers[swapIndex]] = [shuffledOthers[swapIndex], shuffledOthers[index]];
   }
-  return indices;
+
+  const ordered = new Array<number>(4);
+  if (targetPosition === null) {
+    return indices;
+  }
+  ordered[targetPosition] = sourceCorrect;
+  let otherIndex = 0;
+  for (let position = 0; position < 4; position += 1) {
+    if (position !== targetPosition) {
+      ordered[position] = shuffledOthers[otherIndex++];
+    }
+  }
+  return ordered;
 };
 
 const skillHint: Record<string, string> = {
