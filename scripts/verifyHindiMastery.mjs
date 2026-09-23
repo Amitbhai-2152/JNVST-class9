@@ -139,8 +139,10 @@ assert(appSource.includes('mockSubjectId?: ID;') && appSource.includes('mockIdPr
 assert(appSource.includes('mockSubjectId="sub_hin"') && appSource.includes('mockIdPrefix="hindi-mock-"'), 'Hindi Mock must explicitly persist as Hindi');
 assert(appSource.includes('mockSubjectId="sub_eng"') && appSource.includes('mockIdPrefix="english-mock-"'), 'English Mock must explicitly persist as English');
 assert(appSource.includes('sectionScores: { [sectionId]: mockScore }'), 'Mock persistence must use the configured section ID');
+const challengerSourceForBehavior = fs.readFileSync(path.join(questionDir, 'hindiChapterChallengers.ts'), 'utf8');
+const topicChallengerSourceForBehavior = fs.readFileSync(path.join(questionDir, 'hindiTopicChallengers.ts'), 'utf8');
 for (const chapterId of ['chap_hin_01','chap_hin_02','chap_hin_03','chap_hin_04','chap_hin_05','chap_hin_06']) {
-  const combined = [...challengerSourceRecords(challengerSource), ...topicChallengerRecordsData(topicChallengerSource)].filter((record) => record.chapterId === chapterId);
+  const combined = [...challengerSourceRecords(challengerSourceForBehavior), ...topicChallengerRecordsData(topicChallengerSourceForBehavior)].filter((record) => record.chapterId === chapterId);
   const strongCount = combined.filter((record) => record.difficulty === 'hard' || record.difficulty === 'challenge').length;
   assert(strongCount >= 20, chapterId + ' needs at least 20 hard/challenge dedicated candidates for its served Challenger set; found ' + strongCount);
 }
