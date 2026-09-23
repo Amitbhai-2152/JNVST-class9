@@ -6,6 +6,7 @@ import { mathTopicChallengersV2 } from '../data/questions/mathTopicChallengersV2
 import { englishChapterChallengers } from '../data/questions/englishChallengers';
 import { englishChapterChallengersExtra } from '../data/questions/englishChapterChallengersExtra';
 import { hindiChapterChallengers } from '../data/questions/hindiChapterChallengers';
+import { hindiTopicChallengers } from '../data/questions/hindiTopicChallengers';
 
 export interface TopicPerformance {
   topicId: ID;
@@ -617,7 +618,6 @@ export const getTopicChallengerQuestions = (
 ): Question[] => {
   const target = Math.max(20, limit);
   const eligible = (question: Question) =>
-    question.subjectId === 'sub_math' &&
     question.topicId === topicId &&
     question.type === 'mcq' &&
     question.options.length === 4 &&
@@ -625,8 +625,17 @@ export const getTopicChallengerQuestions = (
     question.options.every((option) => challengerOptionIsMeaningful(option.text)) &&
     new Set(question.options.map((option) => option.text.trim().toLowerCase())).size === 4;
 
-  const dedicated = mathTopicChallengersV2.filter(eligible);
-  const source = dedicated.length >= target ? dedicated : [...dedicated, ...allQuestions.filter(eligible)];
+  if (topicId.startsWith('top_hin_')) {
+    const dedicated = hindiTopicChallengers.filter(eligible);
+    const source = dedicated.length >= target ? dedicated : [...dedicated, ...allQuestions.filter(eligible)];
+    return rankChallengerCandidates(source, seed + ':' + topicId)
+      .slice(0, target)
+      .map((question, index) => arrangeChallengerOptions(question, index, seed + ':' + topicId));
+  }
+
+  const mathEligible = (question: Question) => question.subjectId === 'sub_math' && eligible(question);
+  const dedicated = mathTopicChallengersV2.filter(mathEligible);
+  const source = dedicated.length >= target ? dedicated : [...dedicated, ...allQuestions.filter(mathEligible)];
 
   return rankChallengerCandidates(source, seed + ':' + topicId)
     .slice(0, target)
