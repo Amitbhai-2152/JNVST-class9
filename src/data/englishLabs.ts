@@ -173,7 +173,7 @@ const vocabularyCoreItems: VocabularyItem[] = [
   {id:'v_098',level:'challenge',word:'consequence',meaning:'परिणाम',synonyms:['result','outcome'],antonyms:['cause'],sentence:'The passage explains the consequence of the decision.',contextMeaning:'consequence किसी action का परिणाम है।'},
   {id:'v_099',level:'challenge',word:'perspective',meaning:'दृष्टिकोण',synonyms:['viewpoint','outlook'],antonyms:[],sentence:'The story is told from the child’s perspective.',contextMeaning:'perspective किसी व्यक्ति के देखने या सोचने का दृष्टिकोण है।'},
   {id:'v_100',level:'challenge',word:'reliable',meaning:'विश्वसनीय',synonyms:['trustworthy','dependable'],antonyms:['unreliable'],sentence:'Use a reliable source when checking a fact.',contextMeaning:'reliable जिस पर भरोसा किया जा सके।'},
-
+];
 
 const vocabularyExpansion: Array<{
   level: VocabularyItem['level'];
