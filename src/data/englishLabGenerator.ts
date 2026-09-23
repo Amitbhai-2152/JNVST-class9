@@ -53,7 +53,7 @@ const simplePresent = (seed: number, direction: TranslationDirection): Translati
   const hi = `${hindiName[name]} ${hindiObject[object]} ${hiVerb} ${hindiTime[time]}।`;
   return direction === 'hi-en'
     ? { id:`gen-tr-${seed}`,level:1,direction,prompt:hi,acceptableAnswers:[en],displayAnswer:en,hint:`${hindiName[name]} = ${name}. समय-संकेत “${hindiTime[time]}” आदत दिखाता है।`,explanation:`पहले subject पहचानें, फिर habit के लिए Simple Present लगाएँ। ${name} singular है, इसलिए verb में s/es आता है। अंत में object और time phrase जोड़ें।`,grammarPoint:'Subject + V1(s/es) + Object + Time'}
-    : { id:`gen-tr-${seed}`,level:1,direction,prompt:en,acceptableAnswers:[hi],displayAnswer:hi,hint:`${name} = ${hindiName[name]}; ${verb} = ${hiVerb[verb]}.`,explanation:`पहले subject और main verb पहचानें। यह habitual action है, इसलिए हिन्दी में सामान्य वर्तमानकाल का अर्थ रखें और time phrase अंत में जोड़ें।`,grammarPoint:'Simple Present → हिन्दी सामान्य वर्तमानकाल' };
+    : { id:`gen-tr-${seed}`,level:1,direction,prompt:en,acceptableAnswers:[hi],displayAnswer:hi,hint:`${name} = ${hindiName[name]}; ${verb} = ${hiVerb}.`,explanation:`पहले subject और main verb पहचानें। यह habitual action है, इसलिए हिन्दी में सामान्य वर्तमानकाल का अर्थ रखें और time phrase अंत में जोड़ें।`,grammarPoint:'Simple Present → हिन्दी सामान्य वर्तमानकाल' };
 };
 
 const presentContinuous = (seed:number, direction:TranslationDirection): TranslationItem => {
@@ -399,7 +399,7 @@ const vastBuild = (
       steps = ['1. दोनों past actions अलग करें।','2. When-clause में Simple Past रखें।','3. Ongoing action में was + V-ing रखें।','4. दोनों clauses जोड़ें।'];
       break;
   }
-  return makeTranslation('' + family + '-' + n, level, direction, hi, en, hint, explanation, grammarPoint, steps);
+  return makeTranslation(family * 100000 + n, level, direction, hi, en, hint, explanation, grammarPoint, steps);
 };
 
 const vastFamilyMap: Record<number, number[]> = {
