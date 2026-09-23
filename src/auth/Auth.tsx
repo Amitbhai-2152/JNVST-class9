@@ -482,7 +482,7 @@ const AuthPage = () => {
     setShowPassword(false);
   };
 
-  return <main className="auth-screen auth-v4">
+  return <main className="auth-screen auth-v5">
     <div className="auth-v4-bg-orb auth-v4-bg-orb-a" aria-hidden="true"></div>
     <div className="auth-v4-bg-orb auth-v4-bg-orb-b" aria-hidden="true"></div>
     <div className="auth-v4-noise" aria-hidden="true"></div>
