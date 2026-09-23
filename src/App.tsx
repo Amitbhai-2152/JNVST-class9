@@ -164,6 +164,56 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
   const email = user?.email ?? 'Student';
   const location = useLocation();
 
+  const unreadNotifications = siteNotifications.filter((item) => !readNotificationIds.includes(item.id));
+  const toastNotification = toastNotificationId ? siteNotifications.find((item) => item.id === toastNotificationId) : undefined;
+
+  const getSeenNotificationToasts = (): string[] => {
+    try {
+      const raw = localStorage.getItem(NOTIFICATION_TOAST_SEEN_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === 'string') : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const persistSeenNotificationToasts = (ids: string[]) => {
+    try {
+      localStorage.setItem(NOTIFICATION_TOAST_SEEN_KEY, JSON.stringify(ids));
+    } catch {
+      // Local storage may be unavailable; toast state still works in memory.
+    }
+  };
+
+  const persistReadNotifications = (ids: string[]) => {
+    setReadNotificationIds(ids);
+    try {
+      localStorage.setItem(NOTIFICATION_READ_KEY, JSON.stringify(ids));
+    } catch {
+      // Local storage may be unavailable; notification state still works in memory.
+    }
+  };
+
+  const markNotificationRead = (id: string) => {
+    if (readNotificationIds.includes(id)) return;
+    persistReadNotifications([...readNotificationIds, id]);
+  };
+
+  const dismissNotificationToast = (id: string) => {
+    persistSeenNotificationToasts(Array.from(new Set([...getSeenNotificationToasts(), id])));
+    setToastNotificationId(null);
+  };
+
+  const readAndDismissNotificationToast = (id: string) => {
+    markNotificationRead(id);
+    dismissNotificationToast(id);
+  };
+
+  const markAllNotificationsRead = () => {
+    if (!unreadNotifications.length) return;
+    persistReadNotifications(siteNotifications.map((item) => item.id));
+  };
+
   useEffect(() => {
     void trackEvent('page_view', { route: location.pathname });
     setMobileMenuOpen(false);
@@ -174,7 +224,8 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (toastNotificationId) return;
-    const candidate = siteNotifications.find((item) => !readNotificationIds.includes(item.id) && !getSeenNotificationToasts().includes(item.id));
+    const seenIds = getSeenNotificationToasts();
+    const candidate = siteNotifications.find((item) => !readNotificationIds.includes(item.id) && !seenIds.includes(item.id));
     if (!candidate) return;
     const timer = window.setTimeout(() => setToastNotificationId(candidate.id), 650);
     return () => window.clearTimeout(timer);
@@ -210,56 +261,6 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [accountMenuOpen, notificationOpen]);
-
-  const unreadNotifications = siteNotifications.filter((item) => !readNotificationIds.includes(item.id));
-  const toastNotification = toastNotificationId ? siteNotifications.find((item) => item.id === toastNotificationId) : undefined;
-
-  const getSeenNotificationToasts = (): string[] => {
-    try {
-      const raw = localStorage.getItem(NOTIFICATION_TOAST_SEEN_KEY);
-      const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === 'string') : [];
-    } catch {
-      return [];
-    }
-  };
-
-  const persistSeenNotificationToasts = (ids: string[]) => {
-    try {
-      localStorage.setItem(NOTIFICATION_TOAST_SEEN_KEY, JSON.stringify(ids));
-    } catch {
-      // Local storage may be unavailable; toast state still works in memory.
-    }
-  };
-
-  const dismissNotificationToast = (id: string) => {
-    persistSeenNotificationToasts(Array.from(new Set([...getSeenNotificationToasts(), id])));
-    setToastNotificationId(null);
-  };
-
-  const readAndDismissNotificationToast = (id: string) => {
-    markNotificationRead(id);
-    dismissNotificationToast(id);
-  };
-
-  const persistReadNotifications = (ids: string[]) => {
-    setReadNotificationIds(ids);
-    try {
-      localStorage.setItem(NOTIFICATION_READ_KEY, JSON.stringify(ids));
-    } catch {
-      // Local storage may be unavailable; notification state still works in memory.
-    }
-  };
-
-  const markNotificationRead = (id: string) => {
-    if (readNotificationIds.includes(id)) return;
-    persistReadNotifications([...readNotificationIds, id]);
-  };
-
-  const markAllNotificationsRead = () => {
-    if (!unreadNotifications.length) return;
-    persistReadNotifications(siteNotifications.map((item) => item.id));
-  };
 
   const isActive = (section: 'dashboard' | 'subjects' | 'mock') => {
     if (section === 'dashboard') return location.pathname === '/';
