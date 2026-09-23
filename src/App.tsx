@@ -7,13 +7,15 @@ import MathFormulaSheet from './pages/MathFormulaSheetPage';
 import { MathAwareText, MathText } from './components/MathText';
 import { useProgressStore } from './store/progress';
 import type { ContentBlock, ID, MockTestResult, Question } from './types';
-import { buildJnvstMockPaper, buildMathMockPaper, buildScienceMockPaper, getChapterChallengerQuestions, getTopicChallengerQuestions, getPerformanceSummary, getRevisionTopics, getSmartPracticeQuestions, getMathSmartPracticeQuestions, getScienceSmartPracticeQuestions, getSmartRecommendations, getWeakTopics, getTopicPerformances, buildEnglishMockPaper, getEnglishSmartPracticeQuestions } from './utils/jnvstIntelligence';
+import { buildJnvstMockPaper, buildMathMockPaper, buildScienceMockPaper, getChapterChallengerQuestions, getTopicChallengerQuestions, getPerformanceSummary, getRevisionTopics, getSmartPracticeQuestions, getMathSmartPracticeQuestions, getScienceSmartPracticeQuestions, getSmartRecommendations, getWeakTopics, getTopicPerformances, buildEnglishMockPaper, getEnglishSmartPracticeQuestions, buildHindiMockPaper, getHindiSmartPracticeQuestions } from './utils/jnvstIntelligence';
 import { mathMasteryUnits, mathMasteryUnitMap } from './data/mathMastery';
 import { scienceMasteryUnits } from './data/sciencePrep';
 import { scienceLessonCore } from './data/scienceLessonCore';
 import { englishMasteryUnits, englishMasteryUnitMap } from './data/englishPrep';
+import { hindiMasteryUnits } from './data/hindiPrep';
 import { EnglishTranslationLabPage, EnglishVocabularyLabPage, EnglishTranslationPracticePage, EnglishVocabularyPracticePage } from './pages/EnglishLabsPage';
 import EnglishUnseenPassagePage from './pages/EnglishUnseenPassagePage';
+import HindiUnseenPassagePage from './pages/HindiUnseenPassagePage';
 
 const examSections = [
   { id: 'sub_hin', title: 'हिंदी', questions: 15 },
@@ -473,6 +475,92 @@ const EnglishSubjectOverview = () => {
     </section>
   </section>;
 };
+const HindiSubjectOverview = () => {
+  const p = useProgressStore();
+  const performances = getTopicPerformances(p).filter((item) => item.subjectId === 'sub_hin');
+  const attempts = performances.reduce((sum, item) => sum + item.attempts, 0);
+  const correct = performances.reduce((sum, item) => sum + item.correct, 0);
+  const accuracy = attempts ? Math.round((correct / attempts) * 100) : 0;
+  const masteredUnits = hindiMasteryUnits.filter((unit) => {
+    const performance = performances.find((item) => item.topicId === unit.topicId);
+    return Boolean(performance?.attempts && performance.accuracy >= 80);
+  }).length;
+  const questionCount = getQuestionsBySubject('sub_hin').length;
+  const hindiChapters = chapters.filter((chapter) => chapter.subjectId === 'sub_hin').sort((a, b) => a.order - b.order);
+
+  return <section className="english-hub">
+    <div className="english-hub-hero">
+      <div>
+        <span className="eyebrow">JNVST HINDI • COMPLETE PREPARATION CENTER</span>
+        <h2>हिंदी तैयारी केंद्र</h2>
+        <p>11 आधिकारिक इकाइयों को Hindi-first concept learning, examples, topic practice, Challenger, Smart Practice, revision, unseen comprehension और timed mock के साथ तैयार करें।</p>
+        <div className="actions">
+          <Link className="btn primary" to="/hindi-revision">🧠 त्वरित पुनरावृत्ति</Link>
+          <Link className="btn" to="/hindi-smart-practice">🎯 स्मार्ट हिंदी अभ्यास</Link>
+          <Link className="btn" to="/hindi-mock-test">⏱ हिंदी Mock</Link>
+          <Link className="btn challenger" to="/chapters/chap_hin_01/challenger">⚡ Challenger Mode</Link>
+          <Link className="btn" to="/hindi-unseen-passage">📖 अपठित बोध Lab</Link>
+        </div>
+      </div>
+      <div className="english-hub-badge"><b>15</b><span>प्रश्न</span><small>JNVST Hindi section</small></div>
+    </div>
+
+    <div className="english-source-strip">
+      <div><span className="eyebrow">LEARNING METHOD</span><b>समझें → उदाहरण देखें → अभ्यास करें → Challenger करें → Mock दें</b><small>6 chapters · 11 skill units · {questionCount} practice questions · 120 dedicated Challenger questions</small></div>
+      <Link className="btn" to="/hindi-revision">Mastery map →</Link>
+    </div>
+
+    <div className="english-stats">
+      <Card><b>6</b><span>अध्याय</span></Card>
+      <Card><b>11</b><span>Skill units</span></Card>
+      <Card><b>{questionCount}</b><span>हिंदी अभ्यास प्रश्न</span></Card>
+      <Card><b>{attempts ? accuracy + '%' : '—'}</b><span>आपकी सटीकता</span></Card>
+    </div>
+
+    <div className="english-hub-grid">
+      <Card>
+        <div className="topic-top"><div><h3>आपकी हिंदी प्रगति</h3><p>{attempts ? attempts + ' प्रयास · ' + masteredUnits + ' units 80%+ accuracy पर' : 'अभी हिंदी के प्रयास दर्ज नहीं हैं।'}</p></div><span className="count">{attempts ? accuracy + '%' : 'शुरू करें'}</span></div>
+        <div className="actions"><Link className="btn primary" to={attempts ? '/hindi-smart-practice' : '/practice/top_hin_01_01'}>{attempts ? 'स्मार्ट अभ्यास शुरू करें' : 'पहला topic शुरू करें'}</Link></div>
+      </Card>
+      <Card>
+        <h3>Hindi Mastery Cycle</h3>
+        <ol className="english-steps">
+          <li><b>समझें</b> — नियम और भाषा-तर्क।</li>
+          <li><b>उदाहरण</b> — सही/गलत रूप की तुलना।</li>
+          <li><b>अभ्यास</b> — topic-level MCQs और correction।</li>
+          <li><b>Challenger</b> — हर chapter में 20 कठिन प्रश्न।</li>
+          <li><b>बोध Lab</b> — नए गद्यांश पर evidence-based solving।</li>
+          <li><b>Mock</b> — 15-question timed Hindi paper।</li>
+        </ol>
+      </Card>
+    </div>
+
+    <section className="english-learning-map">
+      <div className="english-section-head">
+        <span className="eyebrow">6 अध्याय • 11 SKILL UNITS</span>
+        <h3>Hindi Chapters — पूरा preparation path</h3>
+        <p>हर chapter को concept, practice और Challenger के साथ जोड़कर पढ़ें।</p>
+      </div>
+      <div className="english-learning-grid">
+        {hindiChapters.map((chapter) => {
+          const chapterTopics = chapter.topicIds.map((id) => topics.find((topic) => topic.id === id)).filter(Boolean) as typeof topics;
+          const questionCountForChapter = chapterTopics.reduce((sum, topic) => sum + getQuestionsByTopic(topic.id).length, 0);
+          const chapterAttempts = chapterTopics.reduce((sum, topic) => sum + (performances.find((item) => item.topicId === topic.id)?.attempts ?? 0), 0);
+          const chapterCorrect = chapterTopics.reduce((sum, topic) => sum + (performances.find((item) => item.topicId === topic.id)?.correct ?? 0), 0);
+          const chapterAccuracy = chapterAttempts ? Math.round((chapterCorrect / chapterAttempts) * 100) : 0;
+          const pageCount = getChapterStudyPages(chapter, allLessons, 12).length;
+          return <Card className="english-learning-card" key={chapter.id}>
+            <div className="english-learning-card-top"><span className="english-unit-number">{String(chapter.order).padStart(2,'0')}</span><div><span className="english-status">{chapterAttempts ? 'अभ्यास चल रहा' : 'शुरू नहीं'}</span><h4>{chapter.title}</h4><small>{questionCountForChapter} प्रश्न · {pageCount} अध्ययन पृष्ठ · 20 Challenger</small></div></div>
+            <p className="english-learning-focus">{chapterTopics.map((topic) => hindiMasteryUnits.find((unit) => unit.topicId === topic.id)?.coreSkills.slice(0,2).join(' · ')).filter(Boolean).join(' · ')}</p>
+            <div className="english-learning-meta"><span>{chapterAttempts ? 'आपकी accuracy' : 'Topics'}</span><b>{chapterAttempts ? chapterAccuracy + '%' : chapterTopics.length}</b></div>
+            <div className="english-progress"><span style={{width: (chapterAttempts ? chapterAccuracy : 0) + '%'}} /></div>
+            <div className="actions"><Link className="btn primary" to={'/chapters/' + chapter.id + '/study'}>📖 अध्याय पढ़ें</Link><Link className="btn" to={'/chapters/' + chapter.id}>Chapter map</Link><Link className="btn challenger" to={'/chapters/' + chapter.id + '/challenger'}>⚡ Challenger</Link></div>
+          </Card>;
+        })}
+      </div>
+    </section>
+  </section>;
+};
 const ScienceSubjectOverview = () => {
   const p = useProgressStore();
   const performances = getTopicPerformances(p).filter((topic) => topic.subjectId === 'sub_sci');
@@ -588,6 +676,51 @@ const ScienceSubjectOverview = () => {
   </section>;
 };
 
+const HindiRevisionPage = () => (
+  <Shell>
+    <div className="science-revision-page">
+      <div className="page-head"><Link to="/subjects/sub_hin">← हिंदी तैयारी केंद्र</Link><span className="eyebrow">HINDI • REVISION MAP</span><h1>हिंदी त्वरित पुनरावृत्ति</h1><p>11 official units के core rules, examples और JNVST traps को अंतिम revision में दोहराएँ।</p></div>
+      <div className="science-revision-grid">
+        {hindiMasteryUnits.map((unit, index) => <Card key={unit.topicId} className="science-revision-card">
+          <div className="science-revision-head"><span className="science-unit-number">{String(index + 1).padStart(2,'0')}</span><div><h3>{unit.title}</h3><small>{unit.coreSkills.length} skills · {unit.quickFacts.length} quick facts</small></div></div>
+          <h4>क्या याद रखें</h4><ul>{unit.quickFacts.map((fact) => <li key={fact}>{fact}</li>)}</ul>
+          <h4>मुख्य नियम</h4><ul>{unit.mustKnow.map((fact) => <li key={fact}>{fact}</li>)}</ul>
+          <h4>JNVST Traps</h4><ul>{unit.examTraps.map((trap) => <li key={trap}>{trap}</li>)}</ul>
+          <div className="actions"><Link className="btn" to={'/chapters/' + (topics.find((topic) => topic.id === unit.topicId)?.chapterId ?? '') + '/study'}>📖 पढ़ें</Link><Link className="btn primary" to={'/practice/' + unit.topicId}>🎯 अभ्यास</Link></div>
+        </Card>)}
+      </div>
+    </div>
+  </Shell>
+);
+
+const HindiSmartPracticePage = () => {
+  const qs = useMemo(() => getHindiSmartPracticeQuestions(useProgressStore.getState(), 12, 'jnvst-hindi-smart-0'), []);
+  return <AssessmentRunner
+    questions={qs}
+    title="🎯 स्मार्ट हिंदी अभ्यास"
+    backTo="/subjects/sub_hin"
+    backLabel="हिंदी तैयारी केंद्र"
+    description="Weak, wrong और unseen Hindi questions को priority मिलेगी; 11 official Hindi units में breadth बनाए रखते हुए adaptive practice दी जाती है।"
+    badge="HINDI SMART PRACTICE"
+    bannerLink={{ to: "/hindi-mock-test", label: "15 प्रश्न का Hindi Mock →" }}
+  />;
+};
+
+const HindiMockTestPage = () => {
+  const [mockNumber, setMockNumber] = useState(0);
+  const qs = useMemo(() => buildHindiMockPaper('jnvst-hindi-' + mockNumber + '-' + Date.now()), [mockNumber]);
+  return <AssessmentRunner
+    questions={qs}
+    title="⏱ Hindi Mock Test"
+    backTo="/subjects/sub_hin"
+    backLabel="हिंदी तैयारी केंद्र"
+    description="15-प्रश्न Hindi-only practice paper। पहले chapter learning और Smart Practice करें; फिर बिना मदद के समयबद्ध paper हल करें।"
+    timerSeconds={25 * 60}
+    badge="HINDI MOCK TEST"
+    mode="mock-test"
+    bannerLink={{ to: "/hindi-smart-practice", label: "गलतियों पर Smart Practice →" }}
+  />;
+};
 const EnglishRevisionPage = () => (
   <Shell>
     <div className="english-revision-page">
@@ -773,6 +906,7 @@ const SubjectPage = () => {
     {s.id === 'sub_math' && <MathSubjectOverview />}
     {s.id === 'sub_sci' && <ScienceSubjectOverview />}
     {s.id === 'sub_eng' && <EnglishSubjectOverview />}
+    {s.id === 'sub_hin' && <HindiSubjectOverview />}
     {s.id !== 'sub_sci' && s.id !== 'sub_math' && s.id !== 'sub_eng' && cs.map(c => <Card key={c.id} className="chapter-section"><div className="chapter-section-head"><Link className="chapter-link" to={`/chapters/${c.id}`}><h2>{c.title} →</h2></Link><Link className="btn challenger" to={`/chapters/${c.id}/challenger`}>⚡ Challenger · {getChapterChallengerQuestions(c.id, 20).length}</Link></div><div className="grid">{c.topicIds.map(id => <TopicCard key={id} topicId={id} />)}</div></Card>)}
   </Shell>;
 };
@@ -1776,4 +1910,4 @@ const MockTestsPage = () => {
   </Shell>;
 };
 
-export default function App() { return <HashRouter><Routes><Route path="/" element={<Dashboard />} /><Route path="/subjects" element={<SubjectsPage />} /><Route path="/subjects/:subjectId" element={<SubjectPage />} /><Route path="/chapters/:chapterId" element={<ChapterPage />} /><Route path="/chapters/:chapterId/study" element={<ChapterStudyPage />} /><Route path="/chapters/:chapterId/challenger" element={<ChapterChallengerPage />} /><Route path="/topics/:topicId/challenger" element={<TopicChallengerPage />} /><Route path="/lessons/:lessonId" element={<LessonPage />} /><Route path="/math-formulas" element={<Shell><MathFormulaSheet /></Shell>} /><Route path="/english-revision" element={<EnglishRevisionPage />} /><Route path="/english-smart-practice" element={<EnglishSmartPracticePage />} /><Route path="/english-mock-test" element={<EnglishMockTestPage />} /><Route path="/english-translation-lab" element={<EnglishTranslationLabPage />} /><Route path="/english-translation-practice" element={<EnglishTranslationPracticePage />} /><Route path="/english-vocabulary-lab" element={<EnglishVocabularyLabPage />} /><Route path="/english-vocabulary-practice" element={<EnglishVocabularyPracticePage />} /><Route path="/english-unseen-passage" element={<EnglishUnseenPassagePage />} /><Route path="/science-revision" element={<ScienceRevisionPage />} /><Route path="/science-smart-practice" element={<ScienceSmartPracticePage />} /><Route path="/science-mock-test" element={<ScienceMockTestPage />} /><Route path="/practice/:topicId" element={<PracticePage />} /><Route path="/smart-practice" element={<SmartPracticePage />} /><Route path="/math-smart-practice" element={<MathSmartPracticePage />} /><Route path="/bookmarks" element={<BookmarksPage />} /><Route path="/mock-tests" element={<MockTestsPage />} /><Route path="/math-mock-test" element={<MathMockTestPage />} /><Route path="*" element={<Dashboard />} /></Routes></HashRouter>; }
+export default function App() { return <HashRouter><Routes><Route path="/" element={<Dashboard />} /><Route path="/subjects" element={<SubjectsPage />} /><Route path="/subjects/:subjectId" element={<SubjectPage />} /><Route path="/chapters/:chapterId" element={<ChapterPage />} /><Route path="/chapters/:chapterId/study" element={<ChapterStudyPage />} /><Route path="/chapters/:chapterId/challenger" element={<ChapterChallengerPage />} /><Route path="/topics/:topicId/challenger" element={<TopicChallengerPage />} /><Route path="/lessons/:lessonId" element={<LessonPage />} /><Route path="/math-formulas" element={<Shell><MathFormulaSheet /></Shell>} /><Route path="/english-revision" element={<EnglishRevisionPage />} /><Route path="/hindi-revision" element={<HindiRevisionPage />} /><Route path="/hindi-smart-practice" element={<HindiSmartPracticePage />} /><Route path="/hindi-mock-test" element={<HindiMockTestPage />} /><Route path="/hindi-unseen-passage" element={<HindiUnseenPassagePage />} /><Route path="/english-smart-practice" element={<EnglishSmartPracticePage />} /><Route path="/english-mock-test" element={<EnglishMockTestPage />} /><Route path="/english-translation-lab" element={<EnglishTranslationLabPage />} /><Route path="/english-translation-practice" element={<EnglishTranslationPracticePage />} /><Route path="/english-vocabulary-lab" element={<EnglishVocabularyLabPage />} /><Route path="/english-vocabulary-practice" element={<EnglishVocabularyPracticePage />} /><Route path="/english-unseen-passage" element={<EnglishUnseenPassagePage />} /><Route path="/science-revision" element={<ScienceRevisionPage />} /><Route path="/science-smart-practice" element={<ScienceSmartPracticePage />} /><Route path="/science-mock-test" element={<ScienceMockTestPage />} /><Route path="/practice/:topicId" element={<PracticePage />} /><Route path="/smart-practice" element={<SmartPracticePage />} /><Route path="/math-smart-practice" element={<MathSmartPracticePage />} /><Route path="/bookmarks" element={<BookmarksPage />} /><Route path="/mock-tests" element={<MockTestsPage />} /><Route path="/math-mock-test" element={<MathMockTestPage />} /><Route path="*" element={<Dashboard />} /></Routes></HashRouter>; }
