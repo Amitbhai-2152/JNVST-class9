@@ -1,7 +1,7 @@
 import type { Question } from '../../types';
 import { createQuestion } from '../../utils/questionFactory';
 
-const passage = \`Read the passage: A school eco-club noticed that many students left empty water bottles near the sports ground. The club first placed clearly labelled bins at three convenient points. Members then made a short announcement explaining why sorting waste mattered. During the following weeks, students began using the bins more regularly. The club later counted the collected bottles and sent them to a recycling centre through a local partner. The activity showed that clear instructions, convenient facilities, and regular follow-up could change a simple school habit.\`;
+const passage = 'Read the passage: A school eco-club noticed that many students left empty water bottles near the sports ground. The club first placed clearly labelled bins at three convenient points. Members then made a short announcement explaining why sorting waste mattered. During the following weeks, students began using the bins more regularly. The club later counted the collected bottles and sent them to a recycling centre through a local partner. The activity showed that clear instructions, convenient facilities, and regular follow-up could change a simple school habit.';
 
 const make = (
   id: string,
@@ -18,10 +18,10 @@ const make = (
   subjectId: 'sub_eng',
   chapterId,
   topicId,
-  textPlain: chapterId === 'chap_eng_01' ? \`\${passage}\\n\\n\${question}\` : question,
-  options: options.map((text, index) => ({ id: \`opt_\${index + 1}\`, text })),
-  correctOptionIds: [\`opt_\${correct + 1}\`],
-  explanationPlain: \`The correct answer is: \${options[correct]}\`,
+  textPlain: chapterId === 'chap_eng_01' ? passage + '\n\n' + question : question,
+  options: options.map((text, index) => ({ id: 'opt_' + (index + 1), text })),
+  correctOptionIds: ['opt_' + (correct + 1)],
+  explanationPlain: 'The correct answer is: ' + options[correct],
   difficulty,
   tags,
 });
