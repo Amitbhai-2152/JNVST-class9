@@ -134,7 +134,7 @@ interface AuthContextValue {
   resendConfirmation: (email: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
   finishRecovery: () => void;
-  signUp: (displayName: string, email: string, password: string, analyticsConsent: boolean) => Promise<{ requiresConfirmation: boolean }>;
+  signUp: (displayName: string, email: string, password: string) => Promise<{ requiresConfirmation: boolean }>;
   signOut: () => Promise<void>;
   analyticsConsent: boolean;
   recoveryMode: boolean;
@@ -359,10 +359,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const finishRecovery = () => setRecoveryMode(false);
 
-  const signUp = async (displayName: string, email: string, password: string, consent: boolean) => {
+  const signUp = async (displayName: string, email: string, password: string) => {
     if (!supabase) throw new Error('Supabase अभी configure नहीं है।');
     setAuthError('');
-    setPendingAnalyticsConsent(consent);
+    setPendingAnalyticsConsent(false);
     getCampaignAttribution();
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
@@ -593,7 +593,6 @@ const AuthPage = () => {
   const [working, setWorking] = useState(false);
   const [googleWorking, setGoogleWorking] = useState(false);
   const [message, setMessage] = useState('');
-  const [analyticsConsent, setAnalyticsConsent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [recoveryWorking, setRecoveryWorking] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -624,7 +623,7 @@ const AuthPage = () => {
         if (displayName.trim().length < 2) throw new Error('अपना नाम दर्ज करें।');
         if (password.length < 8) throw new Error('पासवर्ड कम से कम 8 अक्षरों का होना चाहिए।');
         if (password !== confirmPassword) throw new Error('दोनों पासवर्ड एक जैसे नहीं हैं।');
-        const result = await signUp(displayName, email, password, analyticsConsent);
+        const result = await signUp(displayName, email, password);
         if (result.requiresConfirmation) {
           const cleanedEmail = email.trim();
           setConfirmationEmail(cleanedEmail);
@@ -842,11 +841,6 @@ const AuthPage = () => {
             </div>
             <small id="auth-v4-confirm-help" className="auth-v4-inline-help">दोनों passwords एक जैसे होने चाहिए।</small>
           </div>}
-
-          {mode === 'signup' && <label className="auth-v4-consent">
-            <input type="checkbox" checked={analyticsConsent} onChange={(event) => setAnalyticsConsent(event.target.checked)} />
-            <span><strong>Optional analytics</strong> — Learning Hub को बेहतर बनाने में मदद करें। Phone, exact location, school या DOB नहीं लिए जाते।</span>
-          </label>}
 
           {(message || authError) && <div className={'auth-v4-message ' + (authError ? 'error' : 'success')} role="status" aria-live="polite">
             <span className="auth-v4-message-icon">{authError ? '!' : '✓'}</span>
