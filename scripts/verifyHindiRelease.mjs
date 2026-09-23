@@ -129,9 +129,10 @@ const canonicalQuestionCountByFile = canonicalSources.map((file) => {
 });
 assert(canonicalQuestionCountByFile.reduce((sum, value) => sum + value, 0) === 110, 'legacy Hindi canonical question fields must total 110');
 
-const expansionQuestionCount = (expansion.match(/\bid:\s*['"]q_hin_x_/g) ?? []).length;
-const expansionExplanationCount = (expansion.match(/explanationPlain:/g) ?? []).length;
-const expansionMakeCount = expansion.split('make({').length - 1;
+const expansionQuestionsSource = expansion.slice(expansion.indexOf('export const hindiExpansionQuestions'));
+const expansionQuestionCount = (expansionQuestionsSource.match(/\bid:\s*['"]q_hin_x_/g) ?? []).length;
+const expansionExplanationCount = (expansionQuestionsSource.match(/explanationPlain:/g) ?? []).length;
+const expansionMakeCount = expansionQuestionsSource.split('make({').length - 1;
 assert(expansionQuestionCount === 55 && expansionExplanationCount === 55 && expansionMakeCount === 55, 'Hindi expansion must contain 55 complete generated records');
 
 const challengerFiles = [
