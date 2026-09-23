@@ -221,6 +221,7 @@ const TopicCard = ({ topicId }: { topicId: ID }) => {
   const chapter = chapters.find(x => x.id === t.chapterId);
   const isMath = t.id.startsWith('top_math_');
   const isHindi = t.id.startsWith('top_hin_');
+  const isEnglish = t.id.startsWith('top_eng_');
   const chapterPages = chapter ? getChapterStudyPages(chapter, allLessons, 12).length : 12;
   return <Card className="topic-card">
     <div className="topic-top"><h3>{t.title}</h3><span className="count">{qCount} प्रश्न</span></div>
@@ -231,7 +232,7 @@ const TopicCard = ({ topicId }: { topicId: ID }) => {
     <div className="actions">
       <Link className="btn primary" to={`/chapters/${t.chapterId}/study`}>अध्याय पढ़ें</Link>
       <Link className="btn" to={`/practice/${t.id}`}>अभ्यास करें</Link>
-      {isHindi && <Link className="btn challenger" to={`/topics/${t.id}/challenger`}>⚡ Challenger · 20</Link>}
+      {(isMath || isHindi || isEnglish) && <Link className="btn challenger" to={`/topics/${t.id}/challenger`}>⚡ Challenger · 20</Link>}
     </div>
   </Card>;
 };
@@ -1598,7 +1599,7 @@ const TopicChallengerPage = () => {
     : [];
 
   if (!topic || !chapter || (!isMath && !isHindi)) {
-    return <Shell><Card className="empty"><h1>विषयांश Challenger नहीं मिला</h1><p>यह Challenger अभी Maths और Hindi के official subtopics के लिए उपलब्ध है।</p><Link className="btn" to={isHindi ? "/subjects/sub_hin" : "/subjects/sub_math"}>{isHindi ? "हिंदी तैयारी केंद्र" : "गणित तैयारी केंद्र"}</Link></Card></Shell>;
+    return <Shell><Card className="empty"><h1>विषयांश Challenger नहीं मिला</h1><p>इस official subtopic के लिए अभी पर्याप्त Challenger questions उपलब्ध नहीं हैं।</p><Link className="btn" to={`/subjects/${topic.subjectId}`}>विषय तैयारी केंद्र</Link></Card></Shell>;
   }
 
   const subjectLabel = isHindi ? 'HINDI' : 'MATH';
