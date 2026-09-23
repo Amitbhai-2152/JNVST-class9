@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://amitbhai-2152.github.io/JNVST-class9/sitemap.xml

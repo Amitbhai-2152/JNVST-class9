@@ -1,0 +1,37 @@
+[
+  {
+    "id": "notification-live-test-2026-09-23-1733",
+    "title": "🚀 Live Popup Test #2",
+    "body": "यह दूसरा live test message है। इसे बिना page reload के animated popup के रूप में आना चाहिए।",
+    "tag": "LIVE TEST",
+    "date": "23 Sep 2026"
+  },
+  {
+    "id": "notification-live-poll-test-2026-09-23",
+    "title": "⚡ Live Notification Test",
+    "body": "यह notification polling test है। नई notification आने पर page reload की जरूरत नहीं होनी चाहिए।",
+    "tag": "LIVE TEST",
+    "date": "23 Sep 2026"
+  },
+  {
+    "id": "notification-test-2026-09-23",
+    "title": "🔔 Notification System Test",
+    "body": "यह एक test notification है — popup animation, unread badge और notification center check करने के लिए।",
+    "tag": "TEST",
+    "date": "23 Sep 2026"
+  },
+  {
+    "id": "nav-refresh-2026-09-23",
+    "title": "Navbar update",
+    "body": "Dashboard navigation, Student Account और responsive mobile menu को बेहतर किया गया है।",
+    "tag": "Update",
+    "date": "23 Sep 2026"
+  },
+  {
+    "id": "auth-refresh-2026-09-23",
+    "title": "Account experience update",
+    "body": "Login/signup readability, email confirmation और account controls को polish किया गया है।",
+    "tag": "Update",
+    "date": "23 Sep 2026"
+  }
+]
