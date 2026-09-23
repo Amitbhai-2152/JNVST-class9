@@ -150,6 +150,11 @@ const Dashboard = () => {
   const weakTopics = getWeakTopics(p, 3);
   const revisionTopics = getRevisionTopics(p, 3);
 
+  const examAttempts = jnvstExamQuestions.flatMap((question) => p.questionAttempts?.[question.id] ?? []);
+  const examCorrect = examAttempts.filter((attempt) => attempt.isCorrect).length;
+  const examAccuracy = examAttempts.length ? Math.round((examCorrect / examAttempts.length) * 100) : 0;
+  const attemptedQuestionCount = jnvstExamQuestions.filter((question) => (p.questionAttempts?.[question.id]?.length ?? 0) > 0).length;
+
   const subjectStats = subjects.map((subject) => {
     const rows = performances.filter((topic) => topic.subjectId === subject.id);
     const attempts = rows.reduce((sum, topic) => sum + topic.attempts, 0);
@@ -157,15 +162,18 @@ const Dashboard = () => {
     const attemptedTopics = rows.filter((topic) => topic.attempts > 0).length;
     const totalTopics = rows.length;
     const accuracy = attempts ? Math.round((correct / attempts) * 100) : 0;
-    const subjectQuestions = jnvstExamQuestions.filter((question) => question.subjectId === subject.id).length;
+    const subjectQuestions = jnvstExamQuestions.filter((question) => question.subjectId === subject.id);
+    const attemptedQuestions = subjectQuestions.filter((question) => (p.questionAttempts?.[question.id]?.length ?? 0) > 0).length;
     return {
       ...subject,
       attempts,
       attemptedTopics,
       totalTopics,
       accuracy,
-      subjectQuestions,
+      subjectQuestions: subjectQuestions.length,
+      attemptedQuestions,
       coverage: totalTopics ? Math.round((attemptedTopics / totalTopics) * 100) : 0,
+      questionCoverage: subjectQuestions.length ? Math.round((attemptedQuestions / subjectQuestions.length) * 100) : 0,
     };
   });
 
@@ -193,7 +201,7 @@ const Dashboard = () => {
   ].filter(Boolean) as Array<{ icon: string; label: string; title: string; href: string }>;
 
   const completedLessons = Object.values(p.lessonActivity ?? {}).filter((item) => item.status === 'completed').length;
-  const questionCoverage = allQuestions.length ? Math.round((summary.totalAttempts / allQuestions.length) * 100) : 0;
+  const questionCoverage = jnvstExamQuestions.length ? Math.round((attemptedQuestionCount / jnvstExamQuestions.length) * 100) : 0;
   const mockResults = p.mockTestResults ?? [];
   const bestMock = mockResults.length ? Math.max(...mockResults.map((result) => result.totalMarks ? Math.round((result.score / result.totalMarks) * 100) : 0)) : null;
 
@@ -211,9 +219,9 @@ const Dashboard = () => {
           </div>
         </div>
         <div className="dashboard-hero-side">
-          <div className="dashboard-hero-number">{summary.totalAttempts}</div>
-          <div>कुल प्रश्न प्रयास</div>
-          <small>{summary.overallAccuracy}% overall accuracy</small>
+          <div className="dashboard-hero-number">{examAttempts.length}</div>
+          <div>JNVST प्रश्न प्रयास</div>
+          <small>{examAccuracy}% practice accuracy</small>
         </div>
       </section>
 
@@ -224,9 +232,9 @@ const Dashboard = () => {
           <small>{summary.totalTopics ? Math.round((summary.attemptedTopics / summary.totalTopics) * 100) : 0}% topics पर अभ्यास</small>
         </Card>
         <Card className="dashboard-metric">
-          <span>सटीकता</span>
-          <b>{summary.totalAttempts ? summary.overallAccuracy + '%' : '—'}</b>
-          <small>{summary.totalAttempts ? 'आपके दर्ज attempts से' : 'अभी डेटा नहीं'}</small>
+          <span>अभ्यास सटीकता</span>
+          <b>{examAttempts.length ? examAccuracy + '%' : '—'}</b>
+          <small>{examAttempts.length ? 'JNVST-compatible attempts' : 'अभी data नहीं'}</small>
         </Card>
         <Card className="dashboard-metric">
           <span>पूरे किए पाठ</span>
@@ -234,9 +242,9 @@ const Dashboard = () => {
           <small>कुल {allLessons.length} lessons में</small>
         </Card>
         <Card className="dashboard-metric">
-          <span>Mock प्रदर्शन</span>
+          <span>सर्वश्रेष्ठ Mock</span>
           <b>{bestMock !== null ? bestMock + '%' : '—'}</b>
-          <small>{mockResults.length ? mockResults.length + ' mock attempts' : 'पहला mock दें'}</small>
+          <small>{mockResults.length ? mockResults.length + ' full mock attempts' : 'पहला full mock दें'}</small>
         </Card>
       </section>
 
@@ -255,14 +263,14 @@ const Dashboard = () => {
             <small>कम-से-कम हर topic पर अभ्यास शुरू करना लक्ष्य रखें।</small>
           </Card>
           <Card className="dashboard-readiness-card">
-            <div className="dashboard-readiness-top"><div><b>Question coverage</b><span>{summary.totalAttempts} / {allQuestions.length}</span></div><strong>{questionCoverage}%</strong></div>
-            <div className="dashboard-track"><span style={{ width: questionCoverage + '%' }} /></div>
-            <small>जितने अधिक meaningful attempts, उतना बेहतर practice history।</small>
+            <div className="dashboard-readiness-top"><div><b>Question coverage</b><span>{attemptedQuestionCount} / {jnvstExamQuestions.length} unique questions</span></div><strong>{questionCoverage}%</strong></div>
+            <div className="dashboard-track"><span style={{ width: Math.min(100, questionCoverage) + '%' }} /></div>
+            <small>एक ही प्रश्न को बार-बार करने से coverage नहीं बढ़ता; यहाँ unique JNVST questions गिने जाते हैं।</small>
           </Card>
           <Card className="dashboard-readiness-card">
-            <div className="dashboard-readiness-top"><div><b>Practice accuracy</b><span>{summary.totalAttempts ? summary.overallAccuracy + '%' : 'कोई data नहीं'}</span></div><strong>{summary.totalAttempts ? summary.overallAccuracy + '%' : '—'}</strong></div>
-            <div className="dashboard-track"><span style={{ width: summary.overallAccuracy + '%' }} /></div>
-            <small>Accuracy को coverage के साथ देखें; दोनों का संतुलन जरूरी है।</small>
+            <div className="dashboard-readiness-top"><div><b>Practice accuracy</b><span>{examAttempts.length ? examAccuracy + '%' : 'कोई data नहीं'}</span></div><strong>{examAttempts.length ? examAccuracy + '%' : '—'}</strong></div>
+            <div className="dashboard-track"><span style={{ width: examAccuracy + '%' }} /></div>
+            <small>यह केवल JNVST-compatible question attempts पर आधारित है। coverage के साथ accuracy देखें।</small>
           </Card>
         </div>
       </section>
@@ -295,7 +303,9 @@ const Dashboard = () => {
           {subjectStats.map((subject) => <Link key={subject.id} to={'/subjects/' + subject.id} className="dashboard-subject-link">
             <Card className="dashboard-subject-card">
               <div className="dashboard-subject-head">
-                <div className={'dashboard-subject-icon dashboard-subject-' + subject.id}>{subject.iconRef}</div>
+                <div className={'dashboard-subject-icon dashboard-subject-' + subject.id} aria-hidden="true">
+                  {subject.id === 'sub_eng' ? 'EN' : subject.id === 'sub_hin' ? 'हि' : subject.id === 'sub_math' ? '∑' : '⚗'}
+                </div>
                 <div><h3>{subject.title}</h3><span>{subject.attemptedTopics}/{subject.totalTopics} topics attempted</span></div>
               </div>
               <div className="dashboard-subject-score">
@@ -305,7 +315,7 @@ const Dashboard = () => {
               </div>
               <div className="dashboard-track light"><span style={{ width: subject.coverage + '%' }} /></div>
               <div className="dashboard-subject-footer">
-                <small>{subject.subjectQuestions} exam-compatible MCQs</small>
+                <small>{subject.attemptedQuestions}/{subject.subjectQuestions} questions seen · {subject.questionCoverage}% coverage</small>
                 <span>विषय खोलें →</span>
               </div>
             </Card>
@@ -348,7 +358,7 @@ const Dashboard = () => {
       </section>
 
       <section className="dashboard-quick">
-        <div className="dashboard-section-head"><div><span className="dashboard-label">QUICK ACCESS</span><h2>सीधे काम पर जाएँ</h2></div></div>
+        <div className="dashboard-section-head"><div><span className="dashboard-label">QUICK ACCESS</span><h2>सीधे काम पर जाएँ</h2><p>बार-बार इस्तेमाल होने वाले tools एक ही जगह पर।</p></div></div>
         <div className="dashboard-quick-grid">
           <Link to="/smart-practice"><span>🎯</span><b>Smart Practice</b><small>History के आधार पर targeted questions</small></Link>
           <Link to="/english-translation-lab"><span>🔤</span><b>English Translation Lab</b><small>Translation practice और language confidence</small></Link>
