@@ -98,7 +98,7 @@ export const hindiExpansionQuestions: Question[] = [
     textPlain:"'रेलगाड़ी' किस प्रकार का शब्द है?",
     options:['संकर','तत्सम','तद्भव','देशज'], correct:0, difficulty:'challenge',
     tags:['shabdbhed','sankar'],
-    explanationPlain:"विद्यालयी हिंदी में 'लालटेन' को दो भाषाई स्रोतों से बने संकर शब्द के उदाहरण के रूप में दिया जाता है।"
+    explanationPlain:"'रेलगाड़ी' को रेल + गाड़ी के मेल से बना संकर शब्द माना जाता है; इसलिए यह प्रश्न शब्द के दो स्रोतों को पहचानने की क्षमता जाँचता है।"
   }),
 
   make({
@@ -206,7 +206,7 @@ export const hindiExpansionQuestions: Question[] = [
     textPlain:"'वह धीरे बोलता है।' में 'धीरे' किस पद का काम कर रहा है?",
     options:['संज्ञा','क्रिया-विशेषण','सर्वनाम','संबंधबोधक'], correct:1, difficulty:'challenge',
     tags:['pad-bhed','adverb'],
-    explanationPlain:"'बहुत' 'तेज' की मात्रा/तीव्रता बढ़ा रहा है और वाक्य में क्रिया-विशेषणीय कार्य कर रहा है।"
+    explanationPlain:"'धीरे' यहाँ 'बोलता है' क्रिया के होने की रीति बताता है, इसलिए यह रीतिवाचक क्रिया-विशेषण है।"
   }),
   make({
     id:'q_hin_x_05_006', chapterId:'chap_hin_03', topicId:'top_hin_03_01',
