@@ -162,9 +162,14 @@ const unseenPassageIds = [...unseen.matchAll(/\\bid:"(hup-\\d+)"/g)].map((m) => 
 const unseenQuestionIds = [...unseen.matchAll(/\\bid:"(hup-\\d+-q\\d+)"[,]/g)].map((m) => m[1]);
 assert(unseenPassageIds.length === 10 && new Set(unseenPassageIds).size === 10, 'Hindi Unseen Lab must contain exactly 10 unique passages');
 assert(unseenQuestionIds.length === 50 && new Set(unseenQuestionIds).size === 50, 'Hindi Unseen Lab must contain exactly 50 unique questions');
+const questionsPerPassage = new Map();
+for (const id of unseenQuestionIds) {
+  const passageId = id.match(/^hup-(\\d+)-q\\d+$/)?.[1];
+  if (passageId) questionsPerPassage.set(passageId, (questionsPerPassage.get(passageId) ?? 0) + 1);
+}
 for (let index = 1; index <= 10; index += 1) {
-  const passage = unseen.match(new RegExp('\\{\\s*id:"hup-' + String(index).padStart(2, '0') + '"[\\s\\S]*?(?=\\n  \\},\\n  \\{\\s*id:"hup-|' + '\\n  \\},\\n\\];)' );
-  if (passage) assert(count(passage[0], /id:"hup-\\d+-q\\d+"/g) === 5, 'each Hindi unseen passage must contain five questions');
+  const passageId = String(index).padStart(2, '0');
+  assert(questionsPerPassage.get(passageId) === 5, 'Hindi unseen passage ' + passageId + ' must contain exactly five questions');
 }
 const unseenQuestionRecords = [...unseen.matchAll(/\\{id:"(hup-\\d+-q\\d+)",skill:"([^"]+)",question:"([^"]+)",options:\[([^\\]]+)\],correctIndex:(\\d),explanation:"([^"]+)"/g)];
 assert(unseenQuestionRecords.length === 50, 'all 50 Hindi unseen question records must be structurally auditable');
