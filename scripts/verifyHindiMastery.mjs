@@ -48,15 +48,58 @@ for (const file of legacySources) {
   }
 }
 
+const extractCurlyRecords = (source) => {
+  const records = [];
+  for (let start = source.indexOf('{'); start >= 0; ) {
+    let depth = 0;
+    let inString = false;
+    let quote = '';
+    let escaped = false;
+    let end = -1;
+    for (let i = start; i < source.length; i += 1) {
+      const ch = source[i];
+      if (inString) {
+        if (escaped) {
+          escaped = false;
+        } else if (ch === '\\') {
+          escaped = true;
+        } else if (ch === quote) {
+          inString = false;
+        }
+        continue;
+      }
+      if (ch === "'" || ch === '"') {
+        inString = true;
+        quote = ch;
+        continue;
+      }
+      if (ch === '{') depth += 1;
+      else if (ch === '}') {
+        depth -= 1;
+        if (depth === 0) {
+          end = i;
+          break;
+        }
+      }
+    }
+    if (end < 0) break;
+    const record = source.slice(start, end + 1);
+    if (/\bid:\s*['"]q_hin_b\d+_\d+_\d+['"]/.test(record)) records.push(record);
+    start = source.indexOf('{', end + 1);
+  }
+  return records;
+};
+
 const legacyQuestionRecords = new Map();
 for (const file of legacySources) {
-  for (const line of read(file).split('\n')) {
-    const id = line.match(/\bid:\s*['"](q_hin_b\d+_\d+_\d+)['"]/)?.[1];
-    const topicId = line.match(/\btopicId:\s*['"](top_hin_\d+_\d+)['"]/)?.[1];
-    const type = line.match(/\btype:\s*['"]([^'"]+)['"]/)?.[1];
+  for (const record of extractCurlyRecords(read(file))) {
+    const id = record.match(/\bid:\s*['"](q_hin_b\d+_\d+_\d+)['"]/)?.[1];
+    const topicId = record.match(/\btopicId:\s*['"](top_hin_\d+_\d+)['"]/)?.[1];
+    const type = record.match(/\btype:\s*['"]([^'"]+)['"]/)?.[1];
     if (id && topicId && type) legacyQuestionRecords.set(id, { topicId, type });
   }
 }
+assert(legacyQuestionRecords.size === 110, 'could not map all 110 legacy Hindi question records');
 const expansionQuestionRecords = new Map(
   expansionIds.map((id, index) => [id, { topicId: expansionTopics[index], type: 'mcq' }]),
 );
