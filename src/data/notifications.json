@@ -1,5 +1,12 @@
 [
   {
+    "id": "notification-live-poll-test-2026-09-23",
+    "title": "⚡ Live Notification Test",
+    "body": "यह notification polling test है। नई notification आने पर page reload की जरूरत नहीं होनी चाहिए।",
+    "tag": "LIVE TEST",
+    "date": "23 Sep 2026"
+  },
+  {
     "id": "notification-test-2026-09-23",
     "title": "🔔 Notification System Test",
     "body": "यह एक test notification है — popup animation, unread badge और notification center check करने के लिए।",
