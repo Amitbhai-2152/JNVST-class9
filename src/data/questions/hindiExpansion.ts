@@ -412,6 +412,21 @@ export const hindiExpansionQuestions: Question[] = [
   }),
 ];
 
+  make({
+    id:'q_hin_x_08_005', chapterId:'chap_hin_04', topicId:'top_hin_04_02',
+    textPlain:"'बारिश रुकी और बच्चे मैदान में गए।' को मिश्र वाक्य में बदलने का उपयुक्त रूप कौन-सा है?",
+    options:['जब बारिश रुकी, तब बच्चे मैदान में गए।','बारिश रुकते ही बच्चे मैदान में गए।','बारिश और बच्चे मैदान में गए।','बच्चे मैदान में गए और बारिश रुकी।'], correct:0, difficulty:'hard',
+    tags:['sentence-transformation','complex'],
+    explanationPlain:"'जब बारिश रुकी, तब बच्चे मैदान में गए' में 'जब बारिश रुकी' आश्रित उपवाक्य है; इसलिए यह मिश्र वाक्य है।"
+  }),
+  make({
+    id:'q_hin_x_10_005', chapterId:'chap_hin_05', topicId:'top_hin_05_02',
+    textPlain:"“दूर के ढोल सुहावने” का सही प्रयोग किस वाक्य में है?",
+    options:['दूर की नई जगह बहुत अच्छी लग रही है, पर वहाँ की असली कठिनाइयाँ देखने पर समझ आएँगी।','ढोल की आवाज़ पास आकर और मधुर हो गई।','गाँव में सभी लोग ढोल बजा रहे थे।','ढोल हमेशा दूर से ही बजते हैं।'], correct:0, difficulty:'challenge',
+    tags:['proverbs','context'],
+    explanationPlain:"यह लोकोक्ति दूर की चीज़ को वास्तविकता से अधिक आकर्षक मान लेने की स्थिति में प्रयोग होती है।"
+  }),
+
 export const hindiExpansionAudit = {
   addedQuestionCount: hindiExpansionQuestions.length,
   topics: [...new Set(hindiExpansionQuestions.map((question) => question.topicId))],
