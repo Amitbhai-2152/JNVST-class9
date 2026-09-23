@@ -3330,3 +3330,279 @@ a { color: inherit; text-decoration: none; }
   .auth-v5 .auth-v4-brand{padding:6px 8px}
   .auth-v5 .auth-v5-artwork img{object-position:center 42%;transform:scale(1.08)}
 }
+
+
+/* PHASE 3 — motion & interaction system */
+.auth-v5 .auth-v4-shell{
+  animation:authV5ShellIn .72s cubic-bezier(.18,.82,.22,1) both;
+  transform-origin:center;
+}
+.auth-v5 .auth-v4-form-panel{
+  animation:authV5PanelIn .72s cubic-bezier(.18,.82,.22,1) .08s both;
+}
+.auth-v5 .auth-v4-panel-head{
+  animation:authV5FadeUp .48s ease .22s both;
+}
+.auth-v5 .auth-v4-switcher{
+  animation:authV5FadeUp .48s ease .28s both;
+}
+.auth-v5 .auth-v4-google{
+  animation:authV5FadeUp .48s ease .34s both;
+}
+.auth-v5 .auth-v4-divider{
+  animation:authV5FadeUp .48s ease .39s both;
+}
+.auth-v5 .auth-v4-form{
+  animation:authV5FadeUp .48s ease .44s both;
+}
+.auth-v5 .auth-v4-access,
+.auth-v5 .auth-v4-trust{
+  animation:authV5FadeUp .48s ease .50s both;
+}
+
+.auth-v5 .auth-v5-artwork img{
+  animation:authV5HeroIn 1.15s cubic-bezier(.18,.82,.22,1) both,
+             authV5KenBurns 18s ease-in-out 1.05s infinite alternate;
+  transform-origin:center center;
+  will-change:transform;
+}
+.auth-v5 .auth-v4-grid{
+  animation:authV5GridDrift 26s linear infinite;
+  will-change:background-position;
+}
+.auth-v5 .auth-v4-brand{
+  animation:authV5BrandIn .62s cubic-bezier(.18,.82,.22,1) .17s both;
+}
+.auth-v5 .auth-v4-brand-mark{
+  animation:authV5BrandPulse 4.5s ease-in-out 1.1s infinite;
+}
+.auth-v5 .auth-v4-visual::before{
+  animation:authV5OrbitGlow 9s ease-in-out infinite;
+}
+.auth-v5 .auth-v4-visual::after{
+  animation:authV5BottomGlow 7s ease-in-out infinite;
+}
+
+.auth-v5 .auth-v4-switcher button{
+  position:relative;
+  overflow:hidden;
+}
+.auth-v5 .auth-v4-switcher button::after{
+  content:"";
+  position:absolute;
+  left:18%;
+  right:18%;
+  bottom:3px;
+  height:2px;
+  border-radius:999px;
+  background:#5e39bf;
+  transform:scaleX(0);
+  transition:transform .24s cubic-bezier(.2,.8,.2,1);
+}
+.auth-v5 .auth-v4-switcher button.active::after{
+  transform:scaleX(1);
+}
+.auth-v5 .auth-v4-switcher button:active{
+  transform:translateY(1px);
+}
+
+.auth-v5 .auth-v4-google,
+.auth-v5 .auth-v4-submit{
+  position:relative;
+  overflow:hidden;
+}
+.auth-v5 .auth-v4-google::before,
+.auth-v5 .auth-v4-submit::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(105deg,transparent 18%,rgba(255,255,255,.2) 44%,transparent 68%);
+  transform:translateX(-125%);
+  transition:transform .6s ease;
+}
+.auth-v5 .auth-v4-google:hover:not(:disabled)::before,
+.auth-v5 .auth-v4-submit:hover:not(:disabled)::before{
+  transform:translateX(125%);
+}
+.auth-v5 .auth-v4-google:hover:not(:disabled){
+  transform:translateY(-2px);
+  box-shadow:0 13px 28px rgba(34,55,80,.10);
+}
+.auth-v5 .auth-v4-submit:hover:not(:disabled){
+  transform:translateY(-2px);
+  box-shadow:0 17px 30px rgba(40,88,201,.23);
+}
+.auth-v5 .auth-v4-google:active:not(:disabled),
+.auth-v5 .auth-v4-submit:active:not(:disabled){
+  transform:translateY(0);
+}
+.auth-v5 .auth-v4-google.loading{
+  animation:authV5ButtonPulse 1.6s ease-in-out infinite;
+}
+.auth-v5 .auth-v4-google.loading .auth-v4-google-logo{
+  animation:authV5Spin .8s linear infinite;
+}
+.auth-v5 .auth-v4-submit:disabled b{
+  animation:authV5Spin .78s linear infinite;
+}
+
+.auth-v5 .auth-v4-input input{
+  transition:border-color .18s ease,box-shadow .18s ease,background .18s ease,transform .18s ease;
+}
+.auth-v5 .auth-v4-input:focus-within{
+  transform:translateY(-1px);
+}
+.auth-v5 .auth-v4-input-icon{
+  transition:color .18s ease,transform .18s ease;
+}
+.auth-v5 .auth-v4-input:focus-within .auth-v4-input-icon{
+  color:#5b39bf;
+  transform:scale(1.09);
+}
+.auth-v5 .auth-v4-password-toggle{
+  transition:background .17s ease,border-color .17s ease,color .17s ease,transform .17s ease;
+}
+.auth-v5 .auth-v4-password-toggle:hover{
+  transform:translateY(-1px);
+  background:#f7f4ff;
+  border-color:#cfc4eb;
+  color:#5a36b6;
+}
+.auth-v5 .auth-v4-password-toggle:active{
+  transform:translateY(0);
+}
+
+.auth-v5 .auth-v4-field{
+  animation:authV5FieldIn .48s ease both;
+}
+.auth-v5 .auth-v4-field:nth-child(1){animation-delay:.47s}
+.auth-v5 .auth-v4-field:nth-child(2){animation-delay:.53s}
+.auth-v5 .auth-v4-consent{animation:authV5FieldIn .48s ease .59s both}
+.auth-v5 .auth-v4-message{animation:authV5MessageIn .34s ease both}
+
+.auth-v5 .auth-v4-strength-track i{
+  transform-origin:left center;
+  animation:authV5StrengthIn .26s ease both;
+}
+.auth-v5 .auth-v4-strength-track i:nth-child(1){animation-delay:.02s}
+.auth-v5 .auth-v4-strength-track i:nth-child(2){animation-delay:.06s}
+.auth-v5 .auth-v4-strength-track i:nth-child(3){animation-delay:.10s}
+.auth-v5 .auth-v4-strength-track i:nth-child(4){animation-delay:.14s}
+.auth-v5 .auth-v4-strength-track i:nth-child(5){animation-delay:.18s}
+
+.auth-v5 .auth-v4-access button{
+  transition:color .18s ease,transform .18s ease;
+}
+.auth-v5 .auth-v4-access button:hover{
+  color:#1f4ca7;
+  transform:translateX(2px);
+}
+
+@keyframes authV5ShellIn{
+  from{opacity:0;transform:translateY(16px) scale(.985)}
+  to{opacity:1;transform:none}
+}
+@keyframes authV5PanelIn{
+  from{opacity:0;transform:translateX(-10px)}
+  to{opacity:1;transform:none}
+}
+@keyframes authV5FadeUp{
+  from{opacity:0;transform:translateY(7px)}
+  to{opacity:1;transform:none}
+}
+@keyframes authV5FieldIn{
+  from{opacity:0;transform:translateY(6px)}
+  to{opacity:1;transform:none}
+}
+@keyframes authV5HeroIn{
+  from{opacity:0;transform:scale(1.05)}
+  to{opacity:1;transform:scale(1.01)}
+}
+@keyframes authV5KenBurns{
+  from{transform:scale(1.01) translate3d(0,0,0)}
+  to{transform:scale(1.055) translate3d(-1.2%,-.8%,0)}
+}
+@keyframes authV5GridDrift{
+  from{background-position:0 0}
+  to{background-position:68px 68px}
+}
+@keyframes authV5BrandIn{
+  from{opacity:0;transform:translateY(-7px) scale(.96)}
+  to{opacity:1;transform:none}
+}
+@keyframes authV5BrandPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}
+  50%{box-shadow:0 0 0 7px rgba(255,255,255,.06)}
+}
+@keyframes authV5OrbitGlow{
+  0%,100%{transform:translate3d(0,0,0);opacity:.72}
+  50%{transform:translate3d(-12px,10px,0);opacity:1}
+}
+@keyframes authV5BottomGlow{
+  0%,100%{opacity:.82}
+  50%{opacity:1}
+}
+@keyframes authV5ButtonPulse{
+  0%,100%{box-shadow:0 8px 18px rgba(34,55,80,.06)}
+  50%{box-shadow:0 13px 28px rgba(34,55,80,.11)}
+}
+@keyframes authV5Spin{
+  to{transform:rotate(360deg)}
+}
+@keyframes authV5MessageIn{
+  from{opacity:0;transform:translateY(-4px) scale(.99)}
+  to{opacity:1;transform:none}
+}
+@keyframes authV5StrengthIn{
+  from{opacity:0;transform:scaleX(.35)}
+  to{opacity:1;transform:scaleX(1)}
+}
+
+@media(max-width:940px){
+  .auth-v5 .auth-v5-artwork img{
+    animation:authV5HeroIn 1.05s cubic-bezier(.18,.82,.22,1) both,
+               authV5KenBurnsTablet 18s ease-in-out 1s infinite alternate;
+  }
+}
+@keyframes authV5KenBurnsTablet{
+  from{transform:scale(1.01) translate3d(0,0,0)}
+  to{transform:scale(1.055) translate3d(-.6%,-.8%,0)}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .auth-v5 .auth-v4-shell,
+  .auth-v5 .auth-v4-form-panel,
+  .auth-v5 .auth-v4-panel-head,
+  .auth-v5 .auth-v4-switcher,
+  .auth-v5 .auth-v4-google,
+  .auth-v5 .auth-v4-divider,
+  .auth-v5 .auth-v4-form,
+  .auth-v5 .auth-v4-access,
+  .auth-v5 .auth-v4-trust,
+  .auth-v5 .auth-v5-artwork img,
+  .auth-v5 .auth-v4-grid,
+  .auth-v5 .auth-v4-brand,
+  .auth-v5 .auth-v4-brand-mark,
+  .auth-v5 .auth-v4-visual::before,
+  .auth-v5 .auth-v4-visual::after,
+  .auth-v5 .auth-v4-field,
+  .auth-v5 .auth-v4-consent,
+  .auth-v5 .auth-v4-message,
+  .auth-v5 .auth-v4-strength-track i,
+  .auth-v5 .auth-v4-google.loading,
+  .auth-v5 .auth-v4-google.loading .auth-v4-google-logo,
+  .auth-v5 .auth-v4-submit:disabled b{
+    animation:none!important;
+  }
+  .auth-v5 .auth-v4-google::before,
+  .auth-v5 .auth-v4-submit::before{
+    display:none;
+  }
+  .auth-v5 .auth-v4-google,
+  .auth-v5 .auth-v4-submit,
+  .auth-v5 .auth-v4-input input,
+  .auth-v5 .auth-v4-password-toggle,
+  .auth-v5 .auth-v4-access button{
+    transition:none!important;
+  }
+}
