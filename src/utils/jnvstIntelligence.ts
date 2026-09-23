@@ -694,13 +694,26 @@ export const getTopicChallengerQuestions = (
       .map((question, index) => arrangeChallengerOptions(question, index, seed + ':' + topicId));
   }
 
-  const mathEligible = (question: Question) => question.subjectId === 'sub_math' && eligible(question);
-  const dedicated = mathTopicChallengersV2.filter(mathEligible);
-  const source = dedicated.length >= target ? dedicated : [...dedicated, ...allQuestions.filter(mathEligible)];
+  const isMathTopic = topicId.startsWith('top_math_');
+  const isEnglishTopic = topicId.startsWith('top_eng_');
 
-  return rankChallengerCandidates(source, seed + ':' + topicId)
-    .slice(0, target)
-    .map((question, index) => arrangeChallengerOptions(question, index, seed + ':' + topicId));
+  if (isMathTopic) {
+    const dedicated = mathTopicChallengersV2.filter(eligible);
+    const source = dedicated.length >= target ? dedicated : [...dedicated, ...allQuestions.filter(eligible)];
+    return rankChallengerCandidates(source, seed + ':' + topicId)
+      .slice(0, target)
+      .map((question, index) => arrangeChallengerOptions(question, index, seed + ':' + topicId));
+  }
+
+  if (isEnglishTopic) {
+    const dedicated = [...englishChapterChallengers, ...englishChapterChallengersExtra].filter(eligible);
+    const source = dedicated.length >= target ? dedicated : [...dedicated, ...allQuestions.filter(eligible)];
+    return rankChallengerCandidates(source, seed + ':' + topicId)
+      .slice(0, target)
+      .map((question, index) => arrangeChallengerOptions(question, index, seed + ':' + topicId));
+  }
+
+  return [];
 };
 
 export const buildMathMockPaper = (seed = 'jnvst-math-2027'): Question[] => {
