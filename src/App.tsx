@@ -18,7 +18,7 @@ import { hindiMasteryUnits } from './data/hindiPrep';
 import { EnglishTranslationLabPage, EnglishVocabularyLabPage, EnglishTranslationPracticePage, EnglishVocabularyPracticePage } from './pages/EnglishLabsPage';
 import EnglishUnseenPassagePage from './pages/EnglishUnseenPassagePage';
 import HindiUnseenPassagePage from './pages/HindiUnseenPassagePage';
-import { siteNotifications } from './data/notifications';
+import { siteNotifications, type SiteNotification } from './data/notifications';
 
 const examSections = [
   { id: 'sub_hin', title: 'हिंदी', questions: 15 },
@@ -32,6 +32,8 @@ const sameAnswer = (a: ID[], b: ID[]) => a.length === b.length && a.every((x) =>
 const formatMockTime = (seconds: number) => String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0');
 const NOTIFICATION_READ_KEY = 'jnvst-class9-notification-read-v1';
 const NOTIFICATION_TOAST_SEEN_KEY = 'jnvst-class9-notification-toast-seen-v1';
+const NOTIFICATION_FEED_URL = `${import.meta.env.BASE_URL}notifications.json`;
+const NOTIFICATION_REFRESH_INTERVAL_MS = 15000;
 const InlineText = ({ text }: { text: string }) => <MathAwareText text={text} />;
 
 const ContentRenderer = ({ blocks }: { blocks: ContentBlock[] }) => <div className="lesson-content">{blocks.map((b, i) => {
@@ -150,6 +152,8 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [toastNotificationId, setToastNotificationId] = useState<string | null>(null);
+  const [notifications, setNotifications] = useState<SiteNotification[]>(siteNotifications);
+  const notificationsRef = useRef<SiteNotification[]>(siteNotifications);
   const [readNotificationIds, setReadNotificationIds] = useState<string[]>(() => {
     try {
       const raw = localStorage.getItem(NOTIFICATION_READ_KEY);
@@ -164,8 +168,8 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
   const email = user?.email ?? 'Student';
   const location = useLocation();
 
-  const unreadNotifications = siteNotifications.filter((item) => !readNotificationIds.includes(item.id));
-  const toastNotification = toastNotificationId ? siteNotifications.find((item) => item.id === toastNotificationId) : undefined;
+  const unreadNotifications = notifications.filter((item) => !readNotificationIds.includes(item.id));
+  const toastNotification = toastNotificationId ? notifications.find((item) => item.id === toastNotificationId) : undefined;
 
   const getSeenNotificationToasts = (): string[] => {
     try {
@@ -211,7 +215,7 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
 
   const markAllNotificationsRead = () => {
     if (!unreadNotifications.length) return;
-    persistReadNotifications(siteNotifications.map((item) => item.id));
+    persistReadNotifications(notifications.map((item) => item.id));
   };
 
   useEffect(() => {
@@ -222,14 +226,73 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
     setToastNotificationId(null);
   }, [location.pathname]);
 
+  const refreshNotifications = async () => {
+    try {
+      const response = await fetch(NOTIFICATION_FEED_URL + '?v=' + Date.now(), {
+        cache: 'no-store',
+        headers: { Accept: 'application/json' },
+      });
+      if (!response.ok) return;
+
+      const payload: unknown = await response.json();
+      if (!Array.isArray(payload)) return;
+
+      const isNotification = (value: unknown): value is SiteNotification => {
+        if (!value || typeof value !== 'object') return false;
+        const item = value as Record<string, unknown>;
+        return (
+          typeof item.id === 'string' &&
+          typeof item.title === 'string' &&
+          typeof item.body === 'string' &&
+          typeof item.tag === 'string' &&
+          typeof item.date === 'string'
+        );
+      };
+
+      const nextNotifications = payload.filter(isNotification);
+      if (!nextNotifications.length) return;
+
+      const previousIds = new Set(notificationsRef.current.map((item) => item.id));
+      notificationsRef.current = nextNotifications;
+      setNotifications(nextNotifications);
+
+      const newIds = nextNotifications
+        .filter((item) => !previousIds.has(item.id))
+        .map((item) => item.id);
+
+      if (!newIds.length) return;
+    } catch {
+      // Keep the bundled notification feed when the runtime feed is temporarily unavailable.
+    }
+  };
+
+  useEffect(() => {
+    void refreshNotifications();
+
+    const refreshTimer = window.setInterval(() => {
+      void refreshNotifications();
+    }, NOTIFICATION_REFRESH_INTERVAL_MS);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') void refreshNotifications();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.clearInterval(refreshTimer);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   useEffect(() => {
     if (toastNotificationId) return;
     const seenIds = getSeenNotificationToasts();
-    const candidate = siteNotifications.find((item) => !readNotificationIds.includes(item.id) && !seenIds.includes(item.id));
+    const candidate = notifications.find((item) => !readNotificationIds.includes(item.id) && !seenIds.includes(item.id));
     if (!candidate) return;
     const timer = window.setTimeout(() => setToastNotificationId(candidate.id), 650);
     return () => window.clearTimeout(timer);
-  }, [readNotificationIds, toastNotificationId]);
+  }, [notifications, readNotificationIds, toastNotificationId]);
 
   useEffect(() => {
     if (!toastNotificationId) return;
