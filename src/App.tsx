@@ -377,7 +377,7 @@ const EnglishSubjectOverview = () => {
     </div>
 
     <div className="english-source-strip">
-      <div><span className="eyebrow">LEARNING METHOD</span><b>हिन्दी में समझें → English में सोचें → बिना मदद के solve करें</b><small>4 chapters · 10 skill units · 100 base practice questions · adaptive practice</small></div>
+      <div><span className="eyebrow">LEARNING METHOD</span><b>हिन्दी में समझें → English में सोचें → बिना मदद के solve करें</b><small>4 chapters · 10 skill units · 150 practice questions · adaptive practice</small></div>
       <Link className="btn" to="/english-revision">Mastery map →</Link>
     </div>
 
