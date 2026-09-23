@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useMemo, useState } from "react";
 import { useProgressStore } from "../store/progress";
+import { useProgressStore } from "../store/progress";
 import { hindiUnseenPassages, type HindiUnseenPassageQuestion } from "../data/hindiUnseenPassages";
 
 const levelClass = (level: string) => level.toLowerCase().replace(/[^a-z]+/g, "-");
@@ -149,7 +150,7 @@ const PassageQuestion = ({
 
       <div className="unseen-question-actions">
         {!state.revealed ? (
-          <button className="btn" type="button" disabled={state.selected === null} onClick={onReveal}>
+          <button className="btn" type="button" disabled={state.selectedSourceIndex === null} onClick={onReveal}>
             उत्तर और प्रमाण देखें
           </button>
         ) : (
@@ -167,9 +168,9 @@ const PassageQuestion = ({
             सही उत्तर: <b>{String.fromCharCode(65 + displayCorrectIndex)}. {question.options[question.correctIndex]}</b>
           </p>
           <p><b>कैसे हल करें:</b> {question.explanation}</p>
-          {!isCorrect && state.selected !== null && (
+          {!isCorrect && state.selectedSourceIndex !== null && (
             <p className="unseen-mistake">
-              आपने {String.fromCharCode(65 + state.selected)} चुना। अब passage की संबंधित पंक्ति या संकेत दोबारा खोजें।
+              आपने {String.fromCharCode(65 + (selectedDisplayIndex ?? 0))} चुना। अब passage की संबंधित पंक्ति या संकेत दोबारा खोजें।
             </p>
           )}
         </div>
@@ -179,6 +180,7 @@ const PassageQuestion = ({
 };
 
 export default function HindiUnseenPassagePage() {
+  const p = useProgressStore();
   const [activeId, setActiveId] = useState(hindiUnseenPassages[0]?.id ?? "");
   const [level, setLevel] = useState("All");
   const [skill, setSkill] = useState("All");
