@@ -133,6 +133,8 @@ for (const [, id, options, correct] of topicChallengerRecords) {
   assert(new Set(optionTexts.map((x) => x.trim().toLowerCase())).size === 4, id + ' has duplicate option text');
   assert(Number(correct) >= 0 && Number(correct) <= 3, id + ' has invalid correct option index');
 }
+const topicChallengerGenericExplanations = (topicChallengerSource.match(/यह dedicated subtopic Challenger प्रश्न उसी Hindi skill/g) ?? []).length;
+assert(topicChallengerGenericExplanations === 0, 'Hindi topic Challenger explanations must not use the generic placeholder explanation');
 
 const unseenSource = fs.readFileSync(path.join(root, 'src', 'data', 'hindiUnseenPassages.ts'), 'utf8');
 const passageIds = [...unseenSource.matchAll(/\bid:"(hup-\d+)"/g)].map((m) => m[1]);
