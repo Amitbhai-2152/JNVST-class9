@@ -15,7 +15,7 @@ const extractIds = (source, pattern) => unique([...source.matchAll(pattern)].map
 
 const buildSeoFiles = async () => {
   const curriculumSource = await readFile(curriculumSourcePath, 'utf8');
-  const subjectIds = extractIds(curriculumSource, /\{ id: ['"]([^'"]+)['"], description:/g);
+  const subjectIds = extractIds(curriculumSource, /\{ id: ['"](sub_[^'"]+)['"], title:/g);
   const chapterIds = extractIds(curriculumSource, /\{ id: ['"](chap_[^'"]+)['"], subjectId:/g);
   const topicIds = extractIds(curriculumSource, /\{ id: ['"](top_[^'"]+)['"], chapterId:/g);
   const lessonIds = extractIds(curriculumSource, /lessonIds:\s*\[([^\]]*)\]/g).flatMap((chunk) =>
