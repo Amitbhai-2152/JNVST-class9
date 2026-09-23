@@ -31,7 +31,7 @@ const makeExpansionQuestion = (spec: ExpansionSpec): Question =>
 export const englishExpansionQuestions: Question[] = [
   makeExpansionQuestion({
     id: 'q_eng_x_01_001', chapterId: 'chap_eng_01', topicId: 'top_eng_01_01',
-    textPlain: 'Read the passage: Mina planted three flowering plants near her classroom. She watered them every morning and placed small labels beside them. After several weeks, other students began asking about the names of the plants. What was one result of Mina\\'s work?',
+    textPlain: 'Read the passage: Mina planted three flowering plants near her classroom. She watered them every morning and placed small labels beside them. After several weeks, other students began asking about the names of the plants. What was one result of Mina\'s work?',
     options: ['Other students became interested in the plants.', 'The classroom was moved to another building.', 'Mina removed all the labels.', 'The plants were kept inside the library.'],
     correct: 0, difficulty: 'easy',
     explanationPlain: 'The passage says that other students began asking about the names of the plants.',
@@ -64,7 +64,7 @@ export const englishExpansionQuestions: Question[] = [
   makeExpansionQuestion({
     id: 'q_eng_x_01_005', chapterId: 'chap_eng_01', topicId: 'top_eng_01_01',
     textPlain: 'Read the passage: A group of students cleaned a pond near their school. At first, the pond was covered with plastic waste. After the cleanup, the water surface was visible again and people used the nearby path more comfortably. Which is the best title?',
-    options: ['A Cleaner Pond for the Community', 'Why Students Avoided the Pond', 'A New Road to the Market', 'The School\\'s Long Holiday'],
+    options: ['A Cleaner Pond for the Community', 'Why Students Avoided the Pond', 'A New Road to the Market', 'The School\'s Long Holiday'],
     correct: 0, difficulty: 'hard',
     explanationPlain: 'The passage focuses on the students cleaning the pond and the benefit to the community.',
     tags: ['comprehension', 'title', 'main-idea'],
