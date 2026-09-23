@@ -6,7 +6,7 @@ import ChapterStudyPage from './pages/ChapterStudyPage';
 import MathFormulaSheet from './pages/MathFormulaSheetPage';
 import { MathAwareText, MathText } from './components/MathText';
 import { useProgressStore } from './store/progress';
-import { useAuth } from './auth/Auth';
+import { AuthPage, useAuth } from './auth/Auth';
 import { trackEvent } from './lib/analytics';
 import type { ContentBlock, ID, MockTestResult, Question } from './types';
 import { buildJnvstMockPaper, buildMathMockPaper, buildScienceMockPaper, getChapterChallengerQuestions, getTopicChallengerQuestions, getPerformanceSummary, getRevisionTopics, getSmartPracticeQuestions, getMathSmartPracticeQuestions, getScienceSmartPracticeQuestions, getSmartRecommendations, getWeakTopics, getTopicPerformances, buildEnglishMockPaper, getEnglishSmartPracticeQuestions, buildHindiMockPaper, getHindiSmartPracticeQuestions, arrangeAssessmentOptions } from './utils/jnvstIntelligence';
