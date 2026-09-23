@@ -489,7 +489,9 @@ const AuthHeroArtwork = () => <div className="auth-v5-artwork" aria-hidden="true
       <text x="54" y="73" textAnchor="middle" fill="#e8ddff" fontSize="9" fontWeight="800" fontFamily="Inter, Arial">PROGRESS</text>
     </g>
   </svg>
-</div>\n\nexport const AuthGate = ({ children }: { children: React.ReactNode }) => {
+</div>
+
+export const AuthGate = ({ children }: { children: React.ReactNode }) => {
   const { configured, loading, user } = useAuth();
   if (!configured) {
     return <main className="auth-screen"><section className="auth-setup">
