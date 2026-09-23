@@ -319,9 +319,9 @@ const Dashboard = () => {
                 <div><h3>{subject.title}</h3><span>{subject.attemptedTopics}/{subject.totalTopics} topics attempted</span></div>
               </div>
               <div className="dashboard-subject-score">
-                <div><b>{subject.coverage}%</b><span>coverage</span></div>
-                <div><b>{subject.attempts}</b><span>attempts</span></div>
-                <div><b>{subject.attempts ? subject.accuracy + '%' : '—'}</b><span>accuracy</span></div>
+                <div><b>{subject.questionCoverage}%</b><span>question coverage</span></div>
+                <div><b>{subject.attemptedQuestions}</b><span>questions attempted</span></div>
+                <div><b>{subject.attemptedQuestions ? subject.accuracy + '%' : '—'}</b><span>latest accuracy</span></div>
               </div>
               <div className="dashboard-track light"><span style={{ width: subject.coverage + '%' }} /></div>
               <div className="dashboard-subject-footer">
