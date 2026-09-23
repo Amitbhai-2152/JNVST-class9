@@ -144,13 +144,35 @@ const scienceStageMeta = [
 const Shell = ({ children }: { children: React.ReactNode }) => {
   const { user, signOut, syncStatus, analyticsConsent, setAnalyticsConsent } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement | null>(null);
   const email = user?.email ?? 'Student';
   const location = useLocation();
 
   useEffect(() => {
     void trackEvent('page_view', { route: location.pathname });
     setMobileMenuOpen(false);
+    setAccountMenuOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!accountMenuRef.current?.contains(event.target as Node)) setAccountMenuOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setAccountMenuOpen(false);
+        document.getElementById('account-menu-trigger')?.focus();
+      }
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [accountMenuOpen]);
 
   const isActive = (section: 'dashboard' | 'subjects' | 'mock') => {
     if (section === 'dashboard') return location.pathname === '/';
@@ -189,23 +211,75 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
           </Link>
         </nav>
         <div className="account-bar">
-          <div className={'cloud-sync-status ' + syncStatus} title={syncLabel}>
+          <div className={'cloud-sync-status ' + syncStatus} title={syncLabel} aria-label={syncLabel}>
             <span aria-hidden="true">{syncStatus === 'saving' ? '↻' : syncStatus === 'error' ? '!' : '✓'}</span>
             <small>{syncLabel}</small>
           </div>
-          <div className="account-profile" title={email}>
-            <span className="account-avatar" aria-hidden="true">{email.slice(0, 1).toUpperCase()}</span>
-            <span className="account-email">{email}</span>
+
+          <div className="account-menu-wrap" ref={accountMenuRef}>
+            <button
+              id="account-menu-trigger"
+              type="button"
+              className={'account-menu-trigger ' + (accountMenuOpen ? 'open' : '')}
+              aria-expanded={accountMenuOpen}
+              aria-controls="account-menu-panel"
+              aria-haspopup="menu"
+              onClick={() => setAccountMenuOpen((open) => !open)}
+            >
+              <span className="account-avatar" aria-hidden="true">{email.slice(0, 1).toUpperCase()}</span>
+              <span className="account-trigger-copy">
+                <strong>Student</strong>
+                <small>{email}</small>
+              </span>
+              <span className="account-chevron" aria-hidden="true">⌄</span>
+            </button>
+
+            {accountMenuOpen && <div id="account-menu-panel" className="account-menu-panel" role="menu">
+              <div className="account-menu-head">
+                <span className="account-menu-avatar" aria-hidden="true">{email.slice(0, 1).toUpperCase()}</span>
+                <div>
+                  <strong>Student account</strong>
+                  <span>{email}</span>
+                </div>
+              </div>
+
+              <div className="account-menu-status">
+                <span className={'account-menu-status-dot ' + syncStatus}></span>
+                <div>
+                  <strong>Cloud progress</strong>
+                  <span>{syncLabel}</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="account-menu-action"
+                role="menuitem"
+                onClick={() => { void setAnalyticsConsent(!analyticsConsent); }}
+              >
+                <span className="account-menu-action-icon">◉</span>
+                <span>
+                  <strong>Analytics</strong>
+                  <small>{analyticsConsent ? 'ON — optional analytics enabled' : 'OFF — only essential account sync'}</small>
+                </span>
+                <b>{analyticsConsent ? 'ON' : 'OFF'}</b>
+              </button>
+
+              <div className="account-menu-note">
+                <span aria-hidden="true">✓</span>
+                <span>Your learning progress is tied to this student account and synced to the cloud.</span>
+              </div>
+
+              <button
+                type="button"
+                className="account-menu-logout"
+                role="menuitem"
+                onClick={() => { setAccountMenuOpen(false); void signOut(); }}
+              >
+                <span aria-hidden="true">↪</span> लॉग आउट
+              </button>
+            </div>}
           </div>
-          <button
-            type="button"
-            className="account-analytics"
-            onClick={() => { void setAnalyticsConsent(!analyticsConsent); }}
-            title="Product analytics preference"
-          >
-            <span aria-hidden="true">◉</span>{analyticsConsent ? 'Analytics ON' : 'Analytics OFF'}
-          </button>
-          <button type="button" className="account-logout" onClick={() => { void signOut(); }}>लॉग आउट</button>
         </div>
       </div>
     </header>
