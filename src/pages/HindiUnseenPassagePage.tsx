@@ -35,8 +35,7 @@ const getPreferredCorrectPosition = (id: string) => {
   return preferredCorrectPositions[slot] ?? null;
 };
 
-const shuffleIndices = (id: string) => {
-  const correctSourceIndex = 0;
+const shuffleIndices = (id: string, correctSourceIndex: number) => {
   const targetPosition = getPreferredCorrectPosition(id);
   const indices = [0, 1, 2, 3];
   let seed = getQuestionSeed(id);
@@ -104,7 +103,7 @@ const PassageQuestion = ({
   onReveal: () => void;
   onReset: () => void;
 }) => {
-  const order = shuffleIndices(question.id);
+  const order = shuffleIndices(question.id, question.correctIndex);
   const displayCorrectIndex = order.findIndex((sourceIndex) => sourceIndex === question.correctIndex);
   const isCorrect = state.selected === displayCorrectIndex;
   const isLocked = state.revealed;
@@ -119,7 +118,7 @@ const PassageQuestion = ({
 
       <div className="unseen-options" role="radiogroup" aria-label={"प्रश्न " + (index + 1) + " विकल्प"}>
         {(() => {
-          const order = shuffleIndices(question.id);
+          const order = shuffleIndices(question.id, question.correctIndex);
           const displayOptions = order.map((sourceIndex) => ({
             sourceIndex,
             text: question.options[sourceIndex],
