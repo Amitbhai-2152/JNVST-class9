@@ -1935,3 +1935,32 @@ a { color: inherit; text-decoration: none; }
 .english-topic-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}.english-topic-mastery-card{display:flex;flex-direction:column;gap:14px;min-width:0;padding:18px;border:1px solid #dce5f0;border-radius:18px;background:#fff}.english-topic-card-head{display:grid;grid-template-columns:48px minmax(0,1fr);gap:12px;align-items:start}.english-topic-card-head h4{margin:3px 0 4px;font-size:19px;line-height:1.3;overflow-wrap:anywhere}.english-topic-card-head small{color:#6a7b90}.english-topic-label{font-size:10px;letter-spacing:.1em;font-weight:800;color:#718197}.english-hindi-focus{padding:13px 14px;border-radius:13px;background:#f5f8ff;border:1px solid #dfe8f7}.english-hindi-focus span{display:block;font-size:10px;letter-spacing:.1em;font-weight:800;color:#5473a7;margin-bottom:3px}.english-hindi-focus b{display:block}.english-hindi-focus p{margin:5px 0 0;color:#52657b;line-height:1.6}.english-topic-sections{display:grid;grid-template-columns:1fr 1fr;gap:12px}.english-topic-sections>div{min-width:0;padding:12px;border:1px solid #e5ebf2;border-radius:12px;background:#fbfcfe}.english-topic-sections h5{margin:0 0 7px;font-size:13px;color:#304965}.english-topic-sections ul,.english-topic-sections ol{margin:0;padding-left:18px;color:#596c82;font-size:13px;line-height:1.55}.english-topic-sections li{margin:3px 0;overflow-wrap:anywhere}.english-topic-facts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.english-topic-facts>span{font-size:11px;font-weight:800;color:#718197;margin-right:2px}.english-topic-facts>b{font-size:11px;font-weight:700;color:#425972;padding:6px 8px;background:#f4f7fa;border:1px solid #e2e8ef;border-radius:999px;max-width:100%;overflow-wrap:anywhere}.english-topic-card-footer{margin-top:auto}.english-topic-progress{height:5px;background:#e9eef5;border-radius:99px;overflow:hidden;margin-bottom:11px}.english-topic-progress span{display:block;height:100%;background:#5278c8;border-radius:inherit}.english-topic-card-footer .actions{display:flex;flex-wrap:wrap}.english-topic-card-footer .btn{flex:1 1 170px;min-width:0}
 @media(max-width:900px){.english-topic-card-grid{grid-template-columns:1fr}.english-topic-sections{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.english-topic-mastery-card{padding:14px}.english-topic-sections{grid-template-columns:1fr}.english-topic-card-head{grid-template-columns:40px minmax(0,1fr)}.english-topic-card-head h4{font-size:17px}.english-topic-card-footer .actions{display:grid;grid-template-columns:1fr}.english-topic-card-footer .btn{width:100%;flex-basis:auto}}
+
+
+/* Hindi chapter study — same reader architecture */
+.hindi-study-page .science-study-hero {
+  background:linear-gradient(135deg,#4a2f24 0%,#7d5944 100%);
+  box-shadow:0 18px 40px rgba(74,47,36,.14);
+}
+.hindi-study-page .science-study-breadcrumb a { color:#7d513d; }
+.hindi-study-page .science-study-side-card { border-color:#eadfd9; }
+.hindi-study-page .science-study-stage-list button:hover { background:#fbf7f4; }
+.hindi-study-page .science-study-stage-list button.active { background:#f8efea; border-color:#e7d2c8; }
+.hindi-study-page .science-study-stage-icon { background:#f8f3f0; }
+.hindi-study-page .science-study-stage-list button.active .science-study-stage-icon { background:#f1e0d7; }
+.hindi-study-page .science-study-stage-list b,
+.hindi-study-page .science-study-flow-card > b { color:#6d4736; }
+.hindi-study-page .science-study-stage-list button.active em { color:#8a5b43; }
+.hindi-study-page .science-study-pagebar { border-color:#eadfd9; }
+.hindi-study-page .science-study-pagebar > div:first-child span { color:#8a5b43; }
+.hindi-study-page .science-study-progress-track span { background:#8a5b43; }
+.hindi-study-page .science-study-content-card { border-color:#eadfd9; }
+.hindi-study-page .science-study-content-head { background:linear-gradient(180deg,#fffaf7,#fff); }
+.hindi-study-page .science-study-content-head h2 { color:#5f4032; }
+.hindi-study-page .science-study-page-chip { border-color:#eadbd3; background:#f8f0ec; color:#795342; }
+.hindi-study-page .science-study-dots button.active { background:#8a5b43; }
+.hindi-study-page .science-study-chapter-link { border-color:#eadfd9; color:#6f5142; }
+.hindi-study-page .hindi-chapter-content .callout.important { border-color:#e5cdbf; background:#fff7f2; }
+@media (max-width:700px) {
+  .hindi-study-page .science-study-hero { padding:21px; border-radius:21px; }
+}
