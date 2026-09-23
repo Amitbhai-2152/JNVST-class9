@@ -4,6 +4,7 @@ import { allQuestions, jnvstExamQuestions } from '../data/questions';
 import { mathChapterChallengers } from '../data/questions/mathChapterChallengers';
 import { mathTopicChallengersV2 } from '../data/questions/mathTopicChallengersV2';
 import { englishChapterChallengers } from '../data/questions/englishChallengers';
+import { englishChapterChallengersExtra } from '../data/questions/englishChapterChallengersExtra';
 
 export interface TopicPerformance {
   topicId: ID;
@@ -469,7 +470,7 @@ export const getChapterChallengerQuestions = (
   seed = 'jnvst-challenger',
 ): Question[] => {
   const target = Math.max(20, limit);
-  const allChapterCandidates = [...mathTopicChallengersV2, ...mathChapterChallengers, ...englishChapterChallengers, ...allQuestions]
+  const allChapterCandidates = [...mathTopicChallengersV2, ...mathChapterChallengers, ...englishChapterChallengers, ...englishChapterChallengersExtra, ...allQuestions]
     .filter((question) =>
       question.chapterId === chapterId &&
       question.type === 'mcq' &&
