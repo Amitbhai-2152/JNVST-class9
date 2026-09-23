@@ -57,12 +57,10 @@ for (const file of legacySources) {
     if (id && topicId && type) legacyQuestionRecords.set(id, { topicId, type });
   }
 }
-const expansionQuestionRecords = new Map();
-for (const [, record] of expansionRecords) {
-  const id = record.match(/\bid:\s*'([^']+)'/)?.[1];
-  const topicId = record.match(/\btopicId:\s*'([^']+)'/)?.[1];
-  if (id && topicId) expansionQuestionRecords.set(id, { topicId, type: 'mcq' });
-}
+const expansionQuestionRecords = new Map(
+  expansionIds.map((id, index) => [id, { topicId: expansionTopics[index], type: 'mcq' }]),
+);
+assert(expansionQuestionRecords.size === 55, 'Hindi expansion ID/topic pairs should contain 55 unique records');
 const canonicalHindiQuestionRecords = new Map([...legacyQuestionRecords, ...expansionQuestionRecords]);
 assert(canonicalHindiQuestionRecords.size === 165, 'canonical Hindi question source should contain exactly 165 unique records, found ' + canonicalHindiQuestionRecords.size);
 
