@@ -1,5 +1,6 @@
 import type { Question } from "../../types";
 import { englishQuestions } from "./english";
+import { englishExpansionQuestions } from "./englishExpansion";
 import { hindiQuestions } from "./hindi";
 import { mathQuestions } from "./math";
 import { scienceQuestions } from "./science";
@@ -7,8 +8,10 @@ import { topics } from "../curriculum";
 import { jnvstClass9Audit } from "../syllabus/jnvst-class9-audit";
 import { phase5Enhancements } from "../lessons/phase5Content";
 
+export const englishQuestionBank: Question[] = [...englishQuestions, ...englishExpansionQuestions];
+
 export const rawQuestions: Question[] = [
-  ...englishQuestions,
+  ...englishQuestionBank,
   ...hindiQuestions,
   ...mathQuestions,
   ...scienceQuestions,
@@ -112,13 +115,13 @@ const smartEnrich = (question: Question): Question => ({
 export const allQuestions: Question[] = rawQuestions.map(smartEnrich);
 
 const counts = {
-  sub_eng: englishQuestions.length,
+  sub_eng: englishQuestionBank.length,
   sub_hin: hindiQuestions.length,
   sub_math: mathQuestions.length,
   sub_sci: scienceQuestions.length,
 };
 
-const expectedCounts = { sub_eng: 100, sub_hin: 110, sub_math: 220, sub_sci: 390, total: 820 };
+const expectedCounts = { sub_eng: 150, sub_hin: 110, sub_math: 220, sub_sci: 360, total: 840 };
 
 // Never crash the entire app because of a content-count mismatch.
 // Keep the integrity check visible in the console so content issues can be fixed
