@@ -114,7 +114,9 @@ const mergeProgress = (local: ProgressState, remote: ProgressState | null): Prog
 const normalizeAuthError = (message: string) => {
   if (/invalid login credentials/i.test(message)) return 'ईमेल या पासवर्ड सही नहीं है।';
   if (/email not confirmed/i.test(message)) return 'पहले अपने ईमेल से account confirm करें।';
+  if (/already registered|user already exists/i.test(message)) return 'इस ईमेल से account पहले से मौजूद है। Login करें या password reset करें।';
   if (/password.*(6|8|characters)/i.test(message)) return 'पासवर्ड Supabase की न्यूनतम password policy पूरी नहीं करता।';
+  if (/rate limit|too many requests/i.test(message)) return 'बहुत जल्दी बहुत बार कोशिश हुई है। थोड़ी देर बाद फिर प्रयास करें।';
   return message;
 };
 
@@ -129,6 +131,7 @@ interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  resendConfirmation: (email: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
   finishRecovery: () => void;
   signUp: (displayName: string, email: string, password: string, analyticsConsent: boolean) => Promise<{ requiresConfirmation: boolean }>;
@@ -329,6 +332,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const resendConfirmation = async (email: string) => {
+    if (!supabase) throw new Error('Supabase अभी configure नहीं है।');
+    const cleanedEmail = email.trim();
+    if (!cleanedEmail) throw new Error('Confirmation link भेजने के लिए अपना ईमेल दर्ज करें।');
+    setAuthError('');
+    const { error } = await supabase.auth.resend({ type: 'signup', email: cleanedEmail });
+    if (error) {
+      const message = normalizeAuthError(error.message);
+      setAuthError(message);
+      throw new Error(message);
+    }
+  };
+
   const updatePassword = async (password: string) => {
     if (!supabase) throw new Error('Supabase अभी configure नहीं है।');
     if (password.length < 8) throw new Error('पासवर्ड कम से कम 8 अक्षरों का होना चाहिए।');
@@ -419,6 +435,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signIn,
     signInWithGoogle,
     resetPassword,
+    resendConfirmation,
     updatePassword,
     finishRecovery,
     signUp,
@@ -568,7 +585,7 @@ const PasswordRecoveryPage = () => {
 };
 
 const AuthPage = () => {
-  const { signIn, signInWithGoogle, resetPassword, signUp, authError } = useAuth();
+  const { signIn, signInWithGoogle, resetPassword, resendConfirmation, signUp, authError } = useAuth();
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
@@ -579,6 +596,10 @@ const AuthPage = () => {
   const [analyticsConsent, setAnalyticsConsent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [recoveryWorking, setRecoveryWorking] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [confirmationEmail, setConfirmationEmail] = useState('');
+  const [confirmationWorking, setConfirmationWorking] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   const passwordStrength = (() => {
     let score = 0;
@@ -602,13 +623,19 @@ const AuthPage = () => {
       if (mode === 'signup') {
         if (displayName.trim().length < 2) throw new Error('अपना नाम दर्ज करें।');
         if (password.length < 8) throw new Error('पासवर्ड कम से कम 8 अक्षरों का होना चाहिए।');
+        if (password !== confirmPassword) throw new Error('दोनों पासवर्ड एक जैसे नहीं हैं।');
         const result = await signUp(displayName, email, password, analyticsConsent);
         if (result.requiresConfirmation) {
-          setMessage('Account बन गया है। confirmation link खोलकर फिर Login करें।');
+          const cleanedEmail = email.trim();
+          setConfirmationEmail(cleanedEmail);
+          setResendCooldown(30);
+          setMessage('Account बन गया है। Confirmation link आपके ईमेल पर भेज दिया गया है।');
           setMode('login');
           setPassword('');
+          setConfirmPassword('');
         } else {
           setMessage('Account तैयार है। आपकी progress cloud में सुरक्षित कर दी गई है।');
+          setConfirmPassword('');
         }
       } else {
         await signIn(email, password);
@@ -626,6 +653,12 @@ const AuthPage = () => {
       document.getElementById(targetId)?.focus();
     });
   }, [mode]);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = window.setInterval(() => setResendCooldown((value) => Math.max(0, value - 1)), 1000);
+    return () => window.clearInterval(timer);
+  }, [resendCooldown]);
 
   const handleModeKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
     if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
@@ -652,6 +685,21 @@ const AuthPage = () => {
     }
   };
 
+  const resendEmailConfirmation = async () => {
+    if (!confirmationEmail || resendCooldown > 0) return;
+    setMessage('');
+    setConfirmationWorking(true);
+    try {
+      await resendConfirmation(confirmationEmail);
+      setResendCooldown(30);
+      setMessage('Confirmation link फिर से भेज दिया गया है। Inbox के साथ spam folder भी देख लें।');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : String(error));
+    } finally {
+      setConfirmationWorking(false);
+    }
+  };
+
   const continueWithGoogle = async () => {
     setMessage('');
     setGoogleWorking(true);
@@ -667,6 +715,7 @@ const AuthPage = () => {
     setMode(nextMode);
     setMessage('');
     setPassword('');
+    setConfirmPassword('');
     setShowPassword(false);
   };
 
@@ -782,6 +831,18 @@ const AuthPage = () => {
             </div>}
           </div>
 
+          {mode === 'signup' && <div className="auth-v4-field">
+            <div className="auth-v4-label-row">
+              <label htmlFor="auth-v4-confirm-password">पासवर्ड दोबारा</label>
+              {confirmPassword.length > 0 && <span className={'auth-v4-match-label ' + (confirmPassword === password ? 'match' : 'no-match')}>{confirmPassword === password ? 'मेल खाता है' : 'अलग है'}</span>}
+            </div>
+            <div className="auth-v4-input">
+              <span className="auth-v4-input-icon" aria-hidden="true">✓</span>
+              <input id="auth-v4-confirm-password" type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} autoComplete="new-password" minLength={8} aria-describedby="auth-v4-confirm-help" placeholder="पासवर्ड फिर से लिखें" required />
+            </div>
+            <small id="auth-v4-confirm-help" className="auth-v4-inline-help">दोनों passwords एक जैसे होने चाहिए।</small>
+          </div>}
+
           {mode === 'signup' && <label className="auth-v4-consent">
             <input type="checkbox" checked={analyticsConsent} onChange={(event) => setAnalyticsConsent(event.target.checked)} />
             <span><strong>Optional analytics</strong> — Learning Hub को बेहतर बनाने में मदद करें। Phone, exact location, school या DOB नहीं लिए जाते।</span>
@@ -790,6 +851,18 @@ const AuthPage = () => {
           {(message || authError) && <div className={'auth-v4-message ' + (authError ? 'error' : 'success')} role="status" aria-live="polite">
             <span className="auth-v4-message-icon">{authError ? '!' : '✓'}</span>
             <p>{message || authError}</p>
+          </div>}
+
+          {confirmationEmail && mode === 'login' && <div className="auth-v4-confirmation-card" aria-live="polite">
+            <div className="auth-v4-confirmation-icon">✉</div>
+            <div className="auth-v4-confirmation-copy">
+              <strong>ईमेल verify करें</strong>
+              <span>{confirmationEmail}</span>
+              <small>Inbox या spam folder में confirmation link खोलें।</small>
+            </div>
+            <button type="button" onClick={() => { void resendEmailConfirmation(); }} disabled={confirmationWorking || resendCooldown > 0}>
+              {confirmationWorking ? 'भेज रहे हैं…' : resendCooldown > 0 ? `फिर से भेजें (${resendCooldown}s)` : 'Confirmation फिर से भेजें'}
+            </button>
           </div>}
 
           <button type="submit" className="auth-v4-submit" disabled={working || googleWorking || recoveryWorking} aria-busy={working}>
