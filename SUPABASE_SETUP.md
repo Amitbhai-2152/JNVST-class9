@@ -1,46 +1,43 @@
 # Supabase setup for JNVST Class 9
 
-This project now supports authenticated student accounts with cloud-saved progress.
+The app supports authenticated student accounts, cloud-saved progress, and optional consent-gated product analytics.
 
 ## What is stored
 
-The app syncs the complete ProgressState, including lesson activity, question attempts, bookmarks, revision history, recently studied items, mock-test results, English lab attempts, and Hindi unseen-passage attempts.
+The student account uses Supabase Auth. The app syncs the complete learning ProgressState: lesson activity, question attempts, bookmarks, revision history, recently studied items, mock-test results, English lab attempts, and Hindi unseen-passage attempts.
 
-The browser keeps the existing Zustand/Local Storage cache for resilience. On first login, local progress is merged with the cloud record instead of blindly overwriting either side.
+## Growth data
 
-## 1. Create a Supabase project
+With the student's optional analytics consent, the app records page views, learning milestones, practice activity, mock completion, device class, first-touch UTM source/medium/campaign, and referrer hostname.
 
-Create a project at Supabase and open its SQL Editor.
+The system deliberately does not collect phone numbers, exact location, date of birth, school name, passwords, or learning-question text for growth reporting.
 
-## 2. Create the progress table
+Use supabase/growth.sql in the Supabase SQL Editor to create owner-facing growth views for student totals, daily engagement, and campaign attribution.
 
-Run supabase/schema.sql.
+## Security
 
-The table has one row per authenticated user. Row Level Security is enabled and every select/insert/update/delete policy checks auth.uid() = user_id.
+Run supabase/schema.sql. RLS is enabled for every exposed table. Students can only access their own profile/progress rows. Analytics events are client-insert only and are not readable by the authenticated client.
 
-Do not put a service-role key in this frontend repository. The frontend only needs the browser-safe publishable key.
+Keep the Supabase publishable key in the frontend only after RLS and grants are correctly configured. Never commit a service-role key.
 
-## 3. Configure email authentication
+## Promotion links
 
-In Supabase Authentication settings, enable Email provider. Keep email confirmation on if you want students to confirm ownership of their email address.
+Use UTM tags on links you control, for example:
 
-The app supports email + password sign up and login.
+?utm_source=youtube&utm_medium=video&utm_campaign=jnvst_launch
 
-## 4. Configure GitHub Actions
+The reporting view lets you compare campaign sources with students who actually complete a lesson or a mock, instead of only counting clicks.
 
-Add these repository secrets:
+## Test checklist
 
-- VITE_SUPABASE_URL
-- VITE_SUPABASE_PUBLISHABLE_KEY
-
-The Pages build reads them at build time. Do not commit the real key to the repository.
-
-## 5. Test
-
-1. Open the site and create a student account.
-2. Complete a lesson and answer a few questions.
-3. Refresh the page and confirm the progress remains.
-4. Sign out and sign in again.
-5. Open the same account on another browser/device and confirm the same cloud progress loads.
-
-The existing local progress on the first device is imported into the account during the first authenticated load.
+1. Run supabase/schema.sql.
+2. Run supabase/growth.sql.
+3. Configure VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY as GitHub Actions secrets.
+4. Create a test account.
+5. Complete a lesson, some questions, and a mock.
+6. Verify the learning state appears in student_progress.
+7. Verify consented events appear in analytics_events.
+8. Query growth_overview, growth_daily_summary, and growth_campaign_summary.
+9. Sign out and back in; verify progress remains.
+10. Open the same account on another browser/device; verify the cloud progress loads.
+11. Create a second account and verify the first account's progress is not visible.

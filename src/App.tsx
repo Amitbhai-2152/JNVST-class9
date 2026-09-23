@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { HashRouter, Link, Navigate, Route, Routes, useParams } from 'react-router-dom';
+import { HashRouter, Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { allQuestions, allLessons, chapters, getLesson, getQuestionsBySubject, getQuestionsByTopic, getSubject, subjects, topics, jnvstExamQuestions } from './data';
 import { getChapterStudyPages, getScienceChapterStudyPages } from './data/lessons/chapterStudy';
 import ChapterStudyPage from './pages/ChapterStudyPage';
@@ -7,6 +7,7 @@ import MathFormulaSheet from './pages/MathFormulaSheetPage';
 import { MathAwareText, MathText } from './components/MathText';
 import { useProgressStore } from './store/progress';
 import { useAuth } from './auth/Auth';
+import { trackEvent } from './lib/analytics';
 import type { ContentBlock, ID, MockTestResult, Question } from './types';
 import { buildJnvstMockPaper, buildMathMockPaper, buildScienceMockPaper, getChapterChallengerQuestions, getTopicChallengerQuestions, getPerformanceSummary, getRevisionTopics, getSmartPracticeQuestions, getMathSmartPracticeQuestions, getScienceSmartPracticeQuestions, getSmartRecommendations, getWeakTopics, getTopicPerformances, buildEnglishMockPaper, getEnglishSmartPracticeQuestions, buildHindiMockPaper, getHindiSmartPracticeQuestions, arrangeAssessmentOptions } from './utils/jnvstIntelligence';
 import { mathMasteryUnits, mathMasteryUnitMap } from './data/mathMastery';
@@ -141,8 +142,13 @@ const scienceStageMeta = [
 
 
 const Shell = ({ children }: { children: React.ReactNode }) => {
-  const { user, signOut, syncStatus } = useAuth();
+  const { user, signOut, syncStatus, analyticsConsent, setAnalyticsConsent } = useAuth();
   const email = user?.email ?? 'Student';
+  const location = useLocation();
+
+  useEffect(() => {
+    void trackEvent('page_view', { route: location.pathname });
+  }, [location.pathname]);
   const syncLabel = syncStatus === 'saving' ? 'सिंक हो रहा है…' : syncStatus === 'error' ? 'सिंक त्रुटि' : 'सिंक सुरक्षित';
   return <div className="app-shell">
     <header className="topbar">
@@ -151,6 +157,9 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
       <div className="account-bar">
         <span className={'cloud-sync-status ' + syncStatus} title={syncLabel}>{syncStatus === 'saving' ? '↻' : syncStatus === 'error' ? '!' : '✓'} <small>{syncLabel}</small></span>
         <span className="account-email" title={email}>{email}</span>
+        <button type="button" className="account-analytics" onClick={() => { void setAnalyticsConsent(!analyticsConsent); }} title="Product analytics preference">
+          📊 {analyticsConsent ? 'ON' : 'OFF'}
+        </button>
         <button type="button" className="account-logout" onClick={() => { void signOut(); }}>लॉग आउट</button>
       </div>
     </header>

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { ID, MockTestResult, ProgressState, QuestionAttempt, EnglishLabAttempt, HindiUnseenLabAttempt } from '../types';
+import { trackEvent } from '../lib/analytics';
 
 type Store = ProgressState & {
   replaceProgress: (progress: ProgressState) => void;
@@ -64,11 +65,14 @@ export const useProgressStore = create<Store>()(
         englishLabAttempts: nextProgress.englishLabAttempts ?? {},
         hindiUnseenAttempts: nextProgress.hindiUnseenAttempts ?? {},
       })),
-      completeLesson: (id, title) => set((state) => ({
-        lessonActivity: { ...state.lessonActivity, [id]: { status: 'completed', lastAccessed: Date.now() } },
-        recentlyStudied: recent(state.recentlyStudied ?? [], { id, title, type: 'lesson', timestamp: Date.now() }),
-        revisionHistory: [...(state.revisionHistory ?? []), { entityType: 'lesson', entityId: id, timestamp: Date.now() }],
-      })),
+      completeLesson: (id, title) => {
+        set((state) => ({
+          lessonActivity: { ...state.lessonActivity, [id]: { status: 'completed', lastAccessed: Date.now() } },
+          recentlyStudied: recent(state.recentlyStudied ?? [], { id, title, type: 'lesson', timestamp: Date.now() }),
+          revisionHistory: [...(state.revisionHistory ?? []), { entityType: 'lesson', entityId: id, timestamp: Date.now() }],
+        }));
+        void trackEvent('lesson_completed');
+      },
       markInProgress: (id, title) => set((state) => ({
         lessonActivity: {
           ...(state.lessonActivity ?? {}),
@@ -87,40 +91,61 @@ export const useProgressStore = create<Store>()(
         const bookmarks = state.bookmarks ?? { questionIds: [], lessonIds: [] };
         return { bookmarks: { ...bookmarks, lessonIds: bookmarks.lessonIds.includes(id) ? bookmarks.lessonIds.filter((x) => x !== id) : [...bookmarks.lessonIds, id] } };
       }),
-      recordAttempt: (id, attempt) => set((state) => ({
-        questionAttempts: { ...(state.questionAttempts ?? {}), [id]: [...(state.questionAttempts?.[id] ?? []), attempt] },
-        revisionHistory: [...(state.revisionHistory ?? []), { entityType: 'question', entityId: id, timestamp: attempt.timestamp }],
-      })),
-      recordAttempts: (items) => set((state) => {
-        const questionAttempts = { ...(state.questionAttempts ?? {}) };
-        const history = [...(state.revisionHistory ?? [])];
+      recordAttempt: (id, attempt) => {
+        set((state) => ({
+          questionAttempts: { ...(state.questionAttempts ?? {}), [id]: [...(state.questionAttempts?.[id] ?? []), attempt] },
+          revisionHistory: [...(state.revisionHistory ?? []), { entityType: 'question', entityId: id, timestamp: attempt.timestamp }],
+        }));
+        void trackEvent('question_attempted', { mode: attempt.mode });
+      },
+      recordAttempts: (items) => {
+        set((state) => {
+          const questionAttempts = { ...(state.questionAttempts ?? {}) };
+          const history = [...(state.revisionHistory ?? [])];
 
-        items.forEach(({ id, attempt }) => {
-          questionAttempts[id] = [...(questionAttempts[id] ?? []), attempt];
-          history.push({ entityType: 'question', entityId: id, timestamp: attempt.timestamp });
+          items.forEach(({ id, attempt }) => {
+            questionAttempts[id] = [...(questionAttempts[id] ?? []), attempt];
+            history.push({ entityType: 'question', entityId: id, timestamp: attempt.timestamp });
+          });
+
+          return { questionAttempts, revisionHistory: history };
         });
-
-        return { questionAttempts, revisionHistory: history };
-      }),
-      recordStudy: (id, title, type) => set((state) => ({
-        recentlyStudied: recent(state.recentlyStudied ?? [], { id, title, type, timestamp: Date.now() }),
-      })),
-      saveMockResult: (result) => set((state) => ({
-        mockTestResults: [result, ...(state.mockTestResults ?? []).filter((x) => x.id !== result.id)].slice(0, 20),
-        revisionHistory: [...(state.revisionHistory ?? []), { entityType: 'mock-test', entityId: result.id, timestamp: result.timestamp }],
-      })),
-      recordEnglishLabAttempt: (id, attempt) => set((state) => ({
-        englishLabAttempts: {
-          ...(state.englishLabAttempts ?? {}),
-          [id]: [...(state.englishLabAttempts?.[id] ?? []), attempt].slice(-30),
-        },
-      })),
-      recordHindiUnseenAttempt: (id, attempt) => set((state) => ({
-        hindiUnseenAttempts: {
-          ...(state.hindiUnseenAttempts ?? {}),
-          [id]: [...(state.hindiUnseenAttempts?.[id] ?? []), attempt].slice(-30),
-        },
-      })),
+        void trackEvent('questions_batch_attempted', {
+          count: items.length,
+          mode: items[0]?.attempt.mode ?? 'mixed',
+        });
+      },
+      recordStudy: (id, title, type) => {
+        set((state) => ({
+          recentlyStudied: recent(state.recentlyStudied ?? [], { id, title, type, timestamp: Date.now() }),
+        }));
+        void trackEvent(type === 'lesson' ? 'lesson_opened' : 'topic_opened');
+      },
+      saveMockResult: (result) => {
+        set((state) => ({
+          mockTestResults: [result, ...(state.mockTestResults ?? []).filter((x) => x.id !== result.id)].slice(0, 20),
+          revisionHistory: [...(state.revisionHistory ?? []), { entityType: 'mock-test', entityId: result.id, timestamp: result.timestamp }],
+        }));
+        void trackEvent('mock_completed', { question_count: result.totalMarks });
+      },
+      recordEnglishLabAttempt: (id, attempt) => {
+        set((state) => ({
+          englishLabAttempts: {
+            ...(state.englishLabAttempts ?? {}),
+            [id]: [...(state.englishLabAttempts?.[id] ?? []), attempt].slice(-30),
+          },
+        }));
+        void trackEvent('lab_attempted', { mode: attempt.mode });
+      },
+      recordHindiUnseenAttempt: (id, attempt) => {
+        set((state) => ({
+          hindiUnseenAttempts: {
+            ...(state.hindiUnseenAttempts ?? {}),
+            [id]: [...(state.hindiUnseenAttempts?.[id] ?? []), attempt].slice(-30),
+          },
+        }));
+        void trackEvent('lab_attempted', { mode: attempt.mode });
+      },
     }),
     {
       name: 'jnvst-class9-progress-v2',

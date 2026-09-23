@@ -3,6 +3,17 @@ import type { Session, User } from '@supabase/supabase-js';
 import { useProgressStore, emptyProgressState, getProgressSnapshot } from '../store/progress';
 import type { ProgressState } from '../types';
 import { supabase, supabaseConfigured } from '../lib/supabase';
+import {
+  clearPendingAnalyticsConsent,
+  consumePendingSignup,
+  getCampaignAttribution,
+  getPendingAnalyticsConsent,
+  initializeAnalytics,
+  markPendingSignup,
+  setAnalyticsConsent as setAnalyticsConsentState,
+  setPendingAnalyticsConsent,
+  trackEvent,
+} from '../lib/analytics';
 
 const LOCAL_OWNER_KEY = 'jnvst-class9-progress-owner-v1';
 const CLOUD_TABLE = 'student_progress';
@@ -114,8 +125,10 @@ interface AuthContextValue {
   syncStatus: SyncStatus;
   authError: string;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (displayName: string, email: string, password: string) => Promise<{ requiresConfirmation: boolean }>;
+  signUp: (displayName: string, email: string, password: string, analyticsConsent: boolean) => Promise<{ requiresConfirmation: boolean }>;
   signOut: () => Promise<void>;
+  analyticsConsent: boolean;
+  setAnalyticsConsent: (enabled: boolean) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -132,6 +145,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
   const [authError, setAuthError] = useState('');
+  const [analyticsConsent, setAnalyticsConsentValue] = useState(false);
   const syncTimerRef = useRef<number | null>(null);
   const syncCleanupRef = useRef<(() => void) | null>(null);
   const syncRunRef = useRef(0);
@@ -183,20 +197,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     try {
       const local = snapshotForOwner(nextSession.user.id);
-      const { data, error } = await supabase
-        .from(CLOUD_TABLE)
-        .select('progress')
-        .eq('user_id', nextSession.user.id)
-        .maybeSingle();
+      const [{ data, error }, { data: profile, error: profileError }] = await Promise.all([
+        supabase
+          .from(CLOUD_TABLE)
+          .select('progress')
+          .eq('user_id', nextSession.user.id)
+          .maybeSingle(),
+        supabase
+          .from('student_profiles')
+          .select('analytics_consent, display_name, first_utm_source, first_utm_medium, first_utm_campaign')
+          .eq('user_id', nextSession.user.id)
+          .maybeSingle(),
+      ]);
 
       if (runId !== syncRunRef.current) return;
       if (error) throw error;
+      if (profileError) throw profileError;
+
+      const pendingConsent = getPendingAnalyticsConsent();
+      const consent = profile?.analytics_consent ?? pendingConsent ?? false;
+      const campaign = getCampaignAttribution();
+      const now = new Date().toISOString();
+      const displayName = String(nextSession.user.user_metadata?.full_name ?? '').trim().slice(0, 100) || null;
+      const profilePayload: Record<string, unknown> = {
+        user_id: nextSession.user.id,
+        display_name: displayName,
+        last_seen_at: now,
+      };
+      if (!profile) profilePayload.first_seen_at = now;
+      if (pendingConsent !== null) profilePayload.analytics_consent = pendingConsent;
+      if (consent && !profile?.first_utm_source && campaign.source) profilePayload.first_utm_source = campaign.source;
+      if (consent && !profile?.first_utm_medium && campaign.medium) profilePayload.first_utm_medium = campaign.medium;
+      if (consent && !profile?.first_utm_campaign && campaign.campaign) profilePayload.first_utm_campaign = campaign.campaign;
+      if (consent) profilePayload.device_type = undefined;
+      delete profilePayload.device_type;
+
+      const { error: profileUpsertError } = await supabase.from('student_profiles').upsert(profilePayload, { onConflict: 'user_id' });
+      if (profileUpsertError) throw profileUpsertError;
+
+      setAnalyticsConsentValue(Boolean(consent));
+      initializeAnalytics(nextSession.user.id, Boolean(consent));
+      if (pendingConsent !== null) clearPendingAnalyticsConsent();
 
       const remote = toProgress(data?.progress);
       const merged = mergeProgress(local, remote);
       useProgressStore.getState().replaceProgress(merged);
       localStorage.setItem(LOCAL_OWNER_KEY, nextSession.user.id);
-      await saveNow(nextSession.user.id);
+      if (consumePendingSignup()) void trackEvent('sign_up');
+      else void trackEvent('login');
 
       if (runId !== syncRunRef.current) return;
       syncCleanupRef.current = useProgressStore.subscribe(() => scheduleCloudSave(nextSession.user.id));
@@ -241,9 +289,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const signUp = async (displayName: string, email: string, password: string) => {
+  const signUp = async (displayName: string, email: string, password: string, consent: boolean) => {
     if (!supabase) throw new Error('Supabase अभी configure नहीं है।');
     setAuthError('');
+    setPendingAnalyticsConsent(consent);
+    getCampaignAttribution();
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
@@ -254,6 +304,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setAuthError(message);
       throw new Error(message);
     }
+    markPendingSignup();
     return { requiresConfirmation: !data.session };
   };
 
@@ -262,8 +313,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     clearSync();
     setAuthError('');
     await supabase.auth.signOut();
+    initializeAnalytics('', false);
+    setAnalyticsConsentValue(false);
     setSession(null);
     setSyncStatus('idle');
+  };
+
+  const updateAnalyticsConsent = async (enabled: boolean) => {
+    if (!supabase || !session?.user.id) return;
+    setAnalyticsConsentState(enabled);
+    setAnalyticsConsentValue(enabled);
+    const { error } = await supabase.from('student_profiles').upsert(
+      {
+        user_id: session.user.id,
+        analytics_consent: enabled,
+        display_name: String(session.user.user_metadata?.full_name ?? '').trim().slice(0, 100) || null,
+        last_seen_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id' },
+    );
+    if (error) {
+      setAnalyticsConsentState(!enabled);
+      setAnalyticsConsentValue(!enabled);
+      throw error;
+    }
   };
 
   const value = useMemo<AuthContextValue>(() => ({
@@ -275,7 +348,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signIn,
     signUp,
     signOut,
-  }), [loading, session, syncStatus, authError]);
+    analyticsConsent,
+    setAnalyticsConsent: updateAnalyticsConsent,
+  }), [loading, session, syncStatus, authError, analyticsConsent]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
@@ -309,6 +384,7 @@ const AuthPage = () => {
   const [password, setPassword] = useState('');
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState('');
+  const [analyticsConsent, setAnalyticsConsent] = useState(false);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -317,7 +393,7 @@ const AuthPage = () => {
     try {
       if (mode === 'signup') {
         if (displayName.trim().length < 2) throw new Error('अपना नाम दर्ज करें।');
-        const result = await signUp(displayName, email, password);
+        const result = await signUp(displayName, email, password, analyticsConsent);
         if (result.requiresConfirmation) {
           setMessage('Account बन गया है। अपने ईमेल में confirmation link खोलकर फिर Login करें।');
           setMode('login');
@@ -348,6 +424,7 @@ const AuthPage = () => {
         {mode === 'signup' && <div className="auth-field"><label htmlFor="student-name">नाम</label><input id="student-name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} autoComplete="name" required /></div>}
         <div className="auth-field"><label htmlFor="student-email">ईमेल</label><input id="student-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required /></div>
         <div className="auth-field"><label htmlFor="student-password">पासवर्ड</label><input id="student-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength={8} required /></div>
+        {mode === 'signup' && <label className="auth-consent"><input type="checkbox" checked={analyticsConsent} onChange={(event) => setAnalyticsConsent(event.target.checked)} /><span>मैं वैकल्पिक product analytics की अनुमति देता/देती हूँ, ताकि Learning Hub को बेहतर बनाने और promotion sources को समझने में मदद मिले। इसमें phone, exact location, school या DOB जैसे विवरण नहीं लिए जाते।</span></label>}
         {(message || authError) && <div className={'auth-message ' + (authError ? 'error' : 'success')}>{message || authError}</div>}
         <button className="auth-submit" disabled={working}>{working ? 'कृपया प्रतीक्षा करें…' : mode === 'login' ? 'Login करें' : 'Account बनाएँ'}</button>
       </form>
