@@ -10,12 +10,16 @@ create table if not exists public.student_profiles (
   first_utm_source text,
   first_utm_medium text,
   first_utm_campaign text,
+  first_utm_content text,
+  first_utm_term text,
   device_type text,
   constraint student_profiles_display_name_length check (display_name is null or char_length(display_name) between 1 and 100),
   constraint student_profiles_utm_length check (
     (first_utm_source is null or char_length(first_utm_source) <= 100)
     and (first_utm_medium is null or char_length(first_utm_medium) <= 100)
     and (first_utm_campaign is null or char_length(first_utm_campaign) <= 100)
+    and (first_utm_content is null or char_length(first_utm_content) <= 100)
+    and (first_utm_term is null or char_length(first_utm_term) <= 100)
   )
 );
 
@@ -35,6 +39,8 @@ create table if not exists public.analytics_events (
   utm_source text,
   utm_medium text,
   utm_campaign text,
+  utm_content text,
+  utm_term text,
   referrer_host text,
   properties jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
@@ -56,7 +62,7 @@ revoke all on table public.analytics_events from anon, authenticated;
 
 grant select, insert, update, delete on table public.student_profiles to authenticated;
 grant select, insert, update, delete on table public.student_progress to authenticated;
-grant insert on table public.analytics_events to authenticated;
+grant insert, delete on table public.analytics_events to authenticated;
 
 drop policy if exists "Students can read their own profile" on public.student_profiles;
 create policy "Students can read their own profile" on public.student_profiles
@@ -93,6 +99,10 @@ create policy "Students can delete their own progress" on public.student_progres
 drop policy if exists "Students can create their own analytics events" on public.analytics_events;
 create policy "Students can create their own analytics events" on public.analytics_events
   for insert to authenticated with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Students can delete their own analytics events" on public.analytics_events;
+create policy "Students can delete their own analytics events" on public.analytics_events
+  for delete to authenticated using ((select auth.uid()) = user_id);
 
 create index if not exists student_progress_updated_at_idx on public.student_progress(updated_at desc);
 create index if not exists analytics_events_created_at_idx on public.analytics_events(created_at desc);

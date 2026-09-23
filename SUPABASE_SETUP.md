@@ -2,42 +2,62 @@
 
 The app supports authenticated student accounts, cloud-saved progress, and optional consent-gated product analytics.
 
-## What is stored
+## Student account and progress
 
-The student account uses Supabase Auth. The app syncs the complete learning ProgressState: lesson activity, question attempts, bookmarks, revision history, recently studied items, mock-test results, English lab attempts, and Hindi unseen-passage attempts.
+Supabase Auth handles the account. The app syncs the complete learning ProgressState to the student's own row in student_progress. Existing local progress is merged on first login so it is not blindly overwritten.
 
-## Growth data
+## Growth data collected only after optional analytics consent
 
-With the student's optional analytics consent, the app records page views, learning milestones, practice activity, mock completion, device class, first-touch UTM source/medium/campaign, and referrer hostname.
+The app can record page views, lesson/topic opens, lesson completion, practice activity, mock completion, lab usage, device class, referrer hostname, and first-touch UTM attribution.
 
-The system deliberately does not collect phone numbers, exact location, date of birth, school name, passwords, or learning-question text for growth reporting.
+UTM attribution includes:
+- utm_source
+- utm_medium
+- utm_campaign
+- utm_content
+- utm_term
 
-Use supabase/growth.sql in the Supabase SQL Editor to create owner-facing growth views for student totals, daily engagement, and campaign attribution.
+Example promotion link:
+?utm_source=youtube&utm_medium=video&utm_campaign=jnvst_launch&utm_content=short_01
+
+This lets you compare promotion sources and individual campaign creatives against students who actually complete a lesson or mock.
+
+The app deliberately does not collect phone numbers, exact location, DOB, school name, passwords, or question text for growth reporting.
 
 ## Security
 
-Run supabase/schema.sql. RLS is enabled for every exposed table. Students can only access their own profile/progress rows. Analytics events are client-insert only and are not readable by the authenticated client.
+Run supabase/schema.sql. RLS is enabled on every exposed table. Students can only access their own profile/progress rows. Analytics events are insert-only for normal use and are not readable by the authenticated client; when analytics is turned off, the student's previously stored analytics events are removed.
 
-Keep the Supabase publishable key in the frontend only after RLS and grants are correctly configured. Never commit a service-role key.
+Run supabase/growth.sql as the project owner/admin. The growth views are not granted to authenticated users.
 
-## Promotion links
+Never put a service-role key in the frontend.
 
-Use UTM tags on links you control, for example:
+## Growth metrics
 
-?utm_source=youtube&utm_medium=video&utm_campaign=jnvst_launch
+growth_overview provides total students, new students, recently logged-in students, analytics opt-in count, and recent learning-event totals.
 
-The reporting view lets you compare campaign sources with students who actually complete a lesson or a mock, instead of only counting clicks.
+growth_daily_summary provides analytics-consenting engagement by day.
 
-## Test checklist
+growth_campaign_summary provides first-touch campaign/content attribution and the number of attributed students who completed a lesson or a mock.
+
+## GitHub Actions
+
+Configure these repository secrets:
+- VITE_SUPABASE_URL
+- VITE_SUPABASE_PUBLISHABLE_KEY
+
+## Final test
 
 1. Run supabase/schema.sql.
 2. Run supabase/growth.sql.
-3. Configure VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY as GitHub Actions secrets.
+3. Configure the GitHub Actions secrets.
 4. Create a test account.
-5. Complete a lesson, some questions, and a mock.
-6. Verify the learning state appears in student_progress.
-7. Verify consented events appear in analytics_events.
-8. Query growth_overview, growth_daily_summary, and growth_campaign_summary.
-9. Sign out and back in; verify progress remains.
-10. Open the same account on another browser/device; verify the cloud progress loads.
-11. Create a second account and verify the first account's progress is not visible.
+5. Test both analytics OFF and ON.
+6. With analytics ON, complete a lesson, answer questions, and finish a mock.
+7. Verify student_progress contains the learning state.
+8. Verify analytics_events contains only the allowed event names.
+9. Verify growth_* views return expected aggregate data.
+10. Turn analytics OFF and verify the student's analytics events are deleted.
+11. Sign out/in and verify progress remains.
+12. Open the same account on a second device/browser and verify progress loads.
+13. Create another account and verify accounts cannot read one another's progress.

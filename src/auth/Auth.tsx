@@ -13,6 +13,7 @@ import {
   setAnalyticsConsent as setAnalyticsConsentState,
   setPendingAnalyticsConsent,
   trackEvent,
+  getDeviceType,
 } from '../lib/analytics';
 
 const LOCAL_OWNER_KEY = 'jnvst-class9-progress-owner-v1';
@@ -205,7 +206,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           .maybeSingle(),
         supabase
           .from('student_profiles')
-          .select('analytics_consent, display_name, first_utm_source, first_utm_medium, first_utm_campaign')
+          .select('analytics_consent, display_name, first_utm_source, first_utm_medium, first_utm_campaign, first_utm_content, first_utm_term')
           .eq('user_id', nextSession.user.id)
           .maybeSingle(),
       ]);
@@ -229,8 +230,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (consent && !profile?.first_utm_source && campaign.source) profilePayload.first_utm_source = campaign.source;
       if (consent && !profile?.first_utm_medium && campaign.medium) profilePayload.first_utm_medium = campaign.medium;
       if (consent && !profile?.first_utm_campaign && campaign.campaign) profilePayload.first_utm_campaign = campaign.campaign;
-      if (consent) profilePayload.device_type = undefined;
-      delete profilePayload.device_type;
+      if (consent && !profile?.first_utm_content && campaign.content) profilePayload.first_utm_content = campaign.content;
+      if (consent && !profile?.first_utm_term && campaign.term) profilePayload.first_utm_term = campaign.term;
+      if (consent) profilePayload.device_type = getDeviceType();
 
       const { error: profileUpsertError } = await supabase.from('student_profiles').upsert(profilePayload, { onConflict: 'user_id' });
       if (profileUpsertError) throw profileUpsertError;
@@ -323,19 +325,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!supabase || !session?.user.id) return;
     setAnalyticsConsentState(enabled);
     setAnalyticsConsentValue(enabled);
-    const { error } = await supabase.from('student_profiles').upsert(
+    const profileWrite = await supabase.from('student_profiles').upsert(
       {
         user_id: session.user.id,
         analytics_consent: enabled,
         display_name: String(session.user.user_metadata?.full_name ?? '').trim().slice(0, 100) || null,
         last_seen_at: new Date().toISOString(),
+        device_type: enabled ? getDeviceType() : null,
+        ...(enabled ? {} : {
+          first_utm_source: null,
+          first_utm_medium: null,
+          first_utm_campaign: null,
+          first_utm_content: null,
+          first_utm_term: null,
+        }),
       },
       { onConflict: 'user_id' },
     );
-    if (error) {
+    if (profileWrite.error) {
       setAnalyticsConsentState(!enabled);
       setAnalyticsConsentValue(!enabled);
-      throw error;
+      throw profileWrite.error;
+    }
+    if (!enabled) {
+      const eventDelete = await supabase.from('analytics_events').delete().eq('user_id', session.user.id);
+      if (eventDelete.error) {
+        setAnalyticsConsentState(true);
+        setAnalyticsConsentValue(true);
+        throw eventDelete.error;
+      }
+      return;
     }
   };
 

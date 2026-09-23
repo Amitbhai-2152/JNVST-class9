@@ -7,6 +7,8 @@ type Attribution = {
   source: string | null;
   medium: string | null;
   campaign: string | null;
+  content: string | null;
+  term: string | null;
   referrerHost: string | null;
 };
 
@@ -40,6 +42,8 @@ export const getCampaignAttribution = (): Attribution => {
     source: clean(params.get('utm_source')),
     medium: clean(params.get('utm_medium')),
     campaign: clean(params.get('utm_campaign')),
+    content: clean(params.get('utm_content')),
+    term: clean(params.get('utm_term')),
   };
   if (incoming.source || incoming.medium || incoming.campaign) {
     stored = { ...stored, ...incoming };
@@ -53,6 +57,8 @@ export const getCampaignAttribution = (): Attribution => {
     source: clean(stored.source ?? null),
     medium: clean(stored.medium ?? null),
     campaign: clean(stored.campaign ?? null),
+    content: clean(stored.content ?? null),
+    term: clean(stored.term ?? null),
     referrerHost,
   };
 };
@@ -102,6 +108,8 @@ export const trackEvent = async (eventName: string, properties: AnalyticsPropert
     utm_source: attribution.source,
     utm_medium: attribution.medium,
     utm_campaign: attribution.campaign,
+    utm_content: attribution.content,
+    utm_term: attribution.term,
     referrer_host: attribution.referrerHost,
     properties,
   });
