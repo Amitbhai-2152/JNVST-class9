@@ -6,7 +6,7 @@ import { mathMasteryUnitMap } from "../data/mathMastery";
 import { scienceMasteryUnits } from "../data/sciencePrep";
 import { englishMasteryUnits } from "../data/englishPrep";
 import { hindiMasteryUnitMap, hindiMasteryUnits } from "../data/hindiPrep";
-import { getScienceChapterStudyPages, getChapterStudyPages } from "../data/lessons/chapterStudy";
+import { getScienceChapterStudyPages, getHindiChapterStudyPages, getChapterStudyPages } from "../data/lessons/chapterStudy";
 import { allLessons } from "../data";
 import { MathAwareText, MathText } from "../components/MathText";
 import type { ContentBlock } from "../types";
@@ -84,10 +84,14 @@ export default function ChapterStudyPage() {
     [chapter, isScience],
   );
   const genericPages = useMemo(
-    () => (chapter && !isScience ? getChapterStudyPages(chapter, allLessons, 12) : []),
-    [chapter, isScience],
+    () => (chapter && !isScience && !isHindi ? getChapterStudyPages(chapter, allLessons, 12) : []),
+    [chapter, isScience, isHindi],
   );
-  const pages = isScience ? sciencePages : genericPages;
+  const hindiPages = useMemo(
+    () => (chapter && isHindi ? getHindiChapterStudyPages(chapter) : []),
+    [chapter, isHindi],
+  );
+  const pages = isScience ? sciencePages : isHindi ? hindiPages : genericPages;
 
   const [page, setPage] = useState(0);
   useEffect(() => setPage(0), [chapterId]);
