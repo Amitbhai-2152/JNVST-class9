@@ -185,7 +185,7 @@ assert(new Set(passageIds).size === 10, 'duplicate Hindi unseen passage IDs');
 assert(passageQuestionIds.length === 50, 'expected 50 Hindi unseen passage questions, found ' + passageQuestionIds.length);
 assert(new Set(passageQuestionIds).size === 50, 'duplicate Hindi unseen passage question IDs');
 assert((unseenSource.match(/options:\[/g) ?? []).length === 50, 'each Hindi unseen question should have four options');
-const unseenCorrectIndexes = [...unseenSource.matchAll(/correctIndex:(\\d)/g)].map((m) => Number(m[1]));
+const unseenCorrectIndexes = [...unseenSource.matchAll(/correctIndex:(\d)/g)].map((m) => Number(m[1]));
 assert(unseenCorrectIndexes.length === 50, 'each Hindi unseen question must have a correct option index');
 assert(unseenCorrectIndexes.every((index) => index >= 0 && index <= 3), 'Hindi unseen question has invalid correct option index');
 const unseenAnswerCounts = [0, 1, 2, 3].map((index) => unseenCorrectIndexes.filter((value) => value === index).length);
