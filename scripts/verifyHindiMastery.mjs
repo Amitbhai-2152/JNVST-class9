@@ -67,6 +67,36 @@ for (const chapter of ['01','02','03','04','05','06']) {
   assert(count === 20, 'Chapter ' + chapter + ' must have exactly 20 dedicated Hindi Challenger questions');
 }
 
+const topicChallengerSource = read('hindiTopicChallengers.ts');
+const topicChallengerIds = [...topicChallengerSource.matchAll(/make\(\{id:'(q_hin_tc_\d+_\d+_\d+)'/g)].map((m) => m[1]);
+const topicChallengerTopics = [...topicChallengerSource.matchAll(/topicId:'(top_hin_\d+_\d+)'/g)].map((m) => m[1]);
+assert(topicChallengerIds.length === 100, 'expected 100 new dedicated Hindi topic Challenger questions, found ' + topicChallengerIds.length);
+assert(new Set(topicChallengerIds).size === 100, 'duplicate Hindi topic Challenger IDs');
+assert(topicChallengerTopics.length === 100, 'expected 100 Hindi topic Challenger topic mappings, found ' + topicChallengerTopics.length);
+const allHindiTopicChallengerCounts = new Map();
+for (const id of challengerIds) {
+  const topicMatch = [...challengerSource.matchAll(new RegExp("topicId:'(top_hin_" + id.slice(9, 11) + "_\\\\d+)'"))][0];
+}
+const combinedTopicChallengerCounts = new Map();
+for (const match of challengerSource.matchAll(/chapterId:'chap_hin_(\d+)',topicId:'(top_hin_\d+_\d+)'/g)) {
+  const topicId = match[2];
+  combinedTopicChallengerCounts.set(topicId, (combinedTopicChallengerCounts.get(topicId) ?? 0) + 1);
+}
+for (const topicId of topicChallengerTopics) {
+  combinedTopicChallengerCounts.set(topicId, (combinedTopicChallengerCounts.get(topicId) ?? 0) + 1);
+}
+for (const topicId of officialTopics) {
+  assert((combinedTopicChallengerCounts.get(topicId) ?? 0) === 20, topicId + ' must have exactly 20 dedicated Challenger questions');
+}
+const topicChallengerRecords = [...topicChallengerSource.matchAll(/make\(\{id:'(q_hin_tc_\d+_\d+_\d+)'[\s\S]*?options:\[([^\]]+)\],correct:(\d)/g)];
+assert(topicChallengerRecords.length === 100, 'could not fully audit Hindi topic Challenger option records');
+for (const [, id, options, correct] of topicChallengerRecords) {
+  assert((options.match(/'/g) ?? []).length === 8, id + ' must have exactly four string options');
+  const optionTexts = [...options.matchAll(/'([^']*)'/g)].map((m) => m[1]);
+  assert(new Set(optionTexts.map((x) => x.trim().toLowerCase())).size === 4, id + ' has duplicate option text');
+  assert(Number(correct) >= 0 && Number(correct) <= 3, id + ' has invalid correct option index');
+}
+
 const unseenSource = fs.readFileSync(path.join(root, 'src', 'data', 'hindiUnseenPassages.ts'), 'utf8');
 const passageIds = [...unseenSource.matchAll(/\bid:"(hup-\d+)"/g)].map((m) => m[1]);
 const passageQuestionIds = [...unseenSource.matchAll(/\bid:"(hup-\d+-q\d+)"/g)].map((m) => m[1]);
@@ -84,5 +114,7 @@ console.log('Legacy Hindi questions:', legacyIds.length);
 console.log('Expanded Hindi questions:', expansionIds.length);
 console.log('Hindi questions by topic:', Object.fromEntries(officialTopics.map((id) => [id, (legacyTopicCounts.get(id) ?? 0) + (topicCounts.get(id) ?? 0)])));
 console.log('Dedicated Hindi Challenger questions:', challengerIds.length);
+console.log('Dedicated Hindi topic Challenger questions:', topicChallengerIds.length);
+console.log('Hindi Challenger questions by topic:', Object.fromEntries(officialTopics.map((id) => [id, combinedTopicChallengerCounts.get(id) ?? 0])));
 console.log('Hindi unseen passages:', passageIds.length);
 console.log('Hindi unseen passage questions:', passageQuestionIds.length);
