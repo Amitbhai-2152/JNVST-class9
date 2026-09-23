@@ -73,6 +73,13 @@ const buildSeoFiles = async () => {
   );
 
   await copyFile('dist/index.html', 'dist/404.html');
+
+  for (const path of paths) {
+    if (path === '/') continue;
+    const routeDirectory = 'dist' + path;
+    await mkdir(routeDirectory, { recursive: true });
+    await copyFile('dist/index.html', routeDirectory + '/index.html');
+  }
 };
 
 const source = await readFile(sourcePath, 'utf8');
