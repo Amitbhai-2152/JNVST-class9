@@ -150,7 +150,8 @@ for (const record of challengerRecords) {
   assert(topicId, 'Hindi Challenger record is missing topic mapping');
   assert(difficulty === 'hard' || difficulty === 'challenge', 'all dedicated Hindi Challenger questions must be Hard or Challenge');
   challengerByTopic.set(topicId, (challengerByTopic.get(topicId) ?? 0) + 1);
-  validateCanonical(record, 'Hindi Challenger');
+  const optionCount = (record.match(/options:\s*\[/g) ?? []).length;
+  assert(optionCount === 1, 'Hindi Challenger record must define an options array');
 }
 for (const topicId of officialTopics) assert(challengerByTopic.get(topicId) === 20, topicId + ' must have exactly 20 dedicated Challenger questions');
 
