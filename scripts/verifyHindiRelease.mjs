@@ -103,7 +103,7 @@ assert(officialTopics.every((id) => lessonTopics.includes(id)), 'every official 
 const prepTopics = [...hindiPrep.matchAll(/topicId: '(top_hin_\\d+_\\d+)'/g)].map((m) => m[1]);
 assert(prepTopics.length === 11 && new Set(prepTopics).size === 11, 'Hindi mastery data must contain one unit per official topic');
 for (const field of ['coreSkills','mustKnow','quickFacts','examTraps','examples','solveMethod','examFocus']) {
-  const matches = [...hindiPrep.matchAll(new RegExp(field + ':\\s*\\[([^\\]]+)\\]', 'g')];
+  const matches = [...hindiPrep.matchAll(new RegExp(field + ':\\s*\\[([^\\]]+)\\]', 'g'))];
   assert(matches.length === 11, 'each Hindi mastery unit must define non-empty ' + field);
   assert(matches.every((m) => m[1].trim().length > 0), 'Hindi mastery ' + field + ' entries must not be empty');
 }
