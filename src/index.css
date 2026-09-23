@@ -4124,3 +4124,59 @@ a { color: inherit; text-decoration: none; }
     transition:none!important;
   }
 }
+
+
+/* PHASE 7 — auth readability and cleaner signup */
+.auth-v5 .auth-v4-panel-head p{font-size:13px;line-height:1.55}
+.auth-v5 .auth-v4-eyebrow{font-size:10.5px}
+.auth-v5 .auth-v4-secure{font-size:10.5px}
+.auth-v5 .auth-v4-switcher button{font-size:13px}
+.auth-v5 .auth-v4-google{font-size:13px}
+.auth-v5 .auth-v4-divider{font-size:10px}
+.auth-v5 .auth-v4-form{gap:16px}
+.auth-v5 .auth-v4-field{gap:7px}
+.auth-v5 .auth-v4-field label{font-size:12.5px}
+.auth-v5 .auth-v4-strength-label{font-size:10.5px}
+.auth-v5 .auth-v4-label-link{font-size:10.5px}
+.auth-v5 .auth-v4-input input{font-size:14px}
+.auth-v5 .auth-v4-input input::placeholder{font-size:13.5px}
+.auth-v5 .auth-v4-password-toggle{font-size:11.5px}
+.auth-v5 .auth-v4-strength small{font-size:10.5px}
+.auth-v5 .auth-v4-message p{font-size:11.5px}
+.auth-v5 .auth-v4-submit{font-size:13px}
+.auth-v5 .auth-v4-access{font-size:12px}
+.auth-v5 .auth-v4-trust{font-size:10px}
+.auth-v5 .auth-v4-match-label{font-size:10.5px}
+.auth-v5 .auth-v4-inline-help{font-size:10.5px}
+.auth-v5 .auth-v4-confirmation-copy strong{font-size:12px}
+.auth-v5 .auth-v4-confirmation-copy span{font-size:10.5px}
+.auth-v5 .auth-v4-confirmation-copy small{font-size:10px}
+.auth-v5 .auth-v4-confirmation-card>button{font-size:11px}
+
+.auth-v5 .auth-v4-brand strong{font-size:14px}
+.auth-v5 .auth-v4-brand small{font-size:10px}
+.auth-v5 .auth-v4-visual-footer{font-size:10.5px}
+.auth-v5 .auth-v4-metrics span{font-size:9.5px}
+.auth-v5 .auth-v4-path-step strong{font-size:12px}
+.auth-v5 .auth-v4-path-step small{font-size:10px}
+.auth-v5 .auth-v4-overline{font-size:10px}
+
+.account-trigger-copy strong{font-size:11.5px}
+.account-trigger-copy small{font-size:9.5px}
+.account-menu-head strong{font-size:12.5px}
+.account-menu-head span{font-size:10px}
+.account-menu-status strong{font-size:10.5px}
+.account-menu-status span{font-size:9.5px}
+.account-menu-action strong{font-size:10.5px}
+.account-menu-action small{font-size:9.5px}
+.account-menu-action b{font-size:9px}
+.account-menu-note{font-size:9.5px}
+.account-menu-logout{font-size:11px}
+
+@media(max-width:560px){
+  .auth-v5 .auth-v4-panel-head p{font-size:12.5px}
+  .auth-v5 .auth-v4-field label{font-size:12px}
+  .auth-v5 .auth-v4-input input{font-size:14px}
+  .auth-v5 .auth-v4-submit{font-size:13px}
+  .auth-v5 .auth-v4-trust{font-size:9.5px}
+}
