@@ -463,15 +463,12 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
   if (!configured) {
     return <main className="auth-screen"><section className="auth-setup">
       <span className="auth-brand">JNVST CLASS 9</span>
-      <h1>Student account setup बाकी है</h1>
-      <p>Supabase credentials अभी production build में नहीं हैं। GitHub Actions में <code>VITE_SUPABASE_URL</code> और <code>VITE_SUPABASE_PUBLISHABLE_KEY</code> secrets जोड़ने के बाद नया deployment करें।</p>
-      <p>Database में <code>supabase/schema.sql</code> चलाएँ, फिर site को reload करें।</p>
+      <h1>Learning Hub अभी setup हो रहा है</h1>
+      <p>Student account sync के लिए Supabase credentials production build में चाहिए। Public learning content फिर भी उपलब्ध रहना चाहिए, इसलिए content routes को login के बिना browse किया जा सकता है।</p>
     </section></main>;
   }
-  if (loading) return <main className="auth-loading">आपका student data सुरक्षित रूप से load हो रहा है…</main>;
   if (user && recoveryMode) return <PasswordRecoveryPage />;
-  if (user) return <>{children}</>;
-  return <AuthPage />;
+  return <>{children}</>;
 };
 
 
@@ -584,7 +581,7 @@ const PasswordRecoveryPage = () => {
   </main>;
 };
 
-const AuthPage = () => {
+export const AuthPage = () => {
   const { signIn, signInWithGoogle, resetPassword, resendConfirmation, signUp, authError } = useAuth();
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [displayName, setDisplayName] = useState('');
