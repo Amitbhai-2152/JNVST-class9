@@ -150,30 +150,34 @@ const Dashboard = () => {
   const weakTopics = getWeakTopics(p, 3);
   const revisionTopics = getRevisionTopics(p, 3);
 
-  const examAttempts = jnvstExamQuestions.flatMap((question) => p.questionAttempts?.[question.id] ?? []);
-  const examCorrect = examAttempts.filter((attempt) => attempt.isCorrect).length;
-  const examAccuracy = examAttempts.length ? Math.round((examCorrect / examAttempts.length) * 100) : 0;
-  const attemptedQuestionCount = jnvstExamQuestions.filter((question) => (p.questionAttempts?.[question.id]?.length ?? 0) > 0).length;
+  const latestExamAttempts = jnvstExamQuestions.flatMap((question) => {
+    const attempts = p.questionAttempts?.[question.id] ?? [];
+    return attempts.length ? [attempts[attempts.length - 1]] : [];
+  });
+  const latestExamCorrect = latestExamAttempts.filter((attempt) => attempt.isCorrect).length;
+  const examAccuracy = latestExamAttempts.length ? Math.round((latestExamCorrect / latestExamAttempts.length) * 100) : 0;
+  const attemptedQuestionCount = latestExamAttempts.length;
 
   const subjectStats = subjects.map((subject) => {
     const rows = performances.filter((topic) => topic.subjectId === subject.id);
-    const attempts = rows.reduce((sum, topic) => sum + topic.attempts, 0);
-    const correct = rows.reduce((sum, topic) => sum + topic.correct, 0);
     const attemptedTopics = rows.filter((topic) => topic.attempts > 0).length;
     const totalTopics = rows.length;
-    const accuracy = attempts ? Math.round((correct / attempts) * 100) : 0;
     const subjectQuestions = jnvstExamQuestions.filter((question) => question.subjectId === subject.id);
-    const attemptedQuestions = subjectQuestions.filter((question) => (p.questionAttempts?.[question.id]?.length ?? 0) > 0).length;
+    const latestSubjectAttempts = subjectQuestions.flatMap((question) => {
+      const attempts = p.questionAttempts?.[question.id] ?? [];
+      return attempts.length ? [attempts[attempts.length - 1]] : [];
+    });
+    const subjectCorrectLatest = latestSubjectAttempts.filter((attempt) => attempt.isCorrect).length;
+    const accuracy = latestSubjectAttempts.length ? Math.round((subjectCorrectLatest / latestSubjectAttempts.length) * 100) : 0;
     return {
       ...subject,
-      attempts,
       attemptedTopics,
       totalTopics,
       accuracy,
       subjectQuestions: subjectQuestions.length,
-      attemptedQuestions,
+      attemptedQuestions: latestSubjectAttempts.length,
       coverage: totalTopics ? Math.round((attemptedTopics / totalTopics) * 100) : 0,
-      questionCoverage: subjectQuestions.length ? Math.round((attemptedQuestions / subjectQuestions.length) * 100) : 0,
+      questionCoverage: subjectQuestions.length ? Math.round((latestSubjectAttempts.length / subjectQuestions.length) * 100) : 0,
     };
   });
 
@@ -200,10 +204,15 @@ const Dashboard = () => {
     revisionTopics[0] ? { icon: '🔁', label: 'पुनरावृत्ति', title: revisionTopics[0].topicTitle, href: '/practice/' + revisionTopics[0].topicId } : null,
   ].filter(Boolean) as Array<{ icon: string; label: string; title: string; href: string }>;
 
-  const completedLessons = Object.values(p.lessonActivity ?? {}).filter((item) => item.status === 'completed').length;
+  const currentLessonIds = new Set(allLessons.map((lesson) => lesson.id));
+  const completedLessons = Object.entries(p.lessonActivity ?? {}).filter(([id, item]) => currentLessonIds.has(id) && item.status === 'completed').length;
   const questionCoverage = jnvstExamQuestions.length ? Math.round((attemptedQuestionCount / jnvstExamQuestions.length) * 100) : 0;
   const mockResults = p.mockTestResults ?? [];
-  const bestMock = mockResults.length ? Math.max(...mockResults.map((result) => result.totalMarks ? Math.round((result.score / result.totalMarks) * 100) : 0)) : null;
+  const validMockResults = mockResults.filter((result) =>
+    Number.isFinite(result.score) && Number.isFinite(result.totalMarks) &&
+    result.totalMarks > 0 && result.score >= 0 && result.score <= result.totalMarks
+  );
+  const bestMock = validMockResults.length ? Math.max(...validMockResults.map((result) => Math.round((result.score / result.totalMarks) * 100))) : null;
 
   return <Shell>
     <div className="dashboard">
@@ -219,27 +228,28 @@ const Dashboard = () => {
           </div>
         </div>
         <div className="dashboard-hero-side">
-          <div className="dashboard-hero-number">{examAttempts.length}</div>
-          <div>JNVST प्रश्न प्रयास</div>
-          <small>{examAccuracy}% practice accuracy</small>
+          <span className="dashboard-accuracy-eyebrow">ACCURACY</span>
+          <div className="dashboard-hero-number">{latestExamAttempts.length ? examAccuracy + '%' : '—'}</div>
+          <div>{latestExamCorrect} / {latestExamAttempts.length} latest answers correct</div>
+          <small>हर attempted JNVST question का latest recorded result</small>
         </div>
       </section>
 
       <section className="dashboard-metrics" aria-label="तैयारी के मुख्य आँकड़े">
-        <Card className="dashboard-metric">
-          <span>विषय कवरेज</span>
-          <b>{summary.attemptedTopics}/{summary.totalTopics}</b>
-          <small>{summary.totalTopics ? Math.round((summary.attemptedTopics / summary.totalTopics) * 100) : 0}% topics पर अभ्यास</small>
-        </Card>
-        <Card className="dashboard-metric">
+        <Card className="dashboard-metric dashboard-metric-primary">
           <span>अभ्यास सटीकता</span>
-          <b>{examAttempts.length ? examAccuracy + '%' : '—'}</b>
-          <small>{examAttempts.length ? 'JNVST-compatible attempts' : 'अभी data नहीं'}</small>
+          <b>{latestExamAttempts.length ? examAccuracy + '%' : '—'}</b>
+          <small>{latestExamAttempts.length ? latestExamCorrect + '/' + latestExamAttempts.length + ' latest answers correct' : 'अभी JNVST practice data नहीं'}</small>
         </Card>
         <Card className="dashboard-metric">
-          <span>पूरे किए पाठ</span>
-          <b>{completedLessons}</b>
-          <small>कुल {allLessons.length} lessons में</small>
+          <span>Question coverage</span>
+          <b>{attemptedQuestionCount}/{jnvstExamQuestions.length}</b>
+          <small>{questionCoverage}% unique JNVST questions seen</small>
+        </Card>
+        <Card className="dashboard-metric">
+          <span>Topic coverage</span>
+          <b>{summary.attemptedTopics}/{summary.totalTopics}</b>
+          <small>{summary.totalTopics ? Math.round((summary.attemptedTopics / summary.totalTopics) * 100) : 0}% topics started</small>
         </Card>
         <Card className="dashboard-metric">
           <span>सर्वश्रेष्ठ Mock</span>
@@ -257,10 +267,10 @@ const Dashboard = () => {
           </div>
         </div>
         <div className="dashboard-readiness-grid">
-          <Card className="dashboard-readiness-card">
-            <div className="dashboard-readiness-top"><div><b>Topic coverage</b><span>{summary.attemptedTopics} / {summary.totalTopics}</span></div><strong>{summary.totalTopics ? Math.round((summary.attemptedTopics / summary.totalTopics) * 100) : 0}%</strong></div>
-            <div className="dashboard-track"><span style={{ width: (summary.totalTopics ? Math.round((summary.attemptedTopics / summary.totalTopics) * 100) : 0) + '%' }} /></div>
-            <small>कम-से-कम हर topic पर अभ्यास शुरू करना लक्ष्य रखें।</small>
+          <Card className="dashboard-readiness-card dashboard-accuracy-readiness">
+            <div className="dashboard-readiness-top"><div><b>Latest-answer accuracy</b><span>{latestExamCorrect} / {latestExamAttempts.length} unique questions</span></div><strong>{latestExamAttempts.length ? examAccuracy + '%' : '—'}</strong></div>
+            <div className="dashboard-track"><span style={{ width: examAccuracy + '%' }} /></div>
+            <small>हर attempted JNVST question का केवल सबसे हाल का दर्ज उत्तर लिया गया है।</small>
           </Card>
           <Card className="dashboard-readiness-card">
             <div className="dashboard-readiness-top"><div><b>Question coverage</b><span>{attemptedQuestionCount} / {jnvstExamQuestions.length} unique questions</span></div><strong>{questionCoverage}%</strong></div>
@@ -268,9 +278,9 @@ const Dashboard = () => {
             <small>एक ही प्रश्न को बार-बार करने से coverage नहीं बढ़ता; यहाँ unique JNVST questions गिने जाते हैं।</small>
           </Card>
           <Card className="dashboard-readiness-card">
-            <div className="dashboard-readiness-top"><div><b>Practice accuracy</b><span>{examAttempts.length ? examAccuracy + '%' : 'कोई data नहीं'}</span></div><strong>{examAttempts.length ? examAccuracy + '%' : '—'}</strong></div>
-            <div className="dashboard-track"><span style={{ width: examAccuracy + '%' }} /></div>
-            <small>यह केवल JNVST-compatible question attempts पर आधारित है। coverage के साथ accuracy देखें।</small>
+            <div className="dashboard-readiness-top"><div><b>Topic coverage</b><span>{summary.attemptedTopics} / {summary.totalTopics} topics started</span></div><strong>{summary.totalTopics ? Math.round((summary.attemptedTopics / summary.totalTopics) * 100) : 0}%</strong></div>
+            <div className="dashboard-track"><span style={{ width: Math.min(100, summary.totalTopics ? Math.round((summary.attemptedTopics / summary.totalTopics) * 100) : 0) + '%' }} /></div>
+            <small>यह केवल उन official topics को गिनता है जिनके JNVST-compatible questions मौजूद हैं।</small>
           </Card>
         </div>
       </section>
