@@ -218,7 +218,6 @@ const SubjectsPage = () => <Shell><div className="page-head"><h1>विषय</h
 const TopicCard = ({ topicId }: { topicId: ID }) => {
   const t = topics.find(x => x.id === topicId)!;
   const qCount = getQuestionsByTopic(t.id).length;
-  const lessonId = t.lessonIds[0];
   const chapter = chapters.find(x => x.id === t.chapterId);
   const isMath = t.id.startsWith('top_math_');
   const chapterPages = chapter ? getChapterStudyPages(chapter, allLessons, 12).length : 12;
@@ -229,7 +228,6 @@ const TopicCard = ({ topicId }: { topicId: ID }) => {
       <span>{isMath ? '🎯 अभ्यास + Challenger' : '⏱ विस्तृत पाठ'}</span>
     </div>
     <div className="actions">
-      {!isMath && lessonId && <Link className="btn" to={`/lessons/${lessonId}`}>टॉपिक पढ़ें</Link>}
       <Link className="btn primary" to={`/chapters/${t.chapterId}/study`}>अध्याय पढ़ें</Link>
       <Link className="btn" to={`/practice/${t.id}`}>अभ्यास करें</Link>
     </div>
