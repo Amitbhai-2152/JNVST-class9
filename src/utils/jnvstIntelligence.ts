@@ -557,6 +557,17 @@ export const getChapterChallengerQuestions = (
   }
 
   const candidates = [...uniqueById.values()];
+  if (chapterId.startsWith('chap_hin_')) {
+    const dedicated = hindiChapterChallengers
+      .filter((question) => question.chapterId === chapterId);
+    const pool = dedicated.length >= target
+      ? dedicated
+      : candidates.filter((question) => question.chapterId === chapterId);
+    return rankChallengerCandidates(pool, seed + ':' + chapterId)
+      .slice(0, target)
+      .map((question, index) => arrangeChallengerOptions(question, index, seed + ':' + chapterId));
+  }
+
   if (!chapterId.startsWith('chap_math_') && !chapterId.startsWith('chap_eng_')) {
     return rankChallengerCandidates(candidates, seed + ':' + chapterId)
       .slice(0, target)
