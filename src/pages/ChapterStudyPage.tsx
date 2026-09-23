@@ -281,6 +281,13 @@ export default function ChapterStudyPage() {
                   ))}
                 </div>
               </div>}
+
+              {chapter.id === "chap_hin_06" && <div className="science-study-side-card">
+                <span className="science-panel-label">DEDICATED PRACTICE LAB</span>
+                <b>📖 Hindi Unseen Passage Lab</b>
+                <p>10 मौलिक गद्यांश · 50 MCQs · मुख्य विचार, तथ्य, शब्दार्थ, निष्कर्ष और शीर्षक का अभ्यास।</p>
+                <Link className="btn primary full" to="/hindi-unseen-passage">Unseen Passage Lab खोलें →</Link>
+              </div>}
             </aside>
 
             <section className="science-study-main">
