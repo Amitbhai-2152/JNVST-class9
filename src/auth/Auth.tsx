@@ -397,7 +397,99 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthGate = ({ children }: { children: React.ReactNode }) => {
+const AuthHeroArtwork = () => <div className="auth-v5-artwork" aria-hidden="true">
+  <svg viewBox="0 0 720 760" role="presentation">
+    <defs>
+      <linearGradient id="heroBg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#5428b7"/><stop offset="55%" stopColor="#7143d6"/><stop offset="100%" stopColor="#a07af0"/>
+      </linearGradient>
+      <linearGradient id="desk" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#6e48d4"/><stop offset="100%" stopColor="#32166f"/>
+      </linearGradient>
+      <linearGradient id="hoodie" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#f6f2ff"/><stop offset="100%" stopColor="#cfc2ef"/>
+      </linearGradient>
+      <filter id="glow"><feGaussianBlur stdDeviation="8" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+
+    <rect width="720" height="760" rx="36" fill="url(#heroBg)"/>
+    <circle cx="610" cy="90" r="126" fill="rgba(255,255,255,.08)"/>
+    <circle cx="610" cy="90" r="176" fill="none" stroke="rgba(255,255,255,.14)" strokeWidth="1"/>
+    <circle cx="610" cy="90" r="220" fill="none" stroke="rgba(255,255,255,.08)" strokeWidth="1"/>
+
+    <g opacity=".55">
+      <circle cx="88" cy="104" r="3" fill="#fff"/><circle cx="146" cy="74" r="2" fill="#fff"/>
+      <circle cx="188" cy="122" r="2" fill="#fff"/><circle cx="530" cy="152" r="2" fill="#fff"/>
+      <circle cx="660" cy="248" r="3" fill="#fff"/><circle cx="72" cy="332" r="2" fill="#fff"/>
+    </g>
+
+    <text x="360" y="72" textAnchor="middle" fill="#fff" fontSize="38" fontWeight="900" fontFamily="Inter, Arial">JNVST CLASS 9</text>
+    <text x="360" y="106" textAnchor="middle" fill="rgba(255,255,255,.72)" fontSize="18" fontWeight="700" fontFamily="Inter, Arial">LEARN  •  PRACTICE  •  MASTER</text>
+
+    <g filter="url(#glow)">
+      <rect x="62" y="182" width="124" height="110" rx="20" fill="rgba(255,255,255,.12)" stroke="rgba(255,255,255,.28)"/>
+      <text x="124" y="216" textAnchor="middle" fill="#fff" fontSize="18" fontWeight="800" fontFamily="Inter, Arial">Maths</text>
+      <text x="124" y="255" textAnchor="middle" fill="#efe8ff" fontSize="34" fontWeight="900" fontFamily="Georgia, serif">√x</text>
+    </g>
+
+    <g filter="url(#glow)">
+      <rect x="532" y="208" width="126" height="108" rx="20" fill="rgba(255,255,255,.12)" stroke="rgba(255,255,255,.28)"/>
+      <text x="595" y="242" textAnchor="middle" fill="#fff" fontSize="16" fontWeight="800" fontFamily="Inter, Arial">SCIENCE</text>
+      <path d="M575 267h30l-10 26h-10l-10-26Zm7-18h16m-8 0v18" fill="none" stroke="#bdf2ff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+    </g>
+
+    <g filter="url(#glow)">
+      <rect x="40" y="430" width="136" height="100" rx="18" fill="rgba(255,255,255,.10)" stroke="rgba(255,255,255,.24)"/>
+      <text x="108" y="462" textAnchor="middle" fill="#fff" fontSize="15" fontWeight="800" fontFamily="Inter, Arial">CHALLENGER</text>
+      <text x="108" y="495" textAnchor="middle" fill="#efe8ff" fontSize="11" fontWeight="700" fontFamily="Inter, Arial">Push your mastery</text>
+    </g>
+
+    <g filter="url(#glow)">
+      <rect x="548" y="394" width="126" height="108" rx="18" fill="rgba(255,255,255,.10)" stroke="rgba(255,255,255,.24)"/>
+      <text x="611" y="428" textAnchor="middle" fill="#fff" fontSize="15" fontWeight="800" fontFamily="Inter, Arial">MOCK TEST</text>
+      <path d="M582 464h53M582 477h38" stroke="#c8ffd8" strokeWidth="5" strokeLinecap="round"/>
+    </g>
+
+    <g transform="translate(258 188)">
+      <circle cx="104" cy="126" r="74" fill="#f2b58e"/>
+      <path d="M38 120c8-54 44-92 92-86 45 6 74 44 69 89-12-18-29-31-52-37-17-5-35-2-53 9-15 9-28 19-56 25Z" fill="#302047"/>
+      <circle cx="82" cy="136" r="8" fill="#1f1735"/><circle cx="129" cy="136" r="8" fill="#1f1735"/>
+      <circle cx="84" cy="133" r="2.5" fill="#fff"/><circle cx="131" cy="133" r="2.5" fill="#fff"/>
+      <path d="M93 166c17 13 33 13 49 0" fill="none" stroke="#8c4d42" strokeWidth="5" strokeLinecap="round"/>
+      <path d="M36 272c10-55 47-76 94-76s84 21 94 76Z" fill="url(#hoodie)"/>
+      <path d="M84 209c12 19 25 27 43 27s31-8 43-27" fill="none" stroke="#b4a0dc" strokeWidth="8" strokeLinecap="round"/>
+      <text x="130" y="263" textAnchor="middle" fill="#5c4b79" fontSize="17" fontWeight="900" fontFamily="Inter, Arial">JNVST</text>
+      <path d="M73 279c-22 25-38 51-45 78" stroke="#f2b58e" strokeWidth="19" strokeLinecap="round"/>
+      <path d="M187 279c25 20 37 48 41 76" stroke="#f2b58e" strokeWidth="19" strokeLinecap="round"/>
+      <path d="M49 354c-13 12-28 18-46 20" stroke="#1e1830" strokeWidth="8" strokeLinecap="round"/>
+      <path d="M212 354c14 12 26 18 45 20" stroke="#1e1830" strokeWidth="8" strokeLinecap="round"/>
+      <rect x="58" y="352" width="147" height="45" rx="12" fill="#fff"/>
+      <line x1="76" y1="372" x2="185" y2="372" stroke="#cfcae2" strokeWidth="4"/>
+      <line x1="76" y1="383" x2="163" y2="383" stroke="#e5e1ef" strokeWidth="4"/>
+    </g>
+
+    <g transform="translate(214 555)">
+      <rect width="292" height="80" rx="18" fill="url(#desk)" stroke="rgba(255,255,255,.14)"/>
+      <text x="146" y="30" textAnchor="middle" fill="#fff" fontSize="13" fontWeight="900" fontFamily="Inter, Arial">YOUR NEXT STEP</text>
+      <text x="146" y="56" textAnchor="middle" fill="#dcd1fa" fontSize="12" fontWeight="700" fontFamily="Inter, Arial">Learn → Practice → Revise → Test</text>
+    </g>
+
+    <g transform="translate(62 585)">
+      <rect width="125" height="28" rx="8" fill="#31204f"/>
+      <rect y="32" width="142" height="28" rx="8" fill="#3f275f"/>
+      <rect y="64" width="132" height="28" rx="8" fill="#4c2d6f"/>
+      <text x="8" y="19" fill="#fff" fontSize="10" fontWeight="800" fontFamily="Inter, Arial">MATHEMATICS</text>
+      <text x="8" y="51" fill="#fff" fontSize="10" fontWeight="800" fontFamily="Inter, Arial">SCIENCE</text>
+      <text x="8" y="83" fill="#fff" fontSize="10" fontWeight="800" fontFamily="Inter, Arial">MENTAL ABILITY</text>
+    </g>
+
+    <g transform="translate(540 572)">
+      <rect width="108" height="82" rx="16" fill="rgba(255,255,255,.12)" stroke="rgba(255,255,255,.22)"/>
+      <path d="M25 52h58M30 42h40M35 31h24" stroke="#fff" strokeWidth="5" strokeLinecap="round"/>
+      <text x="54" y="73" textAnchor="middle" fill="#e8ddff" fontSize="9" fontWeight="800" fontFamily="Inter, Arial">PROGRESS</text>
+    </g>
+  </svg>
+</div>\n\nexport const AuthGate = ({ children }: { children: React.ReactNode }) => {
   const { configured, loading, user } = useAuth();
   if (!configured) {
     return <main className="auth-screen"><section className="auth-setup">
@@ -488,7 +580,7 @@ const AuthPage = () => {
     <div className="auth-v4-noise" aria-hidden="true"></div>
 
     <div className="auth-v4-shell">
-      <section className="auth-v4-visual" aria-label="JNVST Class 9 learning overview">
+      <section className="auth-v4-visual" aria-label="JNVST Class 9 learning overview">\n        <AuthHeroArtwork />
         <div className="auth-v4-grid" aria-hidden="true"></div>
 
         <div className="auth-v4-brand">
