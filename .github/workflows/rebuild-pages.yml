@@ -1,0 +1,58 @@
+name: Rebuild and Publish Pages
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "assets/**"
+      - "index.html"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: production-build
+  cancel-in-progress: true
+
+jobs:
+  build-and-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Verify
+        run: npm run verify
+      # Final Hindi release gate is included in npm run verify.
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build production app
+        run: npm run build
+
+      - name: Publish production files to repository root
+        run: |
+          rm -rf assets
+          cp -R dist/. .
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A index.html assets
+          if git diff --cached --quiet; then
+            echo "Production files already up to date"
+          else
+            git commit -m "chore: publish current production build"
+            git push
+          fi
+
+      # GitHub Pages deployment is handled by the repository's managed Pages workflow.
+      # This workflow only verifies, builds, and syncs the production files to main.
