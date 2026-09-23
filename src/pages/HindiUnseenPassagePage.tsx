@@ -4,6 +4,30 @@ import { hindiUnseenPassages, type HindiUnseenPassageQuestion } from "../data/hi
 
 const levelClass = (level: string) => level.toLowerCase().replace(/[^a-z]+/g, "-");
 
+const getQuestionSeed = (id: string) => {
+  let hash = 2166136261;
+  for (let index = 0; index < id.length; index += 1) {
+    hash ^= id.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+};
+
+const shuffleIndices = (id: string) => {
+  const indices = [0, 1, 2, 3];
+  let seed = getQuestionSeed(id);
+  const random = () => {
+    seed = Math.imul(seed ^ (seed >>> 16), 2246822519) >>> 0;
+    seed = Math.imul(seed ^ (seed >>> 13), 3266489917) >>> 0;
+    return (seed ^ (seed >>> 16)) / 4294967296;
+  };
+  for (let index = indices.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(random() * (index + 1));
+    [indices[index], indices[swapIndex]] = [indices[swapIndex], indices[index]];
+  }
+  return indices;
+};
+
 const skillHint: Record<string, string> = {
   "मुख्य भाव": "पूरे गद्यांश का केंद्रीय विचार पकड़ें; किसी एक उदाहरण को मुख्य भाव न मानें।",
   "मुख्य विचार": "पूछे गए विचार को पूरे गद्यांश से मिलाएँ, केवल शुरुआती वाक्य से नहीं।",
@@ -41,7 +65,9 @@ const PassageQuestion = ({
   onReveal: () => void;
   onReset: () => void;
 }) => {
-  const isCorrect = state.selected === question.correctIndex;
+  const order = shuffleIndices(question.id);
+  const displayCorrectIndex = order.findIndex((sourceIndex) => sourceIndex === question.correctIndex);
+  const isCorrect = state.selected === displayCorrectIndex;
   const isLocked = state.revealed;
 
   return (
@@ -53,31 +79,40 @@ const PassageQuestion = ({
       <h3>{question.question}</h3>
 
       <div className="unseen-options" role="radiogroup" aria-label={"प्रश्न " + (index + 1) + " विकल्प"}>
-        {question.options.map((option, optionIndex) => {
-          const stateClass = state.revealed
-            ? optionIndex === question.correctIndex
-              ? "correct"
-              : state.selected === optionIndex
-                ? "wrong"
-                : ""
-            : state.selected === optionIndex
-              ? "selected"
-              : "";
+        {(() => {
+          const order = shuffleIndices(question.id);
+          const displayOptions = order.map((sourceIndex) => ({
+            sourceIndex,
+            text: question.options[sourceIndex],
+          }));
+          const displayCorrectIndex = displayOptions.findIndex((item) => item.sourceIndex === question.correctIndex);
 
-          return (
-            <button
-              key={option}
-              type="button"
-              className={"unseen-option " + stateClass}
-              disabled={isLocked}
-              aria-pressed={state.selected === optionIndex}
-              onClick={() => onSelect(optionIndex)}
-            >
-              <span>{String.fromCharCode(65 + optionIndex)}</span>
-              <span>{option}</span>
-            </button>
-          );
-        })}
+          return displayOptions.map((option, optionIndex) => {
+            const stateClass = state.revealed
+              ? optionIndex === displayCorrectIndex
+                ? "correct"
+                : state.selected === optionIndex
+                  ? "wrong"
+                  : ""
+              : state.selected === optionIndex
+                ? "selected"
+                : "";
+
+            return (
+              <button
+                key={option.text}
+                type="button"
+                className={"unseen-option " + stateClass}
+                disabled={isLocked}
+                aria-pressed={state.selected === optionIndex}
+                onClick={() => onSelect(optionIndex)}
+              >
+                <span>{String.fromCharCode(65 + optionIndex)}</span>
+                <span>{option.text}</span>
+              </button>
+            );
+          });
+        })()}
       </div>
 
       <div className="unseen-question-actions">
@@ -97,7 +132,7 @@ const PassageQuestion = ({
         <div className={"unseen-feedback " + (isCorrect ? "success" : "error")}>
           <strong>{isCorrect ? "✅ सही! प्रमाण से मिलान सही है।" : "❌ passage के प्रमाण से दोबारा मिलाएँ।"}</strong>
           <p>
-            सही उत्तर: <b>{String.fromCharCode(65 + question.correctIndex)}. {question.options[question.correctIndex]}</b>
+            सही उत्तर: <b>{String.fromCharCode(65 + displayCorrectIndex)}. {question.options[question.correctIndex]}</b>
           </p>
           <p><b>कैसे हल करें:</b> {question.explanation}</p>
           {!isCorrect && state.selected !== null && (
