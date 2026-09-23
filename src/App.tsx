@@ -7,7 +7,7 @@ import MathFormulaSheet from './pages/MathFormulaSheetPage';
 import { MathAwareText, MathText } from './components/MathText';
 import { useProgressStore } from './store/progress';
 import type { ContentBlock, ID, MockTestResult, Question } from './types';
-import { buildJnvstMockPaper, buildMathMockPaper, buildScienceMockPaper, getChapterChallengerQuestions, getTopicChallengerQuestions, getPerformanceSummary, getRevisionTopics, getSmartPracticeQuestions, getMathSmartPracticeQuestions, getScienceSmartPracticeQuestions, getSmartRecommendations, getWeakTopics, getTopicPerformances, buildEnglishMockPaper, getEnglishSmartPracticeQuestions, buildHindiMockPaper, getHindiSmartPracticeQuestions } from './utils/jnvstIntelligence';
+import { buildJnvstMockPaper, buildMathMockPaper, buildScienceMockPaper, getChapterChallengerQuestions, getTopicChallengerQuestions, getPerformanceSummary, getRevisionTopics, getSmartPracticeQuestions, getMathSmartPracticeQuestions, getScienceSmartPracticeQuestions, getSmartRecommendations, getWeakTopics, getTopicPerformances, buildEnglishMockPaper, getEnglishSmartPracticeQuestions, buildHindiMockPaper, getHindiSmartPracticeQuestions, arrangeAssessmentOptions } from './utils/jnvstIntelligence';
 import { mathMasteryUnits, mathMasteryUnitMap } from './data/mathMastery';
 import { scienceMasteryUnits } from './data/sciencePrep';
 import { scienceLessonCore } from './data/scienceLessonCore';
@@ -693,6 +693,8 @@ const HindiMockTestPage = () => {
     timerSeconds={25 * 60}
     badge="HINDI MOCK TEST"
     mode="mock-test"
+    mockSubjectId="sub_hin"
+    mockIdPrefix="hindi-mock-"
     bannerLink={{ to: "/hindi-smart-practice", label: "गलतियों पर Smart Practice →" }}
   />;
 };
@@ -738,6 +740,8 @@ const EnglishMockTestPage = () => {
     timerSeconds={25 * 60}
     badge="ENGLISH MOCK TEST"
     mode="mock-test"
+    mockSubjectId="sub_eng"
+    mockIdPrefix="english-mock-"
     bannerLink={{ to: "/english-smart-practice", label: "गलतियों पर Smart Practice →" }}
   />;
 };
@@ -1289,6 +1293,9 @@ type AssessmentRunnerProps = {
   emptyTitle?: string;
   emptyText?: string;
   mode?: 'practice' | 'mock-test';
+  preserveOptionOrder?: boolean;
+  mockSubjectId?: ID;
+  mockIdPrefix?: string;
 };
 
 const AssessmentRunner = ({
@@ -1303,6 +1310,9 @@ const AssessmentRunner = ({
   emptyTitle = 'अभी प्रश्न उपलब्ध नहीं हैं',
   emptyText = 'इस अभ्यास के लिए प्रश्न उपलब्ध नहीं हैं।',
   mode = 'practice',
+  preserveOptionOrder = false,
+  mockSubjectId,
+  mockIdPrefix,
 }: AssessmentRunnerProps) => {
   const p = useProgressStore();
   const initialTime = timerSeconds ?? Math.max(5 * 60, questions.length * 60);
@@ -1317,7 +1327,13 @@ const AssessmentRunner = ({
 
   const isScienceAssessment = questions.some((question) => question.chapterId?.startsWith('chap_sci_')) || backTo === '/subjects/sub_sci';
   const isEnglishAssessment = questions.some((question) => question.chapterId?.startsWith('chap_eng_')) || backTo === '/subjects/sub_eng';
-  const q = questions[index];
+  const [presentationVersion, setPresentationVersion] = useState(0);
+  const presentationSeed = title + ':' + mode + ':' + presentationVersion;
+  const displayedQuestions = useMemo(() => preserveOptionOrder
+    ? questions
+    : questions.map((question, questionIndex) => arrangeAssessmentOptions(question, questionIndex, presentationSeed)),
+    [questions, preserveOptionOrder, presentationSeed]);
+  const q = displayedQuestions[index];
   const selected = q ? (answers[q.id] || []) : [];
   const answeredCount = Object.values(answers).filter((value) => value.length > 0).length;
   const score = questions.reduce((sum, question) => sum + (sameAnswer(answers[question.id] || [], question.correctOptionIds) ? 1 : 0), 0);
@@ -1358,7 +1374,11 @@ const AssessmentRunner = ({
     })));
     if (mode === 'mock-test') {
       const mockScore = questions.reduce((sum, question) => sum + (sameAnswer(currentAnswers[question.id] || [], question.correctOptionIds) ? 1 : 0), 0);
-      p.saveMockResult({ id: 'english-mock-' + now, score: mockScore, totalMarks: questions.length, timestamp: now, answers: currentAnswers, sectionScores: { sub_eng: mockScore } });
+      const sectionId = mockSubjectId ?? questions[0]?.subjectId;
+      if (sectionId) {
+        const prefix = mockIdPrefix ?? sectionId.replace(/^sub_/, '') + '-mock-';
+        p.saveMockResult({ id: prefix + now, score: mockScore, totalMarks: questions.length, timestamp: now, answers: currentAnswers, sectionScores: { [sectionId]: mockScore } });
+      }
     }
     setFinished(true);
   };
@@ -1370,6 +1390,7 @@ const AssessmentRunner = ({
     setIndex(0);
     setTimeLeft(initialTime);
     setResultStartedAt(Date.now());
+    setPresentationVersion((value) => value + 1);
     setFinished(false);
     setStarted(true);
   };
@@ -1425,7 +1446,7 @@ const AssessmentRunner = ({
             <b>{accuracy >= 80 ? 'अच्छा प्रदर्शन — अब weak questions revise करें।' : accuracy >= 60 ? 'अच्छी शुरुआत — गलत questions को दोबारा लगाएँ।' : 'अवधारणाएँ दोहराकर फिर से timed practice करें।'}</b>
           </div>
         </Card>
-        <AssessmentAnswerReview questions={questions} answers={answers} englishMode={isEnglishAssessment} />
+        <AssessmentAnswerReview questions={displayedQuestions} answers={answers} englishMode={isEnglishAssessment} />
         <div className="actions">
           <button className="btn primary" onClick={startTest}>फिर से यह टेस्ट दें</button>
           {bannerLink && <Link className="btn" to={bannerLink.to}>{bannerLink.label}</Link>}
@@ -1517,7 +1538,7 @@ const AssessmentRunner = ({
           <div className="assessment-palette-head"><div><b>Question Navigator</b><span>{answeredCount} / {questions.length} answered</span></div><strong>{markedForReview.size}★</strong></div>
           <div className="science-palette-legend"><span>● answered</span><span>★ review</span><span>○ unanswered</span></div>
           <div className="assessment-palette-grid">
-            {questions.map((question, questionIndex) => <button key={question.id} className={(answers[question.id]?.length ? 'answered ' : '') + (markedForReview.has(question.id) ? 'marked ' : '') + (questionIndex === index ? 'current' : '')} onClick={() => setIndex(questionIndex)}>
+            {displayedQuestions.map((question, questionIndex) => <button key={question.id} className={(answers[question.id]?.length ? 'answered ' : '') + (markedForReview.has(question.id) ? 'marked ' : '') + (questionIndex === index ? 'current' : '')} onClick={() => setIndex(questionIndex)}>
               {markedForReview.has(question.id) ? '★' : questionIndex + 1}
             </button>)}
           </div>
@@ -1560,6 +1581,7 @@ const ChapterChallengerPage = () => {
     description={isEnglish ? '20-प्रश्न English Challenger — chapter को पहले पढ़ें, फिर English questions को धीरे-धीरे बिना Hindi translation पर निर्भर हुए solve करें।' : '20-प्रश्न Challenger set — पहले Challenge/Hard प्रश्न, फिर chapter coverage से 20 तक। हर प्रश्न में चार वास्तविक विकल्प; सही उत्तर बीच में नहीं दिखेगा और review केवल टेस्ट के अंत में मिलेगा।'}
     badge={isEnglish ? 'ENGLISH CHALLENGER' : 'CHALLENGER MODE'}
     bannerLink={{ to: '/chapters/' + chapter.id + '/study', label: '📖 अध्याय अध्ययन →' }}
+    preserveOptionOrder
     emptyTitle="इस अध्याय में अभी Challenger Questions उपलब्ध नहीं हैं"
     emptyText="इस chapter के लिए challenge-level question bank उपलब्ध होने पर यह test यहाँ दिखाई देगा।"
   />;
@@ -1591,6 +1613,7 @@ const TopicChallengerPage = () => {
       : "20-प्रश्न subtopic Challenger — concept, calculation और application को कठिन स्तर पर परखें। हर प्रश्न में चार अलग और meaningful विकल्प, एक सही उत्तर और non-guessable answer positions हैं।"}
     badge={subjectLabel + " SUBTOPIC CHALLENGER"}
     bannerLink={{ to: '/chapters/' + chapter.id + '/study', label: '📖 अध्याय अध्ययन →' }}
+    preserveOptionOrder
     emptyTitle="इस विषयांश में Challenger Questions उपलब्ध नहीं हैं"
     emptyText={isHindi
       ? "इस Hindi subtopic के लिए dedicated Challenger question pool उपलब्ध होना चाहिए।"

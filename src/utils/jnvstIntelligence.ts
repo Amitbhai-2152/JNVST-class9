@@ -535,6 +535,30 @@ const arrangeChallengerOptions = (question: Question, index: number, seed: strin
   return { ...question, options: arranged };
 };
 
+const assessmentAnswerPositionPattern = [2,0,3,1,3,1,0,2,1,3,2,0,0,2,1,3,1,0,3,2];
+
+export const arrangeAssessmentOptions = (question: Question, index: number, seed: string): Question => {
+  if (question.type !== 'mcq' || question.options.length !== 4 || question.correctOptionIds.length !== 1) return question;
+  const correct = question.options.find((option) => question.correctOptionIds.includes(option.id));
+  if (!correct) return question;
+
+  const distractors = question.options
+    .filter((option) => option.id !== correct.id)
+    .slice()
+    .sort((a, b) => stableHash(seed + ':assessment:' + question.id + ':' + a.id) - stableHash(seed + ':assessment:' + question.id + ':' + b.id) || a.id.localeCompare(b.id));
+  const rotation = stableHash(seed + ':assessment-answer-pattern') % assessmentAnswerPositionPattern.length;
+  const targetIndex = assessmentAnswerPositionPattern[(rotation + index) % assessmentAnswerPositionPattern.length];
+  const arranged: Question['options'] = new Array(4);
+  arranged[targetIndex] = correct;
+  let distractorIndex = 0;
+  for (let optionIndex = 0; optionIndex < 4; optionIndex += 1) {
+    if (optionIndex === targetIndex) continue;
+    arranged[optionIndex] = distractors[distractorIndex];
+    distractorIndex += 1;
+  }
+  return { ...question, options: arranged };
+};
+
 export const getChapterChallengerQuestions = (
   chapterId: ID,
   limit = 20,
@@ -559,14 +583,16 @@ export const getChapterChallengerQuestions = (
 
   const candidates = [...uniqueById.values()];
   if (chapterId.startsWith('chap_hin_')) {
-    const dedicated = hindiChapterChallengers
+    const dedicated = [...hindiChapterChallengers, ...hindiTopicChallengers]
       .filter((question) => question.chapterId === chapterId);
-    const pool = dedicated.length >= target
-      ? dedicated
+    const uniqueDedicated = [...new Map(dedicated.map((question) => [question.id, question])).values()];
+    const pool = uniqueDedicated.length >= target
+      ? uniqueDedicated
       : candidates.filter((question) => question.chapterId === chapterId);
-    return rankChallengerCandidates(pool, seed + ':' + chapterId)
-      .slice(0, target)
-      .map((question, index) => arrangeChallengerOptions(question, index, seed + ':' + chapterId));
+    const ranked = rankChallengerCandidates(pool, seed + ':' + chapterId);
+    const strong = ranked.filter((question) => question.difficulty === 'hard' || question.difficulty === 'challenge');
+    const selected = [...strong, ...ranked.filter((question) => !strong.includes(question))].slice(0, target);
+    return selected.map((question, index) => arrangeChallengerOptions(question, index, seed + ':' + chapterId));
   }
 
   if (!chapterId.startsWith('chap_math_') && !chapterId.startsWith('chap_eng_')) {

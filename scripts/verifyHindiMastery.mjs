@@ -107,6 +107,44 @@ assert(expansionQuestionRecords.size === 55, 'Hindi expansion ID/topic pairs sho
 const canonicalHindiQuestionRecords = new Map([...legacyQuestionRecords, ...expansionQuestionRecords]);
 assert(canonicalHindiQuestionRecords.size === 165, 'canonical Hindi question source should contain exactly 165 unique records, found ' + canonicalHindiQuestionRecords.size);
 
+const challengerSourceRecords = (source) => {
+  const records = [];
+  const re = /make\(\{id:'([^']+)',chapterId:'([^']+)',topicId:'([^']+)',question:'[^']*',options:\[[^\]]*\],correct:\d,difficulty:'(easy|medium|hard|challenge)'/g;
+  let match;
+  while ((match = re.exec(source))) records.push({ id: match[1], chapterId: match[2], topicId: match[3], difficulty: match[4] });
+  return records;
+};
+const topicChallengerRecordsData = (source) => challengerSourceRecords(source);
+
+// Phase 1–3 behavioral/source checks.
+const intelligenceSource = fs.readFileSync(path.join(root, 'src', 'utils', 'jnvstIntelligence.ts'), 'utf8');
+const appSource = fs.readFileSync(path.join(root, 'src', 'App.tsx'), 'utf8');
+
+const canonicalMcqCount = [...canonicalHindiQuestionRecords.values()].filter((record) => record.type === 'mcq').length;
+assert(canonicalMcqCount === 150, 'Hindi exam-compatible MCQ pool should contain exactly 150 MCQs, found ' + canonicalMcqCount);
+assert(intelligenceSource.includes('export const arrangeAssessmentOptions'), 'Assessment answer-position arranger is missing');
+const answerPatternMatch = intelligenceSource.match(/const assessmentAnswerPositionPattern = \[([^\]]+)\]/);
+assert(answerPatternMatch, 'Assessment answer-position pattern is missing');
+const answerPattern = answerPatternMatch[1].split(',').map((value) => Number(value.trim()));
+assert(answerPattern.length === 20 && answerPattern.every((value) => value >= 0 && value <= 3), 'Assessment answer-position pattern must contain 20 valid A/B/C/D positions');
+const patternCounts = [0,1,2,3].map((value) => answerPattern.filter((item) => item === value).length);
+assert(patternCounts.every((value) => value === 5), 'Assessment answer-position pattern must contain exactly five of each A/B/C/D position');
+const simulatedPositions = Array.from({ length: 150 }, (_, index) => answerPattern[index % answerPattern.length]);
+const simulatedCounts = [0,1,2,3].map((value) => simulatedPositions.filter((item) => item === value).length);
+assert(Math.max(...simulatedCounts) - Math.min(...simulatedCounts) <= 1, '150-question assessment presentation must remain position-balanced');
+assert(intelligenceSource.includes("const correct = question.options.find((option) => question.correctOptionIds.includes(option.id));"), 'Assessment arrangement must locate the correct answer by option ID, not source index');
+assert(intelligenceSource.includes("const dedicated = [...hindiChapterChallengers, ...hindiTopicChallengers]"), 'Hindi chapter Challenger must combine chapter and dedicated subtopic pools');
+assert(intelligenceSource.includes("const strong = ranked.filter((question) => question.difficulty === 'hard' || question.difficulty === 'challenge');"), 'Hindi chapter Challenger must prioritize hard/challenge questions');
+assert(appSource.includes('mockSubjectId?: ID;') && appSource.includes('mockIdPrefix?: string;'), 'AssessmentRunner must accept subject-aware mock persistence configuration');
+assert(appSource.includes('mockSubjectId="sub_hin"') && appSource.includes('mockIdPrefix="hindi-mock-"'), 'Hindi Mock must explicitly persist as Hindi');
+assert(appSource.includes('mockSubjectId="sub_eng"') && appSource.includes('mockIdPrefix="english-mock-"'), 'English Mock must explicitly persist as English');
+assert(appSource.includes('sectionScores: { [sectionId]: mockScore }'), 'Mock persistence must use the configured section ID');
+for (const chapterId of ['chap_hin_01','chap_hin_02','chap_hin_03','chap_hin_04','chap_hin_05','chap_hin_06']) {
+  const combined = [...challengerSourceRecords(challengerSource), ...topicChallengerRecordsData(topicChallengerSource)].filter((record) => record.chapterId === chapterId);
+  const strongCount = combined.filter((record) => record.difficulty === 'hard' || record.difficulty === 'challenge').length;
+  assert(strongCount >= 20, chapterId + ' needs at least 20 hard/challenge dedicated candidates for its served Challenger set; found ' + strongCount);
+}
+
 const curriculumSource = fs.readFileSync(path.join(root, 'src', 'data', 'curriculum.ts'), 'utf8');
 const curriculumQuestionIds = [];
 for (const topicId of officialTopics) {
@@ -204,3 +242,6 @@ console.log('Dedicated Hindi topic Challenger questions:', topicChallengerIds.le
 console.log('Hindi Challenger questions by topic:', Object.fromEntries(officialTopics.map((id) => [id, combinedTopicChallengerCounts.get(id) ?? 0])));
 console.log('Hindi unseen passages:', passageIds.length);
 console.log('Hindi unseen passage questions:', passageQuestionIds.length);
+console.log('Hindi exam-compatible MCQs:', canonicalMcqCount);
+console.log('Assessment answer-position pattern:', patternCounts);
+console.log('Hindi Phase 1–3 behavioral checks: passed');
