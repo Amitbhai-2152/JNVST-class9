@@ -1,6 +1,7 @@
 import type { Chapter, ContentBlock, Lesson, Topic, ID } from "../../types";
 import { allQuestions } from "../questions";
 import { richChapterContent } from "./richChapterContent";
+import { hindiMasteryUnitMap, hindiMasteryUnits } from "../hindiPrep";
 import { scienceStudyPages, scienceLessonCore, scienceLessonLens } from "../scienceLessonCore";
 
 const subjectGuides: Record<"अंग्रेज़ी" | "हिंदी" | "गणित" | "विज्ञान", string[]> = {
@@ -97,6 +98,136 @@ export const getScienceChapterStudyPages = (chapter: Chapter): ContentBlock[][] 
     pages.push([pageTitle(chapter, i * 2 + 1, "अध्याय अध्ययन"), ...blocks.slice(1), ...(i === 0 && lens ? [{ type: "callout" as const, style: "important" as const, title: "इस अध्याय का बड़ा सवाल", text: lens.bigQuestion }] : [])]);
     pages.push([pageTitle(chapter, i * 2 + 2, "अध्याय अध्ययन"), ...blocks.slice(1)]);
   }
+  return pages.slice(0, 12);
+};
+
+const hindiPage = (chapter: Chapter, pageNumber: number, topicTitle: string, sectionTitle: string, blocks: ContentBlock[]): ContentBlock[] => [
+  pageTitle(chapter, pageNumber, topicTitle),
+  { type: 'heading', level: 3, text: sectionTitle },
+  ...blocks,
+];
+
+const hindiList = (items: string[]): ContentBlock[] =>
+  items.length ? [{ type: 'list', style: 'bullet', items }] : [];
+
+const hindiSelfCheck = (questions: typeof allQuestions, startIndex = 0): ContentBlock[] =>
+  questions.flatMap((q, index) => questionBlock(q, startIndex + index));
+
+export const getHindiChapterStudyPages = (chapter: Chapter): ContentBlock[][] => {
+  const units = chapter.topicIds
+    .map((topicId) => hindiMasteryUnitMap.get(topicId))
+    .filter(Boolean) as typeof hindiMasteryUnits;
+
+  if (!units.length) {
+    return getChapterStudyPages(chapter, [], 12);
+  }
+
+  const chapterQuestions = allQuestions.filter(
+    (q) => q.chapterId === chapter.id && q.metadata?.jnvstCompatible,
+  );
+
+  const pages: ContentBlock[][] = [];
+  let pageNumber = 1;
+
+  const pushUnitPages = (unit: typeof hindiMasteryUnits[number], count: number) => {
+    if (count === 3) {
+      pages.push(
+        hindiPage(chapter, pageNumber++, unit.title, 'समझें · नियम पहचानें', [
+          { type: 'paragraph', text: `इस विषयांश में ${unit.title} के मूल अर्थ, पहचान और परीक्षा में उपयोग होने वाले संकेत समझें।` },
+          ...hindiList(unit.coreSkills),
+          ...hindiList(unit.mustKnow),
+        ]),
+        hindiPage(chapter, pageNumber++, unit.title, 'उदाहरण · लगाएँ', [
+          ...hindiList(unit.examples),
+          { type: 'step-by-step', title: 'लगाने की विधि', steps: unit.solveMethod },
+          ...hindiList(unit.examTraps),
+        ]),
+        hindiPage(chapter, pageNumber++, unit.title, 'JNVST फोकस · स्वयं जाँच', [
+          ...hindiList(unit.examFocus),
+          ...hindiList(unit.quickFacts),
+          ...hindiSelfCheck(chapterQuestions.filter((q) => q.topicId === unit.topicId).slice(0, 1)),
+        ]),
+      );
+      return;
+    }
+
+    pages.push(
+      hindiPage(chapter, pageNumber++, unit.title, 'समझें', [
+        { type: 'paragraph', text: `पहले ${unit.title} का अर्थ और इसका उपयोग समझें।` },
+        ...hindiList(unit.coreSkills),
+      ]),
+      hindiPage(chapter, pageNumber++, unit.title, 'नियम पहचानें', [
+        ...hindiList(unit.mustKnow),
+        ...hindiList(unit.quickFacts),
+      ]),
+      hindiPage(chapter, pageNumber++, unit.title, 'उदाहरण', [
+        ...hindiList(unit.examples),
+      ]),
+      hindiPage(chapter, pageNumber++, unit.title, 'लगाएँ', [
+        { type: 'step-by-step', title: 'Solve Method', steps: unit.solveMethod },
+        ...hindiList(unit.examTraps),
+      ]),
+      hindiPage(chapter, pageNumber++, unit.title, 'JNVST फोकस', [
+        ...hindiList(unit.examFocus),
+        ...hindiSelfCheck(chapterQuestions.filter((q) => q.topicId === unit.topicId).slice(0, 1)),
+      ]),
+    );
+  };
+
+  if (units.length === 1) {
+    const unit = units[0];
+    pages.push(
+      hindiPage(chapter, pageNumber++, unit.title, 'समझें · मूल ढाँचा', [
+        { type: 'paragraph', text: `JNVST के लिए ${unit.title} को केवल परिभाषा की तरह नहीं, बल्कि पहचान + प्रयोग + विकल्पों की तुलना के रूप में सीखें।` },
+        ...hindiList(unit.coreSkills),
+      ]),
+      hindiPage(chapter, pageNumber++, unit.title, 'नियम पहचानें · मुख्य नियम', hindiList(unit.mustKnow)),
+      hindiPage(chapter, pageNumber++, unit.title, 'सूक्ष्म तथ्य और उदाहरण', [
+        ...hindiList(unit.quickFacts),
+        ...hindiList(unit.examples),
+      ]),
+      hindiPage(chapter, pageNumber++, unit.title, 'लगाएँ · चरणबद्ध विधि', [
+        { type: 'step-by-step', title: 'उत्तर तक पहुँचने की विधि', steps: unit.solveMethod },
+      ]),
+      hindiPage(chapter, pageNumber++, unit.title, 'JNVST ट्रैप्स', hindiList(unit.examTraps)),
+      hindiPage(chapter, pageNumber++, unit.title, 'JNVST फोकस', [
+        ...hindiList(unit.examFocus),
+        { type: 'callout', style: 'important', title: 'स्वर्ण नियम', text: 'पहचान → नियम → संदर्भ → विकल्प हटाएँ → उत्तर सत्यापित करें।' },
+      ]),
+    );
+
+    const selfChecks = chapterQuestions.filter((q) => q.topicId === unit.topicId).slice(0, 10);
+    const groups = splitInto(selfChecks, 5);
+    groups.forEach((group, index) => {
+      pages.push(hindiPage(chapter, pageNumber++, unit.title, `स्वयं जाँच ${index + 1}`, hindiSelfCheck(group, index * 2)));
+    });
+
+    pages.push(hindiPage(chapter, pageNumber++, unit.title, 'पक्का करें · अंतिम recall', [
+      ...hindiList(unit.mustKnow.slice(0, 4)),
+      ...hindiList(unit.examTraps.slice(0, 3)),
+      ...hindiList(unit.examFocus.slice(0, 4)),
+    ]));
+    return pages.slice(0, 12);
+  }
+
+  const perUnit = units.length === 2 ? 5 : 3;
+  units.forEach((unit) => pushUnitPages(unit, perUnit));
+
+  const mixedQuestions = chapterQuestions.slice(0, 10);
+  const mixedGroups = splitInto(mixedQuestions, units.length === 2 ? 2 : 3);
+  mixedGroups.forEach((group, index) => {
+    pages.push(hindiPage(
+      chapter,
+      pageNumber++,
+      units.map((unit) => unit.title).join(' · '),
+      `मिश्रित JNVST अभ्यास ${index + 1}`,
+      [
+        { type: 'paragraph', text: 'अब अलग-अलग विषयांशों के बीच सूक्ष्म अंतर पहचानते हुए प्रश्न हल करें।' },
+        ...hindiSelfCheck(group, index * group.length),
+      ],
+    ));
+  });
+
   return pages.slice(0, 12);
 };
 
