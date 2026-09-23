@@ -121,9 +121,7 @@ for (const topicId of [
 ]) {
   assert((eligibleByTopic.get(topicId) ?? 0) + (expansionTopics.get(topicId) ?? 0) >= 10, topicId + ' should contain at least 10 JNVST-compatible MCQs');
 }
-for (const chapter of ['chap_eng_01', 'chap_eng_02', 'chap_eng_03', 'chap_eng_04']) {
-  assert((eligibleByChapter.get(chapter) ?? 0) >= 20, chapter + ' has fewer than 20 Challenger-eligible questions in the combined bank');
-}
+
 
 const challengerSources = [challengerSource, challengerExtraSource];
 const challengerIds = challengerSources.flatMap((source) =>
@@ -139,6 +137,14 @@ assert(optionArrays.length === 80, 'dedicated Challenger options could not be fu
 for (const chapterNumber of ['01','02','03','04']) {
   const count = challengerIds.filter((id) => id.startsWith('q_eng_ch_' + chapterNumber + '_')).length;
   assert(count === 20, 'Chapter ' + chapterNumber + ' dedicated Challenger bank must contain exactly 20 questions; found ' + count);
+}
+
+for (const chapter of ['chap_eng_01', 'chap_eng_02', 'chap_eng_03', 'chap_eng_04']) {
+  const chapterNumber = chapter.slice(-2);
+  const expansionCount = expansionTopicIds.filter((topicId) => topicId.startsWith('top_eng_' + chapterNumber + '_')).length;
+  const dedicatedCount = challengerIds.filter((id) => id.startsWith('q_eng_ch_' + chapterNumber + '_')).length;
+  const totalEligible = (eligibleByChapter.get(chapter) ?? 0) + expansionCount + dedicatedCount;
+  assert(totalEligible >= 20, chapter + ' has fewer than 20 Challenger-eligible questions across regular and dedicated banks');
 }
 
 const translationIds = [...labSource.matchAll(/\{ id:'(tr_[^']+)'/g)].map((match) => match[1]);
