@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { copyFile, readFile, writeFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 
 const sourcePath = 'index.src.html';
@@ -22,6 +22,7 @@ try {
   });
 
   if (exitCode !== 0) process.exitCode = exitCode;
+  await copyFile('src/data/notifications.json', 'dist/notifications.json');
 } finally {
   await writeFile(targetPath, previous, 'utf8');
 }
