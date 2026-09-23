@@ -5,6 +5,7 @@ import { scienceLessonLens } from "../data/scienceLessonCore";
 import { mathMasteryUnitMap } from "../data/mathMastery";
 import { scienceMasteryUnits } from "../data/sciencePrep";
 import { englishMasteryUnits } from "../data/englishPrep";
+import { hindiMasteryUnitMap } from "../data/hindiPrep";
 import { getScienceChapterStudyPages, getChapterStudyPages } from "../data/lessons/chapterStudy";
 import { allLessons } from "../data";
 import { MathAwareText, MathText } from "../components/MathText";
@@ -72,7 +73,8 @@ export default function ChapterStudyPage() {
   const isScience = chapter?.subjectId === "sub_sci";
   const isMath = chapter?.subjectId === "sub_math";
   const isEnglish = chapter?.subjectId === "sub_eng";
-  const topic = (isScience || isMath || isEnglish) && chapter ? topics.find((x) => x.id === chapter.topicIds[0]) : undefined;
+  const isHindi = chapter?.subjectId === "sub_hin";
+  const topic = (isScience || isMath || isEnglish || isHindi) && chapter ? topics.find((x) => x.id === chapter.topicIds[0]) : undefined;
   const mastery = isScience && topic ? scienceMasteryUnits.find((x) => x.topicId === topic.id) : undefined;
   const mathMastery = isMath && topic ? mathMasteryUnitMap.get(topic.id) : undefined;
   const lens = isScience && topic ? scienceLessonLens[topic.id] : undefined;
@@ -175,6 +177,137 @@ export default function ChapterStudyPage() {
                 <div className="english-study-page-actions"><button className="btn" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>← पिछला</button><div className="english-study-dots" aria-label="पृष्ठ चयन">{pages.map((_, index) => <button key={index} className={index === page ? "active" : ""} onClick={() => setPage(index)} aria-label={"पृष्ठ " + (index + 1)}><span /></button>)}</div>{page < pages.length - 1 ? <button className="btn primary" onClick={() => setPage((p) => p + 1)}>अगला पृष्ठ →</button> : <Link className="btn primary" to={"/chapters/" + chapter.id}>अध्याय अभ्यास देखें →</Link>}</div>
               </article>
               <div className="english-study-bottom-nav">{prevChapter ? <Link to={"/chapters/" + prevChapter.id} className="english-study-chapter-link">← {String(prevChapter.order).padStart(2, "0")} · {prevChapter.title}</Link> : <span />}{nextChapter ? <Link to={"/chapters/" + nextChapter.id} className="english-study-chapter-link next">{String(nextChapter.order).padStart(2, "0")} · {nextChapter.title} →</Link> : <span />}</div>
+            </section>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (isHindi) {
+    const hindiChapters = chapters.filter((x) => x.subjectId === "sub_hin").sort((a, b) => a.order - b.order);
+    const chapterTopics = chapter.topicIds
+      .map((id) => topics.find((item) => item.id === id))
+      .filter(Boolean) as typeof topics;
+    const chapterUnits = chapterTopics
+      .map((item) => hindiMasteryUnitMap.get(item.id))
+      .filter(Boolean) as typeof import("../data/hindiPrep").hindiMasteryUnits;
+    const current = pages[page] ?? [];
+    const progress = Math.round(((page + 1) / Math.max(1, pages.length)) * 100);
+    const currentTitle = cleanPageTitle(current, "अध्याय अध्ययन");
+    const nextChapter = hindiChapters.find((x) => x.order === chapter.order + 1);
+    const prevChapter = hindiChapters.find((x) => x.order === chapter.order - 1);
+    const hindiStages = [
+      { name: "समझें", pages: "1–2", icon: "🧭", hint: "अर्थ + आधार" },
+      { name: "नियम पहचानें", pages: "3–4", icon: "🔎", hint: "rule + संकेत" },
+      { name: "उदाहरण", pages: "5–7", icon: "🗣️", hint: "सही + गलत तुलना" },
+      { name: "लगाएँ", pages: "8–9", icon: "🧪", hint: "नए प्रश्नों पर प्रयोग" },
+      { name: "JNVST फोकस", pages: "10–11", icon: "🎯", hint: "traps + सूक्ष्म अंतर" },
+      { name: "पक्का करें", pages: "12", icon: "✅", hint: "recall + self-check" },
+    ];
+    const stageIndex = page < 2 ? 0 : page < 4 ? 1 : page < 7 ? 2 : page < 9 ? 3 : page < 11 ? 4 : 5;
+    const stage = hindiStages[stageIndex];
+    const jumpStage = (index: number) => {
+      const starts = [0, 2, 4, 7, 9, 11];
+      setPage(Math.min(starts[index] ?? 0, Math.max(0, pages.length - 1)));
+    };
+    const focusSkills = chapterUnits
+      .flatMap((unit) => unit?.coreSkills ?? [])
+      .filter((value, index, items) => items.indexOf(value) === index)
+      .slice(0, 4);
+    const mustKnow = chapterUnits
+      .flatMap((unit) => unit?.mustKnow ?? [])
+      .filter((value, index, items) => items.indexOf(value) === index)
+      .slice(0, 3);
+    const topicLabels = chapterTopics.map((item) => item.title).join(" · ");
+
+    return (
+      <div className="app-shell">
+        <header className="topbar">
+          <Link to="/" className="brand">JNVST कक्षा 9</Link>
+          <nav><Link to="/">डैशबोर्ड</Link><Link to="/subjects">विषय</Link><Link to="/bookmarks">बुकमार्क</Link><Link to="/mock-tests">मॉक टेस्ट</Link></nav>
+        </header>
+
+        <main className="shell science-study-page hindi-study-page">
+          <div className="science-study-breadcrumb">
+            <Link to="/subjects/sub_hin">← हिंदी तैयारी केंद्र</Link>
+            <span>अध्याय {String(chapter.order).padStart(2, "0")} / {hindiChapters.length}</span>
+            <span className="science-study-keyhint">⌨️ ← → पृष्ठ</span>
+          </div>
+
+          <section className="science-study-hero">
+            <div>
+              <span className="eyebrow">HINDI • CHAPTER STUDY</span>
+              <h1>{chapter.title}</h1>
+              <p>12 पृष्ठों का एकीकृत learning path: पहले अर्थ और नियम समझें, फिर उदाहरण देखें, नए प्रश्नों पर लागू करें और अंत में JNVST recall करें।</p>
+            </div>
+            <div className="science-study-hero-progress">
+              <strong>{progress}%</strong>
+              <span>पृष्ठ पूरे</span>
+            </div>
+          </section>
+
+          <div className="science-study-layout">
+            <aside className="science-study-sidebar">
+              <div className="science-study-side-card">
+                <span className="science-panel-label">STUDY ROADMAP</span>
+                <div className="science-study-stage-list">
+                  {hindiStages.map((item, index) => (
+                    <button key={item.name} className={index === stageIndex ? "active" : ""} onClick={() => jumpStage(index)}>
+                      <span className="science-study-stage-icon">{item.icon}</span>
+                      <span><b>{item.name}</b><small>पृष्ठ {item.pages} · {item.hint}</small></span>
+                      <em>{index < stageIndex ? "✓" : index === stageIndex ? "●" : String(index + 1)}</em>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {focusSkills.length > 0 && <div className="science-study-side-card">
+                <span className="science-panel-label">आज का लक्ष्य</span>
+                <ul className="science-side-list">{focusSkills.map((item) => <li key={item}>{item}</li>)}</ul>
+                <Link className="btn primary full" to={"/chapters/" + chapter.id}>अध्याय के प्रश्न →</Link>
+              </div>}
+
+              {mustKnow.length > 0 && <div className="science-study-side-card science-study-flow-card">
+                <span className="science-panel-label">अध्याय की सोच</span>
+                <b>रूप + अर्थ + संदर्भ को साथ देखकर सही उत्तर तक पहुँचें।</b>
+                <div className="science-mini-flow">
+                  {mustKnow.map((item, index) => (
+                    <div key={item}><span>{"CHECK " + (index + 1)}</span><strong>{item}</strong></div>
+                  ))}
+                </div>
+              </div>}
+            </aside>
+
+            <section className="science-study-main">
+              <div className="science-study-pagebar">
+                <div><span>{stage.icon} {stage.name}</span><strong>पृष्ठ {page + 1} / {pages.length}</strong></div>
+                <div className="science-study-progress-track"><span style={{ width: progress + "%" }} /></div>
+              </div>
+
+              <article className="science-study-content-card">
+                <div className="science-study-content-head">
+                  <div><span className="science-panel-label">CHAPTER · {topicLabels}</span><h2>{currentTitle}</h2></div>
+                  <span className="science-study-page-chip">{stageIndex < 2 ? "CONCEPT" : stageIndex < 4 ? "APPLICATION" : stageIndex === 4 ? "EXAM" : "RECALL"}</span>
+                </div>
+
+                <Content className="hindi-chapter-content" blocks={current.filter((b, index) => !(index === 0 && b.type === "heading"))} />
+
+                <div className="science-study-page-actions">
+                  <button className="btn" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>← पिछला</button>
+                  <div className="science-study-dots" aria-label="पृष्ठ चयन">
+                    {pages.map((_, index) => <button key={index} className={index === page ? "active" : ""} onClick={() => setPage(index)} aria-label={"पृष्ठ " + (index + 1)}><span /></button>)}
+                  </div>
+                  {page < pages.length - 1
+                    ? <button className="btn primary" onClick={() => setPage((p) => p + 1)}>अगला पृष्ठ →</button>
+                    : <Link className="btn primary" to={"/chapters/" + chapter.id}>अध्याय अभ्यास देखें →</Link>}
+                </div>
+              </article>
+
+              <div className="science-study-bottom-nav">
+                {prevChapter ? <Link to={"/chapters/" + prevChapter.id} className="science-study-chapter-link">← {String(prevChapter.order).padStart(2, "0")} · {prevChapter.title}</Link> : <span />}
+                {nextChapter ? <Link to={"/chapters/" + nextChapter.id} className="science-study-chapter-link next">{String(nextChapter.order).padStart(2, "0")} · {nextChapter.title} →</Link> : <span />}
+              </div>
             </section>
           </div>
         </main>
