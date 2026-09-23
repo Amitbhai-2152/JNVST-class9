@@ -100,6 +100,16 @@ export interface EnglishLabAttempt {
   mode: 'translation' | 'vocabulary';
 }
 
+export interface HindiUnseenLabAttempt {
+  questionId: ID;
+  passageId: ID;
+  skill: string;
+  selectedOptionIndex: number;
+  correct: boolean;
+  timestamp: number;
+  mode: 'unseen';
+}
+
 export interface ProgressState {
   lessonActivity: Record<ID, { status: 'completed' | 'in-progress'; lastAccessed: number }>;
   questionAttempts: Record<ID, QuestionAttempt[]>;
@@ -108,4 +118,5 @@ export interface ProgressState {
   recentlyStudied: Array<{ id: ID; title: string; type: 'lesson' | 'topic'; timestamp: number }>;
   mockTestResults: MockTestResult[];
   englishLabAttempts: Record<ID, EnglishLabAttempt[]>;
+  hindiUnseenAttempts: Record<ID, HindiUnseenLabAttempt[]>;
 }
