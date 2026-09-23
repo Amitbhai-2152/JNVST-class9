@@ -32,7 +32,7 @@ export const hindiExpansionQuestions: Question[] = [
   make({
     id:'q_hin_x_01_001', chapterId:'chap_hin_01', topicId:'top_hin_01_01',
     textPlain:"निम्नलिखित में से शुद्ध वर्तनी वाला शब्द चुनिए।",
-    options:['आवश्यक्ता','आवश्यकता','आवश्यकता','आवसयकता'], correct:2, difficulty:'easy',
+    options:['आवश्यक्ता','आवश्यकता','आवाश्यकता','आवसयकता'], correct:1, difficulty:'easy',
     tags:['spelling','varn-vichar'],
     explanationPlain:"शुद्ध वर्तनी 'आवश्यकता' है। इसमें 'शक' वाला संयुक्त रूप नहीं, बल्कि आवश्यक + ता का सही रूप है।"
   }),
@@ -46,7 +46,7 @@ export const hindiExpansionQuestions: Question[] = [
   make({
     id:'q_hin_x_01_003', chapterId:'chap_hin_01', topicId:'top_hin_01_01',
     textPlain:"'ज्ञान' शब्द में कौन-सा संयुक्त व्यंजन प्रमुख है?",
-    options:['ज् + ञ','ग् + न','ज् + ञ और ज्ञ संयुक्त रूप','द् + य'], correct:2, difficulty:'medium',
+    options:['ज्ञ','क्ष','त्र','श्र'], correct:0, difficulty:'medium',
     tags:['phonology','joint-consonants'],
     explanationPlain:"'ज्ञान' का आरंभिक संयुक्त रूप 'ज्ञ' है, जिसे ज् + ञ के संयुक्त रूप के रूप में पढ़ाया जाता है।"
   }),
@@ -95,7 +95,7 @@ export const hindiExpansionQuestions: Question[] = [
   }),
   make({
     id:'q_hin_x_02_005', chapterId:'chap_hin_02', topicId:'top_hin_02_01',
-    textPlain:"'लालटेन' को सामान्यतः किस प्रकार का शब्द माना जाता है?",
+    textPlain:"'रेलगाड़ी' किस प्रकार का शब्द है?",
     options:['संकर','तत्सम','तद्भव','देशज'], correct:0, difficulty:'challenge',
     tags:['shabdbhed','sankar'],
     explanationPlain:"विद्यालयी हिंदी में 'लालटेन' को दो भाषाई स्रोतों से बने संकर शब्द के उदाहरण के रूप में दिया जाता है।"
@@ -203,7 +203,7 @@ export const hindiExpansionQuestions: Question[] = [
   }),
   make({
     id:'q_hin_x_05_005', chapterId:'chap_hin_03', topicId:'top_hin_03_01',
-    textPlain:"'वह बहुत तेज दौड़ता है।' में 'बहुत' किस पद का काम कर रहा है?",
+    textPlain:"'वह धीरे बोलता है।' में 'धीरे' किस पद का काम कर रहा है?",
     options:['संज्ञा','क्रिया-विशेषण','सर्वनाम','संबंधबोधक'], correct:1, difficulty:'challenge',
     tags:['pad-bhed','adverb'],
     explanationPlain:"'बहुत' 'तेज' की मात्रा/तीव्रता बढ़ा रहा है और वाक्य में क्रिया-विशेषणीय कार्य कर रहा है।"
