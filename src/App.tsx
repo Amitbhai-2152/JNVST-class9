@@ -18,6 +18,7 @@ import { hindiMasteryUnits } from './data/hindiPrep';
 import { EnglishTranslationLabPage, EnglishVocabularyLabPage, EnglishTranslationPracticePage, EnglishVocabularyPracticePage } from './pages/EnglishLabsPage';
 import EnglishUnseenPassagePage from './pages/EnglishUnseenPassagePage';
 import HindiUnseenPassagePage from './pages/HindiUnseenPassagePage';
+import { siteNotifications } from './data/notifications';
 
 const examSections = [
   { id: 'sub_hin', title: 'हिंदी', questions: 15 },
@@ -29,6 +30,7 @@ const examSections = [
 const difficultyLabel: Record<Question['difficulty'], string> = { easy: 'आसान', medium: 'मध्यम', hard: 'कठिन', challenge: 'चैलेंज' };
 const sameAnswer = (a: ID[], b: ID[]) => a.length === b.length && a.every((x) => b.includes(x));
 const formatMockTime = (seconds: number) => String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0');
+const NOTIFICATION_READ_KEY = 'jnvst-class9-notification-read-v1';
 const InlineText = ({ text }: { text: string }) => <MathAwareText text={text} />;
 
 const ContentRenderer = ({ blocks }: { blocks: ContentBlock[] }) => <div className="lesson-content">{blocks.map((b, i) => {
@@ -145,7 +147,18 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
   const { user, signOut, syncStatus, analyticsConsent, setAnalyticsConsent } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
+  const [readNotificationIds, setReadNotificationIds] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem(NOTIFICATION_READ_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === 'string') : [];
+    } catch {
+      return [];
+    }
+  });
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
+  const notificationRef = useRef<HTMLDivElement | null>(null);
   const email = user?.email ?? 'Student';
   const location = useLocation();
 
@@ -153,18 +166,25 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
     void trackEvent('page_view', { route: location.pathname });
     setMobileMenuOpen(false);
     setAccountMenuOpen(false);
+    setNotificationOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
-    if (!accountMenuOpen) return;
+    if (!accountMenuOpen && !notificationOpen) return;
     const handlePointerDown = (event: PointerEvent) => {
-      if (!accountMenuRef.current?.contains(event.target as Node)) setAccountMenuOpen(false);
+      const target = event.target as Node;
+      if (accountMenuRef.current?.contains(target) || notificationRef.current?.contains(target)) return;
+      setAccountMenuOpen(false);
+      setNotificationOpen(false);
     };
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setAccountMenuOpen(false);
-        document.getElementById('account-menu-trigger')?.focus();
-      }
+      if (event.key !== 'Escape') return;
+      const shouldFocusNotification = notificationOpen;
+      setAccountMenuOpen(false);
+      setNotificationOpen(false);
+      window.setTimeout(() => {
+        document.getElementById(shouldFocusNotification ? 'notification-trigger' : 'account-menu-trigger')?.focus();
+      }, 0);
     };
     document.addEventListener('pointerdown', handlePointerDown);
     document.addEventListener('keydown', handleKeyDown);
@@ -172,7 +192,28 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
       document.removeEventListener('pointerdown', handlePointerDown);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [accountMenuOpen]);
+  }, [accountMenuOpen, notificationOpen]);
+
+  const unreadNotifications = siteNotifications.filter((item) => !readNotificationIds.includes(item.id));
+
+  const persistReadNotifications = (ids: string[]) => {
+    setReadNotificationIds(ids);
+    try {
+      localStorage.setItem(NOTIFICATION_READ_KEY, JSON.stringify(ids));
+    } catch {
+      // Local storage may be unavailable; notification state still works in memory.
+    }
+  };
+
+  const markNotificationRead = (id: string) => {
+    if (readNotificationIds.includes(id)) return;
+    persistReadNotifications([...readNotificationIds, id]);
+  };
+
+  const markAllNotificationsRead = () => {
+    if (!unreadNotifications.length) return;
+    persistReadNotifications(siteNotifications.map((item) => item.id));
+  };
 
   const isActive = (section: 'dashboard' | 'subjects' | 'mock') => {
     if (section === 'dashboard') return location.pathname === '/';
@@ -214,6 +255,61 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
           <div className={'cloud-sync-status ' + syncStatus} title={syncLabel} aria-label={syncLabel}>
             <span aria-hidden="true">{syncStatus === 'saving' ? '↻' : syncStatus === 'error' ? '!' : '✓'}</span>
             <small>{syncLabel}</small>
+          </div>
+
+          <div className="notification-wrap" ref={notificationRef}>
+            <button
+              id="notification-trigger"
+              type="button"
+              className={'notification-trigger ' + (notificationOpen ? 'open' : '')}
+              aria-label={unreadNotifications.length ? unreadNotifications.length + ' unread notifications' : 'Notifications'}
+              aria-expanded={notificationOpen}
+              aria-controls="notification-panel"
+              aria-haspopup="dialog"
+              onClick={() => {
+                setNotificationOpen((open) => !open);
+                setAccountMenuOpen(false);
+              }}
+            >
+              <span className="notification-emoji" aria-hidden="true">🔔</span>
+              {unreadNotifications.length > 0 && <span className="notification-badge" aria-hidden="true">{unreadNotifications.length > 9 ? '9+' : unreadNotifications.length}</span>}
+            </button>
+
+            {notificationOpen && <div id="notification-panel" className="notification-panel" role="dialog" aria-label="Learning Hub notifications">
+              <div className="notification-panel-head">
+                <div>
+                  <strong>Notifications</strong>
+                  <small>Learning Hub के सभी updates यहाँ मिलेंगे।</small>
+                </div>
+                <button type="button" onClick={markAllNotificationsRead} disabled={!unreadNotifications.length}>
+                  {unreadNotifications.length ? 'सब read करें' : 'सब read हैं'}
+                </button>
+              </div>
+
+              <div className="notification-list">
+                {siteNotifications.length ? siteNotifications.map((item) => {
+                  const unread = !readNotificationIds.includes(item.id);
+                  return <button
+                    type="button"
+                    className={'notification-item ' + (unread ? 'unread' : '')}
+                    key={item.id}
+                    onClick={() => markNotificationRead(item.id)}
+                  >
+                    <span className="notification-item-icon" aria-hidden="true">🔔</span>
+                    <span className="notification-item-copy">
+                      <span className="notification-item-meta">
+                        <b>{item.tag}</b><small>{item.date}</small>
+                      </span>
+                      <strong>{item.title}</strong>
+                      <span>{item.body}</span>
+                    </span>
+                    {unread && <span className="notification-unread-dot" aria-label="Unread"></span>}
+                  </button>;
+                }) : <div className="notification-empty">अभी कोई नया update नहीं है।</div>}
+              </div>
+
+              <div className="notification-panel-foot">नए announcements यहाँ ऊपर दिखाई देंगे।</div>
+            </div>}
           </div>
 
           <div className="account-menu-wrap" ref={accountMenuRef}>
