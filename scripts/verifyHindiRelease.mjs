@@ -131,7 +131,7 @@ assert(canonicalQuestionCountByFile.reduce((sum, value) => sum + value, 0) === 1
 
 const expansionQuestionCount = (expansion.match(/\bid:\s*['"]q_hin_x_/g) ?? []).length;
 const expansionExplanationCount = (expansion.match(/explanationPlain:/g) ?? []).length;
-const expansionMakeCount = (expansion.match(/^\\s*make\\(\\{/gm) ?? []).length;
+const expansionMakeCount = expansion.split('make({').length - 1;
 assert(expansionQuestionCount === 55 && expansionExplanationCount === 55 && expansionMakeCount === 55, 'Hindi expansion must contain 55 complete generated records');
 
 const challengerFiles = [
