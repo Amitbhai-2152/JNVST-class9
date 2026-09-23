@@ -484,7 +484,6 @@ const HindiSubjectOverview = () => {
     return Boolean(performance?.attempts && performance.accuracy >= 80);
   }).length;
   const questionCount = getQuestionsBySubject('sub_hin').length;
-  const hindiChapters = chapters.filter((chapter) => chapter.subjectId === 'sub_hin').sort((a, b) => a.order - b.order);
 
   return <section className="english-hub">
     <div className="english-hub-hero">
@@ -533,30 +532,6 @@ const HindiSubjectOverview = () => {
       </Card>
     </div>
 
-    <section className="english-learning-map">
-      <div className="english-section-head">
-        <span className="eyebrow">6 अध्याय • 11 SKILL UNITS</span>
-        <h3>Hindi Chapters — पूरा preparation path</h3>
-        <p>हर chapter को concept, practice और Challenger के साथ जोड़कर पढ़ें।</p>
-      </div>
-      <div className="english-learning-grid">
-        {hindiChapters.map((chapter) => {
-          const chapterTopics = chapter.topicIds.map((id) => topics.find((topic) => topic.id === id)).filter(Boolean) as typeof topics;
-          const questionCountForChapter = chapterTopics.reduce((sum, topic) => sum + getQuestionsByTopic(topic.id).length, 0);
-          const chapterAttempts = chapterTopics.reduce((sum, topic) => sum + (performances.find((item) => item.topicId === topic.id)?.attempts ?? 0), 0);
-          const chapterCorrect = chapterTopics.reduce((sum, topic) => sum + (performances.find((item) => item.topicId === topic.id)?.correct ?? 0), 0);
-          const chapterAccuracy = chapterAttempts ? Math.round((chapterCorrect / chapterAttempts) * 100) : 0;
-          const pageCount = getChapterStudyPages(chapter, allLessons, 12).length;
-          return <Card className="english-learning-card" key={chapter.id}>
-            <div className="english-learning-card-top"><span className="english-unit-number">{String(chapter.order).padStart(2,'0')}</span><div><span className="english-status">{chapterAttempts ? 'अभ्यास चल रहा' : 'शुरू नहीं'}</span><h4>{chapter.title}</h4><small>{questionCountForChapter} प्रश्न · {pageCount} अध्ययन पृष्ठ · 20 Challenger</small></div></div>
-            <p className="english-learning-focus">{chapterTopics.map((topic) => hindiMasteryUnits.find((unit) => unit.topicId === topic.id)?.coreSkills.slice(0,2).join(' · ')).filter(Boolean).join(' · ')}</p>
-            <div className="english-learning-meta"><span>{chapterAttempts ? 'आपकी accuracy' : 'Topics'}</span><b>{chapterAttempts ? chapterAccuracy + '%' : chapterTopics.length}</b></div>
-            <div className="english-progress"><span style={{width: (chapterAttempts ? chapterAccuracy : 0) + '%'}} /></div>
-            <div className="actions"><Link className="btn primary" to={'/chapters/' + chapter.id + '/study'}>📖 अध्याय पढ़ें</Link><Link className="btn" to={'/chapters/' + chapter.id}>Chapter map</Link><Link className="btn challenger" to={'/chapters/' + chapter.id + '/challenger'}>⚡ Challenger</Link></div>
-          </Card>;
-        })}
-      </div>
-    </section>
   </section>;
 };
 const ScienceSubjectOverview = () => {
