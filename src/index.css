@@ -2512,3 +2512,172 @@ a { color: inherit; text-decoration: none; }
   .auth-heading{margin-top:20px}
   .auth-input-wrap input{padding-left:38px}
 }
+
+
+/* Auth motion layer */
+.auth-screen{isolation:isolate;overflow:hidden}
+.auth-screen::before,
+.auth-screen::after{
+  content:"";position:fixed;border-radius:50%;pointer-events:none;z-index:-1;filter:blur(.2px);
+}
+.auth-screen::before{
+  width:260px;height:260px;left:-120px;top:24%;border:1px solid rgba(40,88,201,.12);
+  box-shadow:0 0 0 36px rgba(40,88,201,.025),0 0 0 72px rgba(40,88,201,.02);
+  animation:authFloat 11s ease-in-out infinite;
+}
+.auth-screen::after{
+  width:190px;height:190px;right:-80px;bottom:8%;border:1px solid rgba(47,116,94,.12);
+  box-shadow:0 0 0 30px rgba(47,116,94,.025),0 0 0 60px rgba(47,116,94,.018);
+  animation:authFloatReverse 13s ease-in-out infinite;
+}
+.auth-shell{animation:authShellIn .65s cubic-bezier(.22,.8,.24,1) both}
+.auth-card{
+  animation:authCardIn .7s cubic-bezier(.22,.8,.24,1) .04s both;
+  will-change:transform,opacity;
+}
+.auth-card-top{animation:authFadeUp .55s ease .18s both}
+.auth-heading{animation:authFadeUp .55s ease .25s both}
+.auth-tabs{animation:authFadeUp .55s ease .32s both}
+.auth-form{animation:authFadeUp .55s ease .39s both}
+.auth-switch-line{animation:authFadeUp .55s ease .46s both}
+.auth-footnote{animation:authFadeUp .55s ease .51s both}
+.auth-side{
+  animation:authSideIn .75s cubic-bezier(.22,.8,.24,1) .12s both;
+  transform-origin:center;
+}
+.auth-side-glow{
+  animation:authGlowPulse 5.5s ease-in-out infinite;
+}
+.auth-orbit{
+  position:absolute;width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,.72);
+  box-shadow:0 0 0 6px rgba(255,255,255,.06),0 0 22px rgba(255,255,255,.18);
+  pointer-events:none;
+}
+.auth-orbit-one{right:20%;top:19%;animation:authOrbitOne 8s ease-in-out infinite}
+.auth-orbit-two{right:34%;top:39%;width:7px;height:7px;opacity:.65;animation:authOrbitTwo 10s ease-in-out infinite}
+.auth-orbit-three{right:13%;top:56%;width:6px;height:6px;opacity:.48;animation:authOrbitThree 12s ease-in-out infinite}
+.auth-tabs button{
+  position:relative;overflow:hidden;transition:background .2s ease,color .2s ease,transform .2s ease,box-shadow .2s ease;
+}
+.auth-tabs button::after{
+  content:"";position:absolute;left:22%;right:22%;bottom:3px;height:2px;border-radius:999px;background:#2858c9;
+  transform:scaleX(0);transform-origin:center;transition:transform .22s ease;
+}
+.auth-tabs button.active::after{transform:scaleX(1)}
+.auth-tabs button:active{transform:translateY(1px)}
+.auth-field{animation:authFieldIn .5s ease both}
+.auth-field:nth-child(1){animation-delay:.43s}
+.auth-field:nth-child(2){animation-delay:.5s}
+.auth-field:nth-child(3){animation-delay:.57s}
+.auth-input-wrap{transition:transform .2s ease}
+.auth-input-wrap:focus-within{transform:translateY(-1px)}
+.auth-input-icon{transition:color .2s ease,transform .2s ease}
+.auth-input-wrap:focus-within .auth-input-icon{color:#2858c9;transform:translateY(-50%) scale(1.08)}
+.auth-password-toggle{transition:transform .16s ease,background .16s ease,border-color .16s ease}
+.auth-password-toggle:hover{background:#eef4ff;border-color:#bfd0e9;transform:translateY(-50%) scale(1.03)}
+.auth-consent{transition:border-color .2s ease,background .2s ease,transform .2s ease}
+.auth-consent:hover{border-color:#cfdae7;background:#f6f9fc;transform:translateY(-1px)}
+.auth-submit{
+  position:relative;overflow:hidden;
+  transition:transform .2s ease,box-shadow .2s ease,filter .2s ease;
+}
+.auth-submit::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(110deg,transparent 18%,rgba(255,255,255,.17) 40%,transparent 62%);
+  transform:translateX(-125%);transition:transform .55s ease;
+}
+.auth-submit:hover:not(:disabled)::before{transform:translateX(125%)}
+.auth-submit span{position:relative;z-index:1}
+.auth-submit:disabled{position:relative}
+.auth-submit:disabled::after{
+  content:"";width:13px;height:13px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;
+  animation:authSpin .75s linear infinite;margin-left:2px;position:relative;z-index:2;
+}
+.auth-submit:disabled span:first-child{opacity:.88}
+.auth-message{animation:authMessageIn .35s ease both}
+.auth-security-pill{animation:authPillPulse 3.6s ease-in-out infinite}
+.auth-benefits>div{
+  transition:transform .2s ease,background .2s ease,border-color .2s ease;
+}
+.auth-benefits>div:nth-child(1){animation:authBenefitIn .5s ease .3s both}
+.auth-benefits>div:nth-child(2){animation:authBenefitIn .5s ease .4s both}
+.auth-benefits>div:nth-child(3){animation:authBenefitIn .5s ease .5s both}
+.auth-benefits>div:hover{
+  transform:translateX(4px);background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);
+}
+.auth-benefits>div>span{transition:transform .2s ease,background .2s ease}
+.auth-benefits>div:hover>span{transform:scale(1.08) rotate(3deg);background:rgba(255,255,255,.16)}
+.auth-switch-line button{transition:color .18s ease,transform .18s ease}
+.auth-switch-line button:hover{transform:translateX(2px)}
+.auth-side-note span{animation:authBlink 2.8s ease-in-out infinite}
+
+@keyframes authShellIn{
+  from{opacity:0;transform:translateY(16px) scale(.985)}
+  to{opacity:1;transform:none}
+}
+@keyframes authCardIn{
+  from{opacity:0;transform:translateX(-12px) scale(.985)}
+  to{opacity:1;transform:none}
+}
+@keyframes authSideIn{
+  from{opacity:0;transform:translateX(14px) scale(.985)}
+  to{opacity:1;transform:none}
+}
+@keyframes authFadeUp{
+  from{opacity:0;transform:translateY(7px)}
+  to{opacity:1;transform:none}
+}
+@keyframes authFieldIn{
+  from{opacity:0;transform:translateY(5px)}
+  to{opacity:1;transform:none}
+}
+@keyframes authMessageIn{
+  from{opacity:0;transform:translateY(-4px)}
+  to{opacity:1;transform:none}
+}
+@keyframes authBenefitIn{
+  from{opacity:0;transform:translateX(8px)}
+  to{opacity:1;transform:none}
+}
+@keyframes authFloat{
+  0%,100%{transform:translate3d(0,0,0)}
+  50%{transform:translate3d(26px,-20px,0)}
+}
+@keyframes authFloatReverse{
+  0%,100%{transform:translate3d(0,0,0)}
+  50%{transform:translate3d(-18px,18px,0)}
+}
+@keyframes authGlowPulse{
+  0%,100%{transform:scale(1);opacity:.85}
+  50%{transform:scale(1.08);opacity:1}
+}
+@keyframes authOrbitOne{
+  0%,100%{transform:translate3d(0,0,0)}
+  50%{transform:translate3d(-22px,18px,0)}
+}
+@keyframes authOrbitTwo{
+  0%,100%{transform:translate3d(0,0,0)}
+  50%{transform:translate3d(17px,27px,0)}
+}
+@keyframes authOrbitThree{
+  0%,100%{transform:translate3d(0,0,0)}
+  50%{transform:translate3d(-11px,-22px,0)}
+}
+@keyframes authPillPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(47,116,94,0)}
+  50%{box-shadow:0 0 0 5px rgba(47,116,94,.05)}
+}
+@keyframes authBlink{
+  0%,100%{opacity:.45}
+  50%{opacity:1}
+}
+@keyframes authSpin{to{transform:rotate(360deg)}}
+
+@media(prefers-reduced-motion:reduce){
+  .auth-screen::before,.auth-screen::after,
+  .auth-shell,.auth-card,.auth-card-top,.auth-heading,.auth-tabs,.auth-form,.auth-switch-line,.auth-footnote,
+  .auth-side,.auth-side-glow,.auth-orbit-one,.auth-orbit-two,.auth-orbit-three,.auth-security-pill,
+  .auth-field,.auth-message,.auth-benefits>div,.auth-side-note span{animation:none!important}
+  .auth-submit::before{display:none}
+  .auth-benefits>div,.auth-input-wrap,.auth-password-toggle,.auth-switch-line button,.auth-submit{transition:none!important}
+}

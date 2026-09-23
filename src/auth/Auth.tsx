@@ -513,6 +513,9 @@ const AuthPage = () => {
 
       <aside className="auth-side">
         <div className="auth-side-glow"></div>
+        <div className="auth-orbit auth-orbit-one" aria-hidden="true"></div>
+        <div className="auth-orbit auth-orbit-two" aria-hidden="true"></div>
+        <div className="auth-orbit auth-orbit-three" aria-hidden="true"></div>
         <span className="auth-side-label">YOUR PREPARATION, PROTECTED</span>
         <h2>एक account से आपकी मेहनत साथ रहती है।</h2>
         <p>Device बदलने या browser data साफ होने पर भी cloud में synced progress आपके account के साथ रह सकती है।</p>
