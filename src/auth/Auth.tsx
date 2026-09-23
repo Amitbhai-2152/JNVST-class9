@@ -406,20 +406,35 @@ const AuthPage = () => {
   const [analyticsConsent, setAnalyticsConsent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const passwordStrength = (() => {
+    const value = password;
+    let score = 0;
+    if (value.length >= 8) score += 1;
+    if (value.length >= 12) score += 1;
+    if (/[A-Z]/.test(value)) score += 1;
+    if (/[0-9]/.test(value)) score += 1;
+    if (/[^A-Za-z0-9]/.test(value)) score += 1;
+    if (score <= 2) return { score, label: 'कमज़ोर', tone: 'low' };
+    if (score <= 3) return { score, label: 'ठीक', tone: 'mid' };
+    return { score, label: 'मज़बूत', tone: 'high' };
+  })();
+
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setMessage('');
     setWorking(true);
     try {
+      if (!email.trim()) throw new Error('अपना ईमेल दर्ज करें।');
       if (mode === 'signup') {
         if (displayName.trim().length < 2) throw new Error('अपना नाम दर्ज करें।');
+        if (password.length < 8) throw new Error('पासवर्ड कम से कम 8 अक्षरों का होना चाहिए।');
         const result = await signUp(displayName, email, password, analyticsConsent);
         if (result.requiresConfirmation) {
           setMessage('Account बन गया है। अपने ईमेल में confirmation link खोलकर फिर Login करें।');
           setMode('login');
           setPassword('');
         } else {
-          setMessage('Account तैयार है। आपकी पुरानी local progress cloud में सुरक्षित कर दी गई है।');
+          setMessage('Account तैयार है। आपकी local progress cloud में सुरक्षित कर दी गई है।');
         }
       } else {
         await signIn(email, password);
@@ -438,94 +453,124 @@ const AuthPage = () => {
     setShowPassword(false);
   };
 
-  return <main className="auth-screen">
-    <div className="auth-shell">
-      <section className="auth-card">
-        <div className="auth-card-top">
-          <span className="auth-brand"><span className="auth-brand-mark">J9</span> JNVST CLASS 9</span>
-          <span className="auth-security-pill"><span aria-hidden="true">✓</span> सुरक्षित प्रगति</span>
+  return <main className="auth-screen auth-v3">
+    <div className="auth-v3-shell">
+      <section className="auth-v3-showcase" aria-label="JNVST preparation overview">
+        <div className="auth-v3-orb auth-v3-orb-a"></div>
+        <div className="auth-v3-orb auth-v3-orb-b"></div>
+
+        <div className="auth-v3-brand">
+          <span className="auth-v3-mark">J9</span>
+          <div><strong>JNVST CLASS 9</strong><small>Learning Hub</small></div>
         </div>
 
-        <div className="auth-heading">
-          <span className="auth-eyebrow">STUDENT ACCOUNT</span>
-          <h1>{mode === 'login' ? 'अपनी तैयारी जारी रखें' : 'अपना student account बनाएँ'}</h1>
-          <p>{mode === 'login'
-            ? 'Login करें और अपनी lessons, practice, mocks, bookmarks और labs वहीं से जारी रखें जहाँ आपने छोड़ा था।'
-            : 'एक account आपकी learning progress को इस browser से आगे सुरक्षित रखने में मदद करता है।'}</p>
+        <div className="auth-v3-kicker"><span className="auth-live-dot"></span> YOUR PREPARATION SPACE</div>
+        <h1>{mode === 'login' ? 'हर सही उत्तर से\nएक कदम आगे।' : 'आज से अपनी\nतैयारी व्यवस्थित करें।'}</h1>
+        <p className="auth-v3-lead">
+          {mode === 'login'
+            ? 'एक account से आपकी learning history, practice और mock performance आपकी तैयारी के साथ जुड़ी रहती है।'
+            : 'अपनी progress को account से जोड़ें और Learning Hub को एक structured preparation space की तरह इस्तेमाल करें।'}
+        </p>
+
+        <div className="auth-v3-roadmap">
+          <div className="auth-v3-roadmap-line"></div>
+          <div className="auth-v3-step active">
+            <span>01</span>
+            <div><strong>सीखें</strong><small>Lessons & concepts</small></div>
+          </div>
+          <div className="auth-v3-step active">
+            <span>02</span>
+            <div><strong>अभ्यास करें</strong><small>Questions & Challenger</small></div>
+          </div>
+          <div className="auth-v3-step">
+            <span>03</span>
+            <div><strong>Master करें</strong><small>Revision & mocks</small></div>
+          </div>
         </div>
 
-        <div className="auth-tabs" role="tablist" aria-label="Account mode">
+        <div className="auth-v3-mini-stats">
+          <div><span>LEARN</span><strong>Lessons</strong><small>Structured topics</small></div>
+          <div><span>PRACTICE</span><strong>Questions</strong><small>Difficulty-aware</small></div>
+          <div><span>CHECK</span><strong>Mock Tests</strong><small>JNVST focused</small></div>
+        </div>
+
+        <div className="auth-v3-footer"><span>✓</span> Progress sync is available after login</div>
+      </section>
+
+      <section className="auth-v3-panel">
+        <div className="auth-v3-panel-top">
+          <div>
+            <span className="auth-v3-eyebrow">{mode === 'login' ? 'WELCOME BACK' : 'GET STARTED'}</span>
+            <h2>{mode === 'login' ? 'Login करें' : 'Account बनाएँ'}</h2>
+          </div>
+          <span className="auth-v3-state">{mode === 'login' ? 'Returning student' : 'New student'}</span>
+        </div>
+
+        <div className="auth-v3-tabs" role="tablist" aria-label="Account mode">
           <button type="button" role="tab" aria-selected={mode === 'login'} className={mode === 'login' ? 'active' : ''} onClick={() => switchMode('login')}>Login</button>
           <button type="button" role="tab" aria-selected={mode === 'signup'} className={mode === 'signup' ? 'active' : ''} onClick={() => switchMode('signup')}>Sign up</button>
         </div>
 
-        <form className="auth-form" onSubmit={submit}>
-          {mode === 'signup' && <div className="auth-field">
-            <label htmlFor="student-name">आपका नाम</label>
-            <div className="auth-input-wrap">
-              <span className="auth-input-icon" aria-hidden="true">◉</span>
-              <input id="student-name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} autoComplete="name" placeholder="जैसे: Amit" required />
+        <div className="auth-v3-mode-note">
+          <span className="auth-v3-mode-icon">{mode === 'login' ? '→' : '+'}</span>
+          <p>{mode === 'login' ? 'अपने saved preparation space में वापस जाएँ।' : 'एक account बनाकर अपनी learning progress को sync रखें।'}</p>
+        </div>
+
+        <form className="auth-v3-form" onSubmit={submit}>
+          {mode === 'signup' && <div className="auth-v3-field auth-v3-reveal">
+            <label htmlFor="student-name-v3">नाम</label>
+            <div className="auth-v3-input">
+              <span aria-hidden="true">A</span>
+              <input id="student-name-v3" value={displayName} onChange={(event) => setDisplayName(event.target.value)} autoComplete="name" placeholder="आपका नाम" required />
             </div>
           </div>}
-          <div className="auth-field">
-            <label htmlFor="student-email">ईमेल</label>
-            <div className="auth-input-wrap">
-              <span className="auth-input-icon" aria-hidden="true">@</span>
-              <input id="student-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="you@example.com" required />
-            </div>
-          </div>
-          <div className="auth-field">
-            <div className="auth-label-row">
-              <label htmlFor="student-password">पासवर्ड</label>
-              <span>कम से कम 8 अक्षर</span>
-            </div>
-            <div className="auth-input-wrap">
-              <span className="auth-input-icon" aria-hidden="true">•</span>
-              <input id="student-password" type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength={8} placeholder="••••••••" required />
-              <button type="button" className="auth-password-toggle" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'पासवर्ड छिपाएँ' : 'पासवर्ड दिखाएँ'}>
-                {showPassword ? 'छिपाएँ' : 'दिखाएँ'}
-              </button>
+
+          <div className="auth-v3-field">
+            <label htmlFor="student-email-v3">ईमेल</label>
+            <div className="auth-v3-input">
+              <span aria-hidden="true">@</span>
+              <input id="student-email-v3" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="you@example.com" required />
             </div>
           </div>
 
-          {mode === 'signup' && <label className="auth-consent">
+          <div className="auth-v3-field">
+            <div className="auth-v3-label-row">
+              <label htmlFor="student-password-v3">पासवर्ड</label>
+              {mode === 'signup' && password.length > 0 && <span className={'auth-v3-strength-label ' + passwordStrength.tone}>{passwordStrength.label}</span>}
+            </div>
+            <div className="auth-v3-input">
+              <span aria-hidden="true">•</span>
+              <input id="student-password-v3" type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength={8} placeholder="अपना पासवर्ड दर्ज करें" required />
+              <button type="button" onClick={() => setShowPassword((visible) => !visible)} className="auth-v3-show">{showPassword ? 'छिपाएँ' : 'दिखाएँ'}</button>
+            </div>
+            {mode === 'signup' && <div className="auth-v3-strength">
+              <div className="auth-v3-strength-bars">{[1, 2, 3, 4, 5].map((bar) => <span key={bar} className={passwordStrength.score >= bar ? passwordStrength.tone : ''}></span>)}</div>
+              <small>कम से कम 8 अक्षर रखें; letters, numbers और symbols से password मजबूत होता है।</small>
+            </div>}
+          </div>
+
+          {mode === 'signup' && <label className="auth-v3-consent">
             <input type="checkbox" checked={analyticsConsent} onChange={(event) => setAnalyticsConsent(event.target.checked)} />
-            <span><strong>वैकल्पिक analytics</strong> — Learning Hub को बेहतर बनाने और promotion sources समझने में मदद के लिए। Phone, exact location, school या DOB नहीं लिए जाते।</span>
+            <span><strong>Optional analytics</strong><br />Learning Hub को बेहतर बनाने में मदद करें। Phone, exact location, school या DOB नहीं लिए जाते।</span>
           </label>}
 
-          {(message || authError) && <div className={'auth-message ' + (authError ? 'error' : 'success')} role="status">
-            <span className="auth-message-icon" aria-hidden="true">{authError ? '!' : '✓'}</span>
-            <span>{message || authError}</span>
+          {(message || authError) && <div className={'auth-v3-message ' + (authError ? 'error' : 'success')} role="status">
+            <span>{authError ? '!' : '✓'}</span><p>{message || authError}</p>
           </div>}
 
-          <button className="auth-submit" disabled={working}>
-            <span>{working ? 'कृपया प्रतीक्षा करें…' : mode === 'login' ? 'Login करें' : 'Account बनाएँ'}</span>
-            {!working && <span aria-hidden="true">→</span>}
+          <button className="auth-v3-submit" disabled={working}>
+            <span>{working ? (mode === 'login' ? 'Account verify हो रहा है…' : 'Account तैयार हो रहा है…') : (mode === 'login' ? 'Continue to dashboard' : 'Create student account')}</span>
+            <b aria-hidden="true">{working ? '◌' : '→'}</b>
           </button>
         </form>
 
-        <div className="auth-switch-line">
-          <span>{mode === 'login' ? 'नया student account चाहिए?' : 'पहले से account है?'}</span>
+        <div className="auth-v3-divider"><span>ACCOUNT ACCESS</span></div>
+        <div className="auth-v3-switch">
+          <span>{mode === 'login' ? 'पहली बार यहाँ आए हैं?' : 'पहले से account है?'}</span>
           <button type="button" onClick={() => switchMode(mode === 'login' ? 'signup' : 'login')}>{mode === 'login' ? 'Sign up करें' : 'Login करें'}</button>
         </div>
-        <p className="auth-footnote">आपकी learning progress authenticated account से जुड़ी रहेगी और database access security policies से restricted है।</p>
+        <p className="auth-v3-note">आपकी progress authenticated account से जुड़ी रहती है।</p>
       </section>
-
-      <aside className="auth-side">
-        <div className="auth-side-glow"></div>
-        <div className="auth-orbit auth-orbit-one" aria-hidden="true"></div>
-        <div className="auth-orbit auth-orbit-two" aria-hidden="true"></div>
-        <div className="auth-orbit auth-orbit-three" aria-hidden="true"></div>
-        <span className="auth-side-label">YOUR PREPARATION, PROTECTED</span>
-        <h2>एक account से आपकी मेहनत साथ रहती है।</h2>
-        <p>Device बदलने या browser data साफ होने पर भी cloud में synced progress आपके account के साथ रह सकती है।</p>
-        <div className="auth-benefits">
-          <div><span>✓</span><div><strong>Progress sync</strong><small>Lessons और mastery activity सुरक्षित रखें</small></div></div>
-          <div><span>✓</span><div><strong>Practice history</strong><small>Questions, mocks और revision history</small></div></div>
-          <div><span>✓</span><div><strong>Student-first privacy</strong><small>अनावश्यक personal details collect नहीं किए जाते</small></div></div>
-        </div>
-        <div className="auth-side-note"><span aria-hidden="true">⌁</span> JNVST Class 9 Learning Hub</div>
-      </aside>
     </div>
   </main>;
 };
