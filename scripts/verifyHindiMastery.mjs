@@ -47,6 +47,47 @@ for (const file of legacySources) {
     legacyTopicCounts.set(topicId, (legacyTopicCounts.get(topicId) ?? 0) + 1);
   }
 }
+
+const legacyQuestionRecords = new Map();
+for (const file of legacySources) {
+  for (const line of read(file).split('\n')) {
+    const id = line.match(/\bid:\s*['"](q_hin_b\d+_\d+_\d+)['"]/)?.[1];
+    const topicId = line.match(/\btopicId:\s*['"](top_hin_\d+_\d+)['"]/)?.[1];
+    const type = line.match(/\btype:\s*['"]([^'"]+)['"]/)?.[1];
+    if (id && topicId && type) legacyQuestionRecords.set(id, { topicId, type });
+  }
+}
+const expansionQuestionRecords = new Map();
+for (const [, record] of expansionRecords) {
+  const id = record.match(/\bid:\s*'([^']+)'/)?.[1];
+  const topicId = record.match(/\btopicId:\s*'([^']+)'/)?.[1];
+  if (id && topicId) expansionQuestionRecords.set(id, { topicId, type: 'mcq' });
+}
+const canonicalHindiQuestionRecords = new Map([...legacyQuestionRecords, ...expansionQuestionRecords]);
+assert(canonicalHindiQuestionRecords.size === 165, 'canonical Hindi question source should contain exactly 165 unique records, found ' + canonicalHindiQuestionRecords.size);
+
+const curriculumSource = fs.readFileSync(path.join(root, 'src', 'data', 'curriculum.ts'), 'utf8');
+const curriculumQuestionIds = [];
+for (const topicId of officialTopics) {
+  const line = curriculumSource.split('\n').find((candidate) => candidate.includes(`{ id: '${topicId}'`));
+  assert(line, topicId + ' is missing from curriculum');
+  const ids = [...line.matchAll(/"(q_hin_[^"]+)"/g)].map((m) => m[1]);
+  assert(ids.length === 15, topicId + ' must expose exactly 15 canonical practice questions, found ' + ids.length);
+  assert(new Set(ids).size === 15, topicId + ' contains duplicate curriculum question IDs');
+  for (const id of ids) {
+    const record = canonicalHindiQuestionRecords.get(id);
+    assert(record, topicId + ' references unknown Hindi question ' + id);
+    assert(record.topicId === topicId, id + ' is assigned to ' + record.topicId + ' but appears under ' + topicId);
+  }
+  curriculumQuestionIds.push(...ids);
+}
+assert(new Set(curriculumQuestionIds).size === 165, 'Hindi curriculum must reference each of the 165 canonical questions exactly once');
+assert(curriculumQuestionIds.every((id) => canonicalHindiQuestionRecords.has(id)), 'Hindi curriculum contains an unknown canonical question ID');
+
+for (const topicId of officialTopics) {
+  const compatible = [...canonicalHindiQuestionRecords.values()].filter((record) => record.topicId === topicId && record.type === 'mcq').length;
+  assert(compatible >= 10, topicId + ' should have at least 10 JNVST-compatible four-option MCQs, found ' + compatible);
+}
 for (const topicId of officialTopics) {
   const total = (legacyTopicCounts.get(topicId) ?? 0) + (topicCounts.get(topicId) ?? 0);
   assert(total === 15, topicId + ' should contain exactly 15 questions, found ' + total);
