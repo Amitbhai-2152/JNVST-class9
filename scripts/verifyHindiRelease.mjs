@@ -68,7 +68,7 @@ const extractCurlyRecords = (source, idPattern) => {
 };
 
 const allFiles = fs.readdirSync(path.join(root, 'src'), { recursive: true })
-  .filter((file) => typeof file === 'string' && /\\.(ts|tsx)$/.test(file));
+  .filter((file) => typeof file === 'string' && /\.(ts|tsx)$/.test(file));
 
 const repoText = allFiles
   .map((file) => fs.readFileSync(path.join(root, 'src', file), 'utf8'))
@@ -77,16 +77,16 @@ const repoText = allFiles
 assert(curriculum.includes("{ id: 'sub_hin'"), 'Hindi subject ID sub_hin is missing');
 assert(officialChapters.every((id) => curriculum.includes("id: '" + id + "'")), 'all six Hindi chapters must exist in curriculum');
 assert(officialTopics.every((id) => curriculum.includes("id: '" + id + "'")), 'all eleven Hindi topics must exist in curriculum');
-assert(count(curriculum, /id: 'top_hin_\\d+_\\d+'/g) === 11, 'curriculum must contain exactly 11 Hindi topics');
-assert(count(syllabus, /id: 'hin_\\d+'/g) === 11, 'official Hindi syllabus map must contain exactly 11 units');
+assert(count(curriculum, /id: 'top_hin_\d+_\d+'/g) === 11, 'curriculum must contain exactly 11 Hindi topics');
+assert(count(syllabus, /id: 'hin_\d+'/g) === 11, 'official Hindi syllabus map must contain exactly 11 units');
 assert(syllabus.includes("marks: 15") && syllabus.includes("questionCount: 15"), 'Hindi official exam target must remain 15 marks / 15 questions');
 assert(syllabus.includes('totalMarks: 100') && syllabus.includes('totalQuestions: 100') && syllabus.includes('durationMinutes: 150'), 'official exam metadata must remain 100 questions / 100 marks / 150 minutes');
 
-const topicLines = curriculum.split(/\r?\n/).filter((line) => /id: 'top_hin_\\d+_\\d+'/.test(line));
+const topicLines = curriculum.split(/\r?\n/).filter((line) => /id: 'top_hin_\d+_\d+'/.test(line));
 assert(topicLines.length === 11, 'could not isolate all eleven Hindi curriculum topic records');
 const curriculumIds = [];
 for (const line of topicLines) {
-  const topicId = line.match(/id: '(top_hin_\\d+_\\d+)'/)?.[1];
+  const topicId = line.match(/id: '(top_hin_\d+_\d+)'/)?.[1];
   const ids = [...line.matchAll(/"(q_hin_[^"]+)"/g)].map((m) => m[1]);
   assert(topicId, 'Hindi topic line is missing topic ID');
   assert(ids.length === 15, topicId + ' must expose exactly 15 canonical practice questions');
@@ -96,11 +96,11 @@ for (const line of topicLines) {
 assert(curriculumIds.length === 165 && new Set(curriculumIds).size === 165, 'curriculum must expose all 165 canonical Hindi questions exactly once');
 
 assert(count(hindiLessons, /id: 'les_hin_/g) === 11, 'Hindi lesson bank must contain exactly 11 lessons');
-const lessonTopics = [...hindiLessons.matchAll(/topicId: '(top_hin_\\d+_\\d+)'/g)].map((m) => m[1]);
+const lessonTopics = [...hindiLessons.matchAll(/topicId: '(top_hin_\d+_\d+)'/g)].map((m) => m[1]);
 assert(lessonTopics.length === 11 && new Set(lessonTopics).size === 11, 'Hindi lessons must map one-to-one to all official topics');
 assert(officialTopics.every((id) => lessonTopics.includes(id)), 'every official Hindi topic needs a lesson');
 
-const prepTopics = [...hindiPrep.matchAll(/topicId: '(top_hin_\\d+_\\d+)'/g)].map((m) => m[1]);
+const prepTopics = [...hindiPrep.matchAll(/topicId: '(top_hin_\d+_\d+)'/g)].map((m) => m[1]);
 assert(prepTopics.length === 11 && new Set(prepTopics).size === 11, 'Hindi mastery data must contain one unit per official topic');
 for (const field of ['coreSkills','mustKnow','quickFacts','examTraps','examples','solveMethod','examFocus']) {
   const matches = [...hindiPrep.matchAll(new RegExp(field + ':\\s*\\[([^\\]]+)\\]', 'g'))];
@@ -108,23 +108,23 @@ for (const field of ['coreSkills','mustKnow','quickFacts','examTraps','examples'
   assert(matches.every((m) => m[1].trim().length > 0), 'Hindi mastery ' + field + ' entries must not be empty');
 }
 assert(chapterStudy.includes('getHindiChapterStudyPages') && chapterStudy.includes('hindiMasteryUnitMap'), 'live Hindi chapter study must remain driven by hindiPrep mastery data');
-assert((rich.match(/\\n  chap_hin_\\d+:/g) ?? []).length === 0, 'Hindi richChapterContent duplication must remain removed');
+assert((rich.match(/\n  chap_hin_\d+:/g) ?? []).length === 0, 'Hindi richChapterContent duplication must remain removed');
 assert(rich.includes('chap_eng_01:') && rich.includes('chap_sci_01:'), 'non-Hindi rich chapter content must remain intact');
 
 const canonicalSources = ['hindiPart1.ts','hindiPart2.ts','hindiPart3.ts','hindiPart4.ts'];
-const legacyRecords = canonicalSources.flatMap((file) => extractCurlyRecords(read('src/data/questions/' + file), /\\bid:\s*['"]q_hin_b\\d+_\\d+_\\d+['"]/));
+const legacyRecords = canonicalSources.flatMap((file) => extractCurlyRecords(read('src/data/questions/' + file), /\bid:\s*['"]q_hin_b\d+_\d+_\d+['"]/));
 assert(legacyRecords.length === 110, 'legacy Hindi question records must total 110');
 const expansion = read('src/data/questions/hindiExpansion.ts');
-const expansionRecords = [...expansion.matchAll(/make\\(\\{([\\s\\S]*?)\\}\\)/g)];
+const expansionRecords = [...expansion.matchAll(/make\(\{([\s\S]*?)\}\)/g)];
 assert(expansionRecords.length === 55, 'Hindi expansion records must total 55');
 
 const validateCanonical = (record, kind) => {
-  const optionsText = record.match(/options:\[([^\\]]+)\]/)?.[1] ?? '';
+  const optionsText = record.match(/options:\[([^\]]+)\]/)?.[1] ?? '';
   const options = [...optionsText.matchAll(/'([^']*)'/g)].map((m) => m[1].trim().toLowerCase());
   assert(options.length === 4, kind + ' question must have exactly four options');
   assert(options.every(Boolean), kind + ' question must have non-empty options');
   assert(new Set(options).size === 4, kind + ' question must have four unique option texts');
-  const explanation = record.match(/explanation(?:Plain)?:\\s*['"]([^'"]+)['"]/)?.[1] ?? '';
+  const explanation = record.match(/explanation(?:Plain)?:\s*['"]([^'"]+)['"]/)?.[1] ?? '';
   assert(explanation.trim().length >= 12, kind + ' question must have a substantive explanation');
 };
 
@@ -144,12 +144,12 @@ const challengerFiles = [
   read('src/data/questions/hindiTopicChallengers.ts'),
 ];
 const challengerRecords = challengerFiles.flatMap((source) =>
-  [...source.matchAll(/make\\(\\{([\\s\\S]*?)\\}\\)/g)].map((m) => m[1])
+  [...source.matchAll(/make\(\{([\s\S]*?)\}\)/g)].map((m) => m[1])
 );
 assert(challengerRecords.length === 220, 'Hindi Challenger bank must contain exactly 220 dedicated records');
 const challengerByTopic = new Map();
 for (const record of challengerRecords) {
-  const topicId = record.match(/topicId:'(top_hin_\\d+_\\d+)'/)?.[1];
+  const topicId = record.match(/topicId:'(top_hin_\d+_\d+)'/)?.[1];
   const difficulty = record.match(/difficulty:'(easy|medium|hard|challenge)'/)?.[1];
   assert(topicId, 'Hindi Challenger record is missing topic mapping');
   assert(difficulty === 'hard' || difficulty === 'challenge', 'all dedicated Hindi Challenger questions must be Hard or Challenge');
@@ -158,20 +158,20 @@ for (const record of challengerRecords) {
 }
 for (const topicId of officialTopics) assert(challengerByTopic.get(topicId) === 20, topicId + ' must have exactly 20 dedicated Challenger questions');
 
-const unseenPassageIds = [...unseen.matchAll(/\\bid:"(hup-\\d+)"/g)].map((m) => m[1]);
-const unseenQuestionIds = [...unseen.matchAll(/\\bid:"(hup-\\d+-q\\d+)"[,]/g)].map((m) => m[1]);
+const unseenPassageIds = [...unseen.matchAll(/\bid:"(hup-\d+)"/g)].map((m) => m[1]);
+const unseenQuestionIds = [...unseen.matchAll(/\bid:"(hup-\d+-q\d+)"[,]/g)].map((m) => m[1]);
 assert(unseenPassageIds.length === 10 && new Set(unseenPassageIds).size === 10, 'Hindi Unseen Lab must contain exactly 10 unique passages');
 assert(unseenQuestionIds.length === 50 && new Set(unseenQuestionIds).size === 50, 'Hindi Unseen Lab must contain exactly 50 unique questions');
 const questionsPerPassage = new Map();
 for (const id of unseenQuestionIds) {
-  const passageId = id.match(/^hup-(\\d+)-q\\d+$/)?.[1];
+  const passageId = id.match(/^hup-(\d+)-q\d+$/)?.[1];
   if (passageId) questionsPerPassage.set(passageId, (questionsPerPassage.get(passageId) ?? 0) + 1);
 }
 for (let index = 1; index <= 10; index += 1) {
   const passageId = String(index).padStart(2, '0');
   assert(questionsPerPassage.get(passageId) === 5, 'Hindi unseen passage ' + passageId + ' must contain exactly five questions');
 }
-const unseenQuestionRecords = [...unseen.matchAll(/\\{id:"(hup-\\d+-q\\d+)",skill:"([^"]+)",question:"([^"]+)",options:\[([^\\]]+)\],correctIndex:(\\d),explanation:"([^"]+)"/g)];
+const unseenQuestionRecords = [...unseen.matchAll(/\{id:"(hup-\d+-q\d+)",skill:"([^"]+)",question:"([^"]+)",options:\[([^\]]+)\],correctIndex:(\d),explanation:"([^"]+)"/g)];
 assert(unseenQuestionRecords.length === 50, 'all 50 Hindi unseen question records must be structurally auditable');
 const unseenSkills = new Set();
 for (const [, id, skill, question, opts, correct, explanation] of unseenQuestionRecords) {
