@@ -1,6 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import ErrorBoundary from './components/ErrorBoundary';
+import { AuthGate, AuthProvider } from './auth/Auth';
 import './index.css';
 import './chapter-ui.css';
 
@@ -34,9 +35,13 @@ const renderApp = async () => {
     const { default: App } = await import('./App');
     createRoot(root).render(
       <React.StrictMode>
-        <ErrorBoundary>
-          <App />
-        </ErrorBoundary>
+        <AuthProvider>
+          <AuthGate>
+            <ErrorBoundary>
+              <App />
+            </ErrorBoundary>
+          </AuthGate>
+        </AuthProvider>
       </React.StrictMode>,
     );
   } catch (error) {

@@ -6,6 +6,7 @@ import ChapterStudyPage from './pages/ChapterStudyPage';
 import MathFormulaSheet from './pages/MathFormulaSheetPage';
 import { MathAwareText, MathText } from './components/MathText';
 import { useProgressStore } from './store/progress';
+import { useAuth } from './auth/Auth';
 import type { ContentBlock, ID, MockTestResult, Question } from './types';
 import { buildJnvstMockPaper, buildMathMockPaper, buildScienceMockPaper, getChapterChallengerQuestions, getTopicChallengerQuestions, getPerformanceSummary, getRevisionTopics, getSmartPracticeQuestions, getMathSmartPracticeQuestions, getScienceSmartPracticeQuestions, getSmartRecommendations, getWeakTopics, getTopicPerformances, buildEnglishMockPaper, getEnglishSmartPracticeQuestions, buildHindiMockPaper, getHindiSmartPracticeQuestions, arrangeAssessmentOptions } from './utils/jnvstIntelligence';
 import { mathMasteryUnits, mathMasteryUnitMap } from './data/mathMastery';
@@ -139,7 +140,23 @@ const scienceStageMeta = [
 ];
 
 
-const Shell = ({ children }: { children: React.ReactNode }) => <div className="app-shell"><header className="topbar"><Link to="/" className="brand">JNVST कक्षा 9</Link><nav><Link to="/">डैशबोर्ड</Link><Link to="/subjects">विषय</Link><Link to="/mock-tests">मॉक टेस्ट</Link></nav></header><main className="shell">{children}</main></div>;
+const Shell = ({ children }: { children: React.ReactNode }) => {
+  const { user, signOut, syncStatus } = useAuth();
+  const email = user?.email ?? 'Student';
+  const syncLabel = syncStatus === 'saving' ? 'सिंक हो रहा है…' : syncStatus === 'error' ? 'सिंक त्रुटि' : 'सिंक सुरक्षित';
+  return <div className="app-shell">
+    <header className="topbar">
+      <Link to="/" className="brand">JNVST कक्षा 9</Link>
+      <nav aria-label="मुख्य नेविगेशन"><Link to="/">डैशबोर्ड</Link><Link to="/subjects">विषय</Link><Link to="/mock-tests">मॉक टेस्ट</Link></nav>
+      <div className="account-bar">
+        <span className={'cloud-sync-status ' + syncStatus} title={syncLabel}>{syncStatus === 'saving' ? '↻' : syncStatus === 'error' ? '!' : '✓'} <small>{syncLabel}</small></span>
+        <span className="account-email" title={email}>{email}</span>
+        <button type="button" className="account-logout" onClick={() => { void signOut(); }}>लॉग आउट</button>
+      </div>
+    </header>
+    <main className="shell">{children}</main>
+  </div>;
+};
 const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => <div className={`card ${className}`}>{children}</div>;
 
 const Dashboard = () => {
@@ -186,10 +203,11 @@ const Dashboard = () => {
   const latestTopicId = latestLesson?.topicId ?? (latestStudy?.type === 'topic' ? latestStudy.id : undefined);
   const latestTopic = latestTopicId ? topics.find((topic) => topic.id === latestTopicId) : undefined;
   const latestChapter = latestTopic ? chapters.find((chapter) => chapter.id === latestTopic.chapterId) : undefined;
-  const continueTitle = latestStudy
-    ? latestLesson?.title ?? latestTopic?.title ?? latestStudy.title
+  const hasValidLatestStudy = Boolean(latestLesson || latestTopic);
+  const continueTitle = hasValidLatestStudy
+    ? (latestLesson?.title ?? latestTopic?.title ?? 'तैयारी जारी रखें')
     : recommendations[0]?.topicTitle ?? 'अपनी JNVST तैयारी शुरू करें';
-  const continueLabel = latestStudy?.type === 'lesson' ? 'पढ़ना जारी रखें' : latestStudy?.type === 'topic' ? 'अभ्यास जारी रखें' : 'तैयारी शुरू करें';
+  const continueLabel = latestLesson ? 'पढ़ना जारी रखें' : latestTopic ? 'अभ्यास जारी रखें' : 'तैयारी शुरू करें';
   const continueTo = latestLesson
     ? '/lessons/' + latestLesson.id
     : latestTopic

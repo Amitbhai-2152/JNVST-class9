@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import type { ID, MockTestResult, ProgressState, QuestionAttempt, EnglishLabAttempt, HindiUnseenLabAttempt } from '../types';
 
 type Store = ProgressState & {
+  replaceProgress: (progress: ProgressState) => void;
   completeLesson: (id: ID, title: string) => void;
   markInProgress: (id: ID, title: string) => void;
   toggleBookmarkQuestion: (id: ID) => void;
@@ -15,7 +16,10 @@ type Store = ProgressState & {
   recordHindiUnseenAttempt: (id: ID, attempt: HindiUnseenLabAttempt) => void;
 };
 
-const initial: ProgressState = {
+const recent = (current: ProgressState['recentlyStudied'], item: ProgressState['recentlyStudied'][number]) =>
+  [item, ...current.filter((x) => x.id !== item.id)].slice(0, 8);
+
+export const emptyProgressState: ProgressState = {
   lessonActivity: {},
   questionAttempts: {},
   bookmarks: { questionIds: [], lessonIds: [] },
@@ -26,13 +30,40 @@ const initial: ProgressState = {
   hindiUnseenAttempts: {},
 };
 
-const recent = (current: ProgressState['recentlyStudied'], item: ProgressState['recentlyStudied'][number]) =>
-  [item, ...current.filter((x) => x.id !== item.id)].slice(0, 8);
+export const getProgressSnapshot = (): ProgressState => {
+  const state = useProgressStore.getState();
+  return {
+    lessonActivity: state.lessonActivity ?? {},
+    questionAttempts: state.questionAttempts ?? {},
+    bookmarks: {
+      questionIds: state.bookmarks?.questionIds ?? [],
+      lessonIds: state.bookmarks?.lessonIds ?? [],
+    },
+    revisionHistory: state.revisionHistory ?? [],
+    recentlyStudied: state.recentlyStudied ?? [],
+    mockTestResults: state.mockTestResults ?? [],
+    englishLabAttempts: state.englishLabAttempts ?? {},
+    hindiUnseenAttempts: state.hindiUnseenAttempts ?? {},
+  };
+};
 
 export const useProgressStore = create<Store>()(
   persist(
     (set) => ({
-      ...initial,
+      ...emptyProgressState,
+      replaceProgress: (nextProgress) => set(() => ({
+        lessonActivity: nextProgress.lessonActivity ?? {},
+        questionAttempts: nextProgress.questionAttempts ?? {},
+        bookmarks: {
+          questionIds: nextProgress.bookmarks?.questionIds ?? [],
+          lessonIds: nextProgress.bookmarks?.lessonIds ?? [],
+        },
+        revisionHistory: nextProgress.revisionHistory ?? [],
+        recentlyStudied: nextProgress.recentlyStudied ?? [],
+        mockTestResults: nextProgress.mockTestResults ?? [],
+        englishLabAttempts: nextProgress.englishLabAttempts ?? {},
+        hindiUnseenAttempts: nextProgress.hindiUnseenAttempts ?? {},
+      })),
       completeLesson: (id, title) => set((state) => ({
         lessonActivity: { ...state.lessonActivity, [id]: { status: 'completed', lastAccessed: Date.now() } },
         recentlyStudied: recent(state.recentlyStudied ?? [], { id, title, type: 'lesson', timestamp: Date.now() }),
