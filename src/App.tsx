@@ -31,6 +31,7 @@ const difficultyLabel: Record<Question['difficulty'], string> = { easy: 'आस�
 const sameAnswer = (a: ID[], b: ID[]) => a.length === b.length && a.every((x) => b.includes(x));
 const formatMockTime = (seconds: number) => String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0');
 const NOTIFICATION_READ_KEY = 'jnvst-class9-notification-read-v1';
+const NOTIFICATION_TOAST_SEEN_KEY = 'jnvst-class9-notification-toast-seen-v1';
 const InlineText = ({ text }: { text: string }) => <MathAwareText text={text} />;
 
 const ContentRenderer = ({ blocks }: { blocks: ContentBlock[] }) => <div className="lesson-content">{blocks.map((b, i) => {
@@ -148,6 +149,7 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [toastNotificationId, setToastNotificationId] = useState<string | null>(null);
   const [readNotificationIds, setReadNotificationIds] = useState<string[]>(() => {
     try {
       const raw = localStorage.getItem(NOTIFICATION_READ_KEY);
@@ -167,7 +169,22 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
     setMobileMenuOpen(false);
     setAccountMenuOpen(false);
     setNotificationOpen(false);
+    setToastNotificationId(null);
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (toastNotificationId) return;
+    const candidate = siteNotifications.find((item) => !readNotificationIds.includes(item.id) && !getSeenNotificationToasts().includes(item.id));
+    if (!candidate) return;
+    const timer = window.setTimeout(() => setToastNotificationId(candidate.id), 650);
+    return () => window.clearTimeout(timer);
+  }, [readNotificationIds, toastNotificationId]);
+
+  useEffect(() => {
+    if (!toastNotificationId) return;
+    const timer = window.setTimeout(() => dismissNotificationToast(toastNotificationId), 8500);
+    return () => window.clearTimeout(timer);
+  }, [toastNotificationId]);
 
   useEffect(() => {
     if (!accountMenuOpen && !notificationOpen) return;
@@ -195,6 +212,35 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
   }, [accountMenuOpen, notificationOpen]);
 
   const unreadNotifications = siteNotifications.filter((item) => !readNotificationIds.includes(item.id));
+  const toastNotification = toastNotificationId ? siteNotifications.find((item) => item.id === toastNotificationId) : undefined;
+
+  const getSeenNotificationToasts = (): string[] => {
+    try {
+      const raw = localStorage.getItem(NOTIFICATION_TOAST_SEEN_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === 'string') : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const persistSeenNotificationToasts = (ids: string[]) => {
+    try {
+      localStorage.setItem(NOTIFICATION_TOAST_SEEN_KEY, JSON.stringify(ids));
+    } catch {
+      // Local storage may be unavailable; toast state still works in memory.
+    }
+  };
+
+  const dismissNotificationToast = (id: string) => {
+    persistSeenNotificationToasts(Array.from(new Set([...getSeenNotificationToasts(), id])));
+    setToastNotificationId(null);
+  };
+
+  const readAndDismissNotificationToast = (id: string) => {
+    markNotificationRead(id);
+    dismissNotificationToast(id);
+  };
 
   const persistReadNotifications = (ids: string[]) => {
     setReadNotificationIds(ids);
@@ -223,6 +269,23 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
   const syncLabel = syncStatus === 'saving' ? 'सिंक हो रहा है…' : syncStatus === 'error' ? 'सिंक त्रुटि' : 'सिंक सुरक्षित';
 
   return <div className="app-shell">
+    {toastNotification && <aside className="notification-toast" role="status" aria-live="polite">
+      <div className="notification-toast-glow" aria-hidden="true"></div>
+      <div className="notification-toast-icon" aria-hidden="true">🔔</div>
+      <div className="notification-toast-body">
+        <div className="notification-toast-topline">
+          <span>{toastNotification.tag}</span>
+          <small>{toastNotification.date}</small>
+        </div>
+        <strong>{toastNotification.title}</strong>
+        <p>{toastNotification.body}</p>
+        <div className="notification-toast-actions">
+          <button type="button" onClick={() => readAndDismissNotificationToast(toastNotification.id)}>✓ पढ़ लिया</button>
+          <button type="button" onClick={() => dismissNotificationToast(toastNotification.id)} aria-label="Notification बंद करें">×</button>
+        </div>
+      </div>
+      <div className="notification-toast-progress" aria-hidden="true"></div>
+    </aside>}
     <header className={'topbar ' + (mobileMenuOpen ? 'menu-open' : '')}>
       <div className="topbar-main">
         <Link to="/" className="brand" aria-label="JNVST कक्षा 9 होम">
