@@ -157,7 +157,7 @@ const Dashboard = () => {
     const attemptedTopics = rows.filter((topic) => topic.attempts > 0).length;
     const totalTopics = rows.length;
     const accuracy = attempts ? Math.round((correct / attempts) * 100) : 0;
-    const subjectQuestions = getJnvstQuestionsBySubject(subject.id).length;
+    const subjectQuestions = jnvstExamQuestions.filter((question) => question.subjectId === subject.id).length;
     return {
       ...subject,
       attempts,
