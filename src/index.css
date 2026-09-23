@@ -3279,16 +3279,29 @@ a { color: inherit; text-decoration: none; }
   .auth-v5 .auth-v4-secure{display:none}
 }
 
-/* Phase 2 embedded hero artwork */
+/* Phase 2 hero image asset */
 .auth-v5 .auth-v4-visual{position:relative}
-.auth-v5 .auth-v4-visual>.auth-v5-artwork{position:absolute;inset:0;z-index:2}
-.auth-v5 .auth-v5-artwork svg{display:block;width:100%;height:100%;object-fit:cover}
+.auth-v5 .auth-v5-artwork{
+  position:absolute;
+  inset:0;
+  z-index:2;
+  overflow:hidden;
+}
+.auth-v5 .auth-v5-artwork img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center center;
+  transform:scale(1.01);
+  filter:saturate(1.04) contrast(1.02);
+}
 .auth-v5 .auth-v4-visual>.auth-v4-grid{z-index:3;opacity:.045}
 .auth-v5 .auth-v4-visual>.auth-v4-brand{z-index:5}
-.auth-v5 .auth-v5-artwork~.auth-v4-visual-copy,
-.auth-v5 .auth-v5-artwork~.auth-v4-path,
-.auth-v5 .auth-v5-artwork~.auth-v4-metrics,
-.auth-v5 .auth-v5-artwork~.auth-v4-visual-footer{display:none}
+.auth-v5 .auth-v4-visual-copy,
+.auth-v5 .auth-v4-path,
+.auth-v5 .auth-v4-metrics,
+.auth-v5 .auth-v4-visual-footer{display:none}
 .auth-v5 .auth-v4-visual::before{
   z-index:4;
   width:300px;height:300px;right:-140px;top:-110px;
@@ -3298,7 +3311,7 @@ a { color: inherit; text-decoration: none; }
   z-index:4;
   left:0;right:0;bottom:0;width:auto;height:24%;
   border:0;border-radius:0;transform:none;
-  background:linear-gradient(to top,rgba(27,10,74,.56),transparent);
+  background:linear-gradient(to top,rgba(27,10,74,.46),transparent);
 }
 .auth-v5 .auth-v4-brand{
   position:relative;
@@ -3310,10 +3323,10 @@ a { color: inherit; text-decoration: none; }
   width:max-content;
 }
 @media(max-width:940px){
-  .auth-v5 .auth-v5-artwork svg{object-position:center}
+  .auth-v5 .auth-v5-artwork img{object-position:center center}
 }
 @media(max-width:560px){
   .auth-v5 .auth-v4-visual{min-height:410px;padding:18px;clip-path:none}
   .auth-v5 .auth-v4-brand{padding:6px 8px}
-  .auth-v5 .auth-v5-artwork svg{width:128%;height:128%;transform:translate(-10%,-9%)}
+  .auth-v5 .auth-v5-artwork img{object-position:center 42%;transform:scale(1.08)}
 }
