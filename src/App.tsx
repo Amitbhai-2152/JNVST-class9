@@ -226,7 +226,7 @@ const TopicCard = ({ topicId }: { topicId: ID }) => {
     <div className="topic-top"><h3>{t.title}</h3><span className="count">{qCount} प्रश्न</span></div>
     <div className="topic-meta">
       <span>📖 अध्याय अध्ययन: {chapterPages} पृष्ठ</span>
-      <span>{isMath ? '🎯 अभ्यास + Challenger' : '⏱ विस्तृत पाठ'}</span>
+      <span>{isMath || isHindi ? '🎯 अभ्यास + Challenger' : '⏱ विस्तृत पाठ'}</span>
     </div>
     <div className="actions">
       <Link className="btn primary" to={`/chapters/${t.chapterId}/study`}>अध्याय पढ़ें</Link>
