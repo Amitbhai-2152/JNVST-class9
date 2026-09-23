@@ -143,24 +143,70 @@ const scienceStageMeta = [
 
 const Shell = ({ children }: { children: React.ReactNode }) => {
   const { user, signOut, syncStatus, analyticsConsent, setAnalyticsConsent } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const email = user?.email ?? 'Student';
   const location = useLocation();
 
   useEffect(() => {
     void trackEvent('page_view', { route: location.pathname });
+    setMobileMenuOpen(false);
   }, [location.pathname]);
+
+  const isActive = (section: 'dashboard' | 'subjects' | 'mock') => {
+    if (section === 'dashboard') return location.pathname === '/';
+    if (section === 'subjects') return location.pathname.startsWith('/subjects');
+    return location.pathname.startsWith('/mock-tests');
+  };
   const syncLabel = syncStatus === 'saving' ? 'सिंक हो रहा है…' : syncStatus === 'error' ? 'सिंक त्रुटि' : 'सिंक सुरक्षित';
+
   return <div className="app-shell">
-    <header className="topbar">
-      <Link to="/" className="brand">JNVST कक्षा 9</Link>
-      <nav aria-label="मुख्य नेविगेशन"><Link to="/">डैशबोर्ड</Link><Link to="/subjects">विषय</Link><Link to="/mock-tests">मॉक टेस्ट</Link></nav>
-      <div className="account-bar">
-        <span className={'cloud-sync-status ' + syncStatus} title={syncLabel}>{syncStatus === 'saving' ? '↻' : syncStatus === 'error' ? '!' : '✓'} <small>{syncLabel}</small></span>
-        <span className="account-email" title={email}>{email}</span>
-        <button type="button" className="account-analytics" onClick={() => { void setAnalyticsConsent(!analyticsConsent); }} title="Product analytics preference">
-          📊 {analyticsConsent ? 'ON' : 'OFF'}
+    <header className={'topbar ' + (mobileMenuOpen ? 'menu-open' : '')}>
+      <div className="topbar-main">
+        <Link to="/" className="brand" aria-label="JNVST कक्षा 9 होम">
+          <span className="brand-mark">J9</span>
+          <span className="brand-copy"><strong>JNVST कक्षा 9</strong><small>Learning Hub</small></span>
+        </Link>
+        <button
+          type="button"
+          className="mobile-menu-toggle"
+          aria-label={mobileMenuOpen ? 'मेन्यू बंद करें' : 'मेन्यू खोलें'}
+          aria-expanded={mobileMenuOpen}
+          onClick={() => setMobileMenuOpen((open) => !open)}
+        >
+          {mobileMenuOpen ? '×' : '☰'}
         </button>
-        <button type="button" className="account-logout" onClick={() => { void signOut(); }}>लॉग आउट</button>
+      </div>
+      <div className="topbar-content">
+        <nav aria-label="मुख्य नेविगेशन">
+          <Link to="/" className={isActive('dashboard') ? 'active' : ''} aria-current={isActive('dashboard') ? 'page' : undefined}>
+            <span className="nav-icon">⌂</span><span>डैशबोर्ड</span>
+          </Link>
+          <Link to="/subjects" className={isActive('subjects') ? 'active' : ''} aria-current={isActive('subjects') ? 'page' : undefined}>
+            <span className="nav-icon">▦</span><span>विषय</span>
+          </Link>
+          <Link to="/mock-tests" className={isActive('mock') ? 'active' : ''} aria-current={isActive('mock') ? 'page' : undefined}>
+            <span className="nav-icon">✓</span><span>मॉक टेस्ट</span>
+          </Link>
+        </nav>
+        <div className="account-bar">
+          <div className={'cloud-sync-status ' + syncStatus} title={syncLabel}>
+            <span aria-hidden="true">{syncStatus === 'saving' ? '↻' : syncStatus === 'error' ? '!' : '✓'}</span>
+            <small>{syncLabel}</small>
+          </div>
+          <div className="account-profile" title={email}>
+            <span className="account-avatar" aria-hidden="true">{email.slice(0, 1).toUpperCase()}</span>
+            <span className="account-email">{email}</span>
+          </div>
+          <button
+            type="button"
+            className="account-analytics"
+            onClick={() => { void setAnalyticsConsent(!analyticsConsent); }}
+            title="Product analytics preference"
+          >
+            <span aria-hidden="true">◉</span>{analyticsConsent ? 'Analytics ON' : 'Analytics OFF'}
+          </button>
+          <button type="button" className="account-logout" onClick={() => { void signOut(); }}>लॉग आउट</button>
+        </div>
       </div>
     </header>
     <main className="shell">{children}</main>

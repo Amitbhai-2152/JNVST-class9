@@ -404,6 +404,7 @@ const AuthPage = () => {
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState('');
   const [analyticsConsent, setAnalyticsConsent] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -430,24 +431,98 @@ const AuthPage = () => {
     }
   };
 
+  const switchMode = (nextMode: 'login' | 'signup') => {
+    setMode(nextMode);
+    setMessage('');
+    setPassword('');
+    setShowPassword(false);
+  };
+
   return <main className="auth-screen">
-    <section className="auth-card">
-      <span className="auth-brand">JNVST CLASS 9 • STUDENT ACCOUNT</span>
-      <h1>{mode === 'login' ? 'अपनी तैयारी जारी रखें' : 'Student account बनाएँ'}</h1>
-      <p>{mode === 'login' ? 'Login के बाद आपकी lessons, attempts, mocks, bookmarks और labs आपकी account progress के साथ sync रहेंगे।' : 'एक account बनाएँ ताकि आपकी तैयारी किसी एक browser तक सीमित न रहे।'}</p>
-      <div className="auth-tabs" role="tablist" aria-label="Account mode">
-        <button type="button" className={mode === 'login' ? 'active' : ''} onClick={() => { setMode('login'); setMessage(''); }}>Login</button>
-        <button type="button" className={mode === 'signup' ? 'active' : ''} onClick={() => { setMode('signup'); setMessage(''); }}>Sign up</button>
-      </div>
-      <form className="auth-form" onSubmit={submit}>
-        {mode === 'signup' && <div className="auth-field"><label htmlFor="student-name">नाम</label><input id="student-name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} autoComplete="name" required /></div>}
-        <div className="auth-field"><label htmlFor="student-email">ईमेल</label><input id="student-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required /></div>
-        <div className="auth-field"><label htmlFor="student-password">पासवर्ड</label><input id="student-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength={8} required /></div>
-        {mode === 'signup' && <label className="auth-consent"><input type="checkbox" checked={analyticsConsent} onChange={(event) => setAnalyticsConsent(event.target.checked)} /><span>मैं वैकल्पिक product analytics की अनुमति देता/देती हूँ, ताकि Learning Hub को बेहतर बनाने और promotion sources को समझने में मदद मिले। इसमें phone, exact location, school या DOB जैसे विवरण नहीं लिए जाते।</span></label>}
-        {(message || authError) && <div className={'auth-message ' + (authError ? 'error' : 'success')}>{message || authError}</div>}
-        <button className="auth-submit" disabled={working}>{working ? 'कृपया प्रतीक्षा करें…' : mode === 'login' ? 'Login करें' : 'Account बनाएँ'}</button>
-      </form>
-      <p className="auth-footnote">आपकी learning progress केवल आपके authenticated account के row में रखी जाएगी; database access RLS policies से restricted रहेगा।</p>
-    </section>
+    <div className="auth-shell">
+      <section className="auth-card">
+        <div className="auth-card-top">
+          <span className="auth-brand"><span className="auth-brand-mark">J9</span> JNVST CLASS 9</span>
+          <span className="auth-security-pill"><span aria-hidden="true">✓</span> सुरक्षित प्रगति</span>
+        </div>
+
+        <div className="auth-heading">
+          <span className="auth-eyebrow">STUDENT ACCOUNT</span>
+          <h1>{mode === 'login' ? 'अपनी तैयारी जारी रखें' : 'अपना student account बनाएँ'}</h1>
+          <p>{mode === 'login'
+            ? 'Login करें और अपनी lessons, practice, mocks, bookmarks और labs वहीं से जारी रखें जहाँ आपने छोड़ा था।'
+            : 'एक account आपकी learning progress को इस browser से आगे सुरक्षित रखने में मदद करता है।'}</p>
+        </div>
+
+        <div className="auth-tabs" role="tablist" aria-label="Account mode">
+          <button type="button" role="tab" aria-selected={mode === 'login'} className={mode === 'login' ? 'active' : ''} onClick={() => switchMode('login')}>Login</button>
+          <button type="button" role="tab" aria-selected={mode === 'signup'} className={mode === 'signup' ? 'active' : ''} onClick={() => switchMode('signup')}>Sign up</button>
+        </div>
+
+        <form className="auth-form" onSubmit={submit}>
+          {mode === 'signup' && <div className="auth-field">
+            <label htmlFor="student-name">आपका नाम</label>
+            <div className="auth-input-wrap">
+              <span className="auth-input-icon" aria-hidden="true">◉</span>
+              <input id="student-name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} autoComplete="name" placeholder="जैसे: Amit" required />
+            </div>
+          </div>}
+          <div className="auth-field">
+            <label htmlFor="student-email">ईमेल</label>
+            <div className="auth-input-wrap">
+              <span className="auth-input-icon" aria-hidden="true">@</span>
+              <input id="student-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="you@example.com" required />
+            </div>
+          </div>
+          <div className="auth-field">
+            <div className="auth-label-row">
+              <label htmlFor="student-password">पासवर्ड</label>
+              <span>कम से कम 8 अक्षर</span>
+            </div>
+            <div className="auth-input-wrap">
+              <span className="auth-input-icon" aria-hidden="true">•</span>
+              <input id="student-password" type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength={8} placeholder="••••••••" required />
+              <button type="button" className="auth-password-toggle" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'पासवर्ड छिपाएँ' : 'पासवर्ड दिखाएँ'}>
+                {showPassword ? 'छिपाएँ' : 'दिखाएँ'}
+              </button>
+            </div>
+          </div>
+
+          {mode === 'signup' && <label className="auth-consent">
+            <input type="checkbox" checked={analyticsConsent} onChange={(event) => setAnalyticsConsent(event.target.checked)} />
+            <span><strong>वैकल्पिक analytics</strong> — Learning Hub को बेहतर बनाने और promotion sources समझने में मदद के लिए। Phone, exact location, school या DOB नहीं लिए जाते।</span>
+          </label>}
+
+          {(message || authError) && <div className={'auth-message ' + (authError ? 'error' : 'success')} role="status">
+            <span className="auth-message-icon" aria-hidden="true">{authError ? '!' : '✓'}</span>
+            <span>{message || authError}</span>
+          </div>}
+
+          <button className="auth-submit" disabled={working}>
+            <span>{working ? 'कृपया प्रतीक्षा करें…' : mode === 'login' ? 'Login करें' : 'Account बनाएँ'}</span>
+            {!working && <span aria-hidden="true">→</span>}
+          </button>
+        </form>
+
+        <div className="auth-switch-line">
+          <span>{mode === 'login' ? 'नया student account चाहिए?' : 'पहले से account है?'}</span>
+          <button type="button" onClick={() => switchMode(mode === 'login' ? 'signup' : 'login')}>{mode === 'login' ? 'Sign up करें' : 'Login करें'}</button>
+        </div>
+        <p className="auth-footnote">आपकी learning progress authenticated account से जुड़ी रहेगी और database access security policies से restricted है।</p>
+      </section>
+
+      <aside className="auth-side">
+        <div className="auth-side-glow"></div>
+        <span className="auth-side-label">YOUR PREPARATION, PROTECTED</span>
+        <h2>एक account से आपकी मेहनत साथ रहती है।</h2>
+        <p>Device बदलने या browser data साफ होने पर भी cloud में synced progress आपके account के साथ रह सकती है।</p>
+        <div className="auth-benefits">
+          <div><span>✓</span><div><strong>Progress sync</strong><small>Lessons और mastery activity सुरक्षित रखें</small></div></div>
+          <div><span>✓</span><div><strong>Practice history</strong><small>Questions, mocks और revision history</small></div></div>
+          <div><span>✓</span><div><strong>Student-first privacy</strong><small>अनावश्यक personal details collect नहीं किए जाते</small></div></div>
+        </div>
+        <div className="auth-side-note"><span aria-hidden="true">⌁</span> JNVST Class 9 Learning Hub</div>
+      </aside>
+    </div>
   </main>;
 };
