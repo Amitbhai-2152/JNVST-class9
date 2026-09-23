@@ -149,7 +149,7 @@ const PassageQuestion = ({
 
       <div className="unseen-question-actions">
         {!state.revealed ? (
-          <button className="btn" type="button" disabled={state.selected === null} onClick={onReveal}>
+          <button className="btn" type="button" disabled={state.selectedSourceIndex === null} onClick={onReveal}>
             उत्तर और प्रमाण देखें
           </button>
         ) : (
@@ -179,6 +179,7 @@ const PassageQuestion = ({
 };
 
 export default function HindiUnseenPassagePage() {
+  const p = useProgressStore();
   const [activeId, setActiveId] = useState(hindiUnseenPassages[0]?.id ?? "");
   const [level, setLevel] = useState("All");
   const [skill, setSkill] = useState("All");
