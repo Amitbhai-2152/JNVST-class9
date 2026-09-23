@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { HashRouter, Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom';
+import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { allQuestions, allLessons, chapters, getLesson, getQuestionsBySubject, getQuestionsByTopic, getSubject, subjects, topics, jnvstExamQuestions } from './data';
 import { getChapterStudyPages, getScienceChapterStudyPages } from './data/lessons/chapterStudy';
 import ChapterStudyPage from './pages/ChapterStudyPage';
@@ -34,6 +34,98 @@ const NOTIFICATION_READ_KEY = 'jnvst-class9-notification-read-v1';
 const NOTIFICATION_TOAST_SEEN_KEY = 'jnvst-class9-notification-toast-seen-v1';
 const NOTIFICATION_FEED_URL = `${import.meta.env.BASE_URL}notifications.json`;
 const NOTIFICATION_REFRESH_INTERVAL_MS = 15000;
+const SEO_DEFAULT_DESCRIPTION = 'JNVST कक्षा 9 Learning Hub — हिंदी, अंग्रेज़ी, गणित और विज्ञान की तैयारी, chapter lessons, practice questions और mock tests।';
+
+const SEOController = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    const path = location.pathname.replace(/\\/+$/, '') || '/';
+    const subject = subjects.find((item) => path === '/subjects/' + item.id);
+    const chapter = chapters.find((item) => path === '/chapters/' + item.id || path === '/chapters/' + item.id + '/study');
+    const lesson = path.startsWith('/lessons/') ? allLessons.find((item) => '/lessons/' + item.id === path) : undefined;
+    const topic = path.startsWith('/practice/') ? topics.find((item) => '/practice/' + item.id === path) : undefined;
+
+    let title = 'JNVST कक्षा 9 Learning Hub';
+    let description = SEO_DEFAULT_DESCRIPTION;
+
+    if (subject) {
+      title = subject.title + ' — JNVST कक्षा 9 तैयारी';
+      description = subject.description;
+    } else if (chapter) {
+      title = chapter.title + ' — JNVST कक्षा 9 अध्ययन';
+      description = 'JNVST कक्षा 9 के लिए ' + chapter.title + ' का structured study material, lessons और practice तैयारी।';
+    } else if (lesson) {
+      title = lesson.title + ' — JNVST कक्षा 9 Lesson';
+      description = lesson.objectives?.slice(0, 2).join(' ') || ('JNVST कक्षा 9 के लिए ' + lesson.title + ' का विस्तृत lesson और अभ्यास।');
+    } else if (topic) {
+      title = topic.title + ' — JNVST कक्षा 9 Practice';
+      description = 'JNVST कक्षा 9 ' + topic.title + ' पर practice questions और concept-based तैयारी।';
+    } else if (path === '/subjects') {
+      title = 'Subjects — JNVST कक्षा 9 Learning Hub';
+      description = 'JNVST कक्षा 9 के लिए हिंदी, अंग्रेज़ी, गणित और विज्ञान की structured तैयारी।';
+    } else if (path === '/mock-tests') {
+      title = 'JNVST कक्षा 9 Mock Tests';
+      description = 'JNVST Class 9 pattern पर timed mock tests और section-wise practice।';
+    }
+
+    document.title = title;
+
+    const upsertMeta = (name: string, content: string) => {
+      let node = document.head.querySelector('meta[name="' + name + '"]') as HTMLMetaElement | null;
+      if (!node) {
+        node = document.createElement('meta');
+        node.name = name;
+        document.head.appendChild(node);
+      }
+      node.content = content;
+    };
+
+    const upsertProperty = (property: string, content: string) => {
+      let node = document.head.querySelector('meta[property="' + property + '"]') as HTMLMetaElement | null;
+      if (!node) {
+        node = document.createElement('meta');
+        node.setAttribute('property', property);
+        document.head.appendChild(node);
+      }
+      node.content = content;
+    };
+
+    upsertMeta('description', description);
+    upsertMeta('robots', 'index, follow, max-image-preview:large');
+    upsertProperty('og:title', title);
+    upsertProperty('og:description', description);
+    upsertProperty('og:type', 'website');
+    upsertProperty('og:url', window.location.href.split('#')[0]);
+
+    let canonical = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.rel = 'canonical';
+      document.head.appendChild(canonical);
+    }
+    canonical.href = window.location.href.split('#')[0];
+
+    let structuredData = document.head.querySelector('#jnvst-seo-schema') as HTMLScriptElement | null;
+    if (!structuredData) {
+      structuredData = document.createElement('script');
+      structuredData.id = 'jnvst-seo-schema';
+      structuredData.type = 'application/ld+json';
+      document.head.appendChild(structuredData);
+    }
+    structuredData.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'JNVST कक्षा 9 Learning Hub',
+      url: window.location.origin + '/JNVST-class9/',
+      inLanguage: ['hi', 'en'],
+      description,
+    });
+  }, [location.pathname]);
+
+  return null;
+};
+
 const InlineText = ({ text }: { text: string }) => <MathAwareText text={text} />;
 
 const ContentRenderer = ({ blocks }: { blocks: ContentBlock[] }) => <div className="lesson-content">{blocks.map((b, i) => {
@@ -414,7 +506,7 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
               </div>
 
               <div className="notification-list">
-                {siteNotifications.length ? siteNotifications.map((item) => {
+                {notifications.length ? notifications.map((item) => {
                   const unread = !readNotificationIds.includes(item.id);
                   return <button
                     type="button"
@@ -512,7 +604,56 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
 const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => <div className={`card ${className}`}>{children}</div>;
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const p = useProgressStore();
+
+  if (!user) {
+    return <Shell>
+      <div className="dashboard public-dashboard">
+        <section className="dashboard-hero">
+          <div className="dashboard-hero-copy">
+            <span className="dashboard-kicker">JNVST CLASS 9 • FREE LEARNING HUB</span>
+            <h1>JNVST कक्षा 9 की तैयारी एक जगह।</h1>
+            <p>हिंदी, अंग्रेज़ी, गणित और विज्ञान के chapter lessons, concept practice, challenging questions, vocabulary, unseen passages और mock tests के साथ structured preparation शुरू करें।</p>
+            <div className="actions">
+              <Link className="btn primary" to="/subjects">📚 विषय और अध्याय देखें</Link>
+              <Link className="btn dashboard-hero-btn" to="/mock-tests">📝 Mock Test देखें</Link>
+              <Link className="btn dashboard-hero-btn" to="/login">🔐 Student Login</Link>
+            </div>
+          </div>
+          <div className="dashboard-hero-side">
+            <span className="dashboard-accuracy-eyebrow">PREPARATION</span>
+            <div className="dashboard-hero-number">4</div>
+            <div>मुख्य विषय</div>
+            <small>Hindi • English • Maths • Science</small>
+          </div>
+        </section>
+
+        <section className="grid" aria-label="JNVST Class 9 subjects">
+          {subjects.map((subject) => <Link to={'/subjects/' + subject.id} key={subject.id}>
+            <Card className="subject-card">
+              <div className="icon">{subject.iconRef === 'book' ? 'अ' : subject.iconRef === 'edit' ? 'क' : subject.iconRef === 'calculator' ? '∑' : '⚗'}</div>
+              <h2>{subject.title}</h2>
+              <p>{subject.description}</p>
+              <span className="linkish">तैयारी खोलें →</span>
+            </Card>
+          </Link>)}
+        </section>
+
+        <section className="card">
+          <span className="dashboard-label">JNVST CLASS 9 PREPARATION</span>
+          <h2>Chapter-wise और topic-wise तैयारी</h2>
+          <p>हर subject को छोटे learning units में बाँटा गया है ताकि छात्र पहले concept समझे, फिर practice करे और उसके बाद revision तथा mock test से अपनी तैयारी जाँचे।</p>
+          <div className="actions">
+            <Link className="btn" to="/english-revision">English Revision</Link>
+            <Link className="btn" to="/hindi-revision">Hindi Revision</Link>
+            <Link className="btn" to="/math-formulas">Math Formula Sheet</Link>
+            <Link className="btn" to="/science-revision">Science Revision</Link>
+          </div>
+        </section>
+      </div>
+    </Shell>;
+  }
   const summary = getPerformanceSummary(p);
   const performances = getTopicPerformances(p);
   const recommendations = getSmartRecommendations(p, 3);
@@ -2456,4 +2597,11 @@ const MockTestsPage = () => {
   </Shell>;
 };
 
-export default function App() { return <HashRouter><Routes><Route path="/" element={<Dashboard />} /><Route path="/subjects" element={<SubjectsPage />} /><Route path="/subjects/:subjectId" element={<SubjectPage />} /><Route path="/chapters/:chapterId" element={<ChapterPage />} /><Route path="/chapters/:chapterId/study" element={<ChapterStudyPage />} /><Route path="/chapters/:chapterId/challenger" element={<ChapterChallengerPage />} /><Route path="/topics/:topicId/challenger" element={<TopicChallengerPage />} /><Route path="/lessons/:lessonId" element={<LessonPage />} /><Route path="/math-formulas" element={<Shell><MathFormulaSheet /></Shell>} /><Route path="/english-revision" element={<EnglishRevisionPage />} /><Route path="/hindi-revision" element={<HindiRevisionPage />} /><Route path="/hindi-smart-practice" element={<HindiSmartPracticePage />} /><Route path="/hindi-mock-test" element={<HindiMockTestPage />} /><Route path="/hindi-unseen-passage" element={<HindiUnseenPassagePage />} /><Route path="/english-smart-practice" element={<EnglishSmartPracticePage />} /><Route path="/english-mock-test" element={<EnglishMockTestPage />} /><Route path="/english-translation-lab" element={<EnglishTranslationLabPage />} /><Route path="/english-translation-practice" element={<EnglishTranslationPracticePage />} /><Route path="/english-vocabulary-lab" element={<EnglishVocabularyLabPage />} /><Route path="/english-vocabulary-practice" element={<EnglishVocabularyPracticePage />} /><Route path="/english-unseen-passage" element={<EnglishUnseenPassagePage />} /><Route path="/science-revision" element={<ScienceRevisionPage />} /><Route path="/science-smart-practice" element={<ScienceSmartPracticePage />} /><Route path="/science-mock-test" element={<ScienceMockTestPage />} /><Route path="/practice/:topicId" element={<PracticePage />} /><Route path="/smart-practice" element={<SmartPracticePage />} /><Route path="/math-smart-practice" element={<MathSmartPracticePage />} /><Route path="/bookmarks" element={<BookmarksPage />} /><Route path="/mock-tests" element={<MockTestsPage />} /><Route path="/math-mock-test" element={<MathMockTestPage />} /><Route path="*" element={<Dashboard />} /></Routes></HashRouter>; }
+const appBasename = window.location.hostname.endsWith('.github.io') ? '/JNVST-class9' : undefined;
+
+export default function App() {
+  return <BrowserRouter basename={appBasename}>
+    <SEOController />
+    <Routes><Route path="/" element={<Dashboard />} /><Route path="/login" element={<AuthPage />} /><Route path="/subjects" element={<SubjectsPage />} /><Route path="/subjects/:subjectId" element={<SubjectPage />} /><Route path="/chapters/:chapterId" element={<ChapterPage />} /><Route path="/chapters/:chapterId/study" element={<ChapterStudyPage />} /><Route path="/chapters/:chapterId/challenger" element={<ChapterChallengerPage />} /><Route path="/topics/:topicId/challenger" element={<TopicChallengerPage />} /><Route path="/lessons/:lessonId" element={<LessonPage />} /><Route path="/math-formulas" element={<Shell><MathFormulaSheet /></Shell>} /><Route path="/english-revision" element={<EnglishRevisionPage />} /><Route path="/hindi-revision" element={<HindiRevisionPage />} /><Route path="/hindi-smart-practice" element={<HindiSmartPracticePage />} /><Route path="/hindi-mock-test" element={<HindiMockTestPage />} /><Route path="/hindi-unseen-passage" element={<HindiUnseenPassagePage />} /><Route path="/english-smart-practice" element={<EnglishSmartPracticePage />} /><Route path="/english-mock-test" element={<EnglishMockTestPage />} /><Route path="/english-translation-lab" element={<EnglishTranslationLabPage />} /><Route path="/english-translation-practice" element={<EnglishTranslationPracticePage />} /><Route path="/english-vocabulary-lab" element={<EnglishVocabularyLabPage />} /><Route path="/english-vocabulary-practice" element={<EnglishVocabularyPracticePage />} /><Route path="/english-unseen-passage" element={<EnglishUnseenPassagePage />} /><Route path="/science-revision" element={<ScienceRevisionPage />} /><Route path="/science-smart-practice" element={<ScienceSmartPracticePage />} /><Route path="/science-mock-test" element={<ScienceMockTestPage />} /><Route path="/practice/:topicId" element={<PracticePage />} /><Route path="/smart-practice" element={<SmartPracticePage />} /><Route path="/math-smart-practice" element={<MathSmartPracticePage />} /><Route path="/bookmarks" element={<BookmarksPage />} /><Route path="/mock-tests" element={<MockTestsPage />} /><Route path="/math-mock-test" element={<MathMockTestPage />} /><Route path="*" element={<Dashboard />} /></Routes>
+  </BrowserRouter>;
+}
