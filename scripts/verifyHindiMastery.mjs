@@ -21,6 +21,16 @@ const expansionTopics = [...expansionSource.matchAll(/\btopicId:\s*['"](top_hin_
 assert(expansionIds.length === 55, 'expected 55 Hindi expansion questions, found ' + expansionIds.length);
 assert(new Set(expansionIds).size === 55, 'duplicate Hindi expansion question IDs');
 assert(expansionTopics.length === 55, 'expected 55 Hindi expansion topic mappings, found ' + expansionTopics.length);
+const expansionRecords = [...expansionSource.matchAll(/make\(\{([\s\S]*?)\}\)/g)];
+assert(expansionRecords.length === 55, 'could not fully audit Hindi expansion question records');
+for (const [, record] of expansionRecords) {
+  const optionText = record.match(/options:\[([^\]]+)\]/)?.[1] ?? '';
+  const options = [...optionText.matchAll(/'([^']*)'/g)].map((match) => match[1]);
+  assert(options.length === 4, 'every Hindi expansion MCQ must contain exactly four options');
+  assert(new Set(options.map((option) => option.trim().toLowerCase())).size === 4, 'Hindi expansion MCQs contain duplicate option text');
+  const correct = Number(record.match(/correct:(\d)/)?.[1] ?? -1);
+  assert(correct >= 0 && correct <= 3, 'Hindi expansion MCQ has invalid correct option index');
+}
 assert(expansionIds.every((id) => !new Set(legacyIds).has(id)), 'Hindi expansion overlaps legacy IDs');
 
 const topicCounts = new Map();
