@@ -73,10 +73,6 @@ const topicChallengerTopics = [...topicChallengerSource.matchAll(/topicId:'(top_
 assert(topicChallengerIds.length === 100, 'expected 100 new dedicated Hindi topic Challenger questions, found ' + topicChallengerIds.length);
 assert(new Set(topicChallengerIds).size === 100, 'duplicate Hindi topic Challenger IDs');
 assert(topicChallengerTopics.length === 100, 'expected 100 Hindi topic Challenger topic mappings, found ' + topicChallengerTopics.length);
-const allHindiTopicChallengerCounts = new Map();
-for (const id of challengerIds) {
-  const topicMatch = [...challengerSource.matchAll(new RegExp("topicId:'(top_hin_" + id.slice(9, 11) + "_\\\\d+)'"))][0];
-}
 const combinedTopicChallengerCounts = new Map();
 for (const match of challengerSource.matchAll(/chapterId:'chap_hin_(\d+)',topicId:'(top_hin_\d+_\d+)'/g)) {
   const topicId = match[2];
