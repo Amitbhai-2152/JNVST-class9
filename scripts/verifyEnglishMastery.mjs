@@ -3,7 +3,9 @@ import path from 'node:path';
 
 const root = process.cwd();
 const englishSource = fs.readFileSync(path.join(root, 'src', 'data', 'questions', 'english.ts'), 'utf8');
+const englishExpansionSource = fs.readFileSync(path.join(root, 'src', 'data', 'questions', 'englishExpansion.ts'), 'utf8');
 const challengerSource = fs.readFileSync(path.join(root, 'src', 'data', 'questions', 'englishChallengers.ts'), 'utf8');
+const challengerExtraSource = fs.readFileSync(path.join(root, 'src', 'data', 'questions', 'englishChapterChallengersExtra.ts'), 'utf8');
 const labSource = fs.readFileSync(path.join(root, 'src', 'data', 'englishLabs.ts'), 'utf8');
 
 const assert = (condition, message) => {
@@ -52,13 +54,59 @@ const extractCreateQuestionBlocks = (source) => {
 };
 
 const blocks = extractCreateQuestionBlocks(englishSource);
-assert(blocks.length >= 100, 'expected at least 100 English createQuestion records, found ' + blocks.length);
+const expansionBlocks = extractCreateQuestionBlocks(englishExpansionSource).length
+  ? extractCreateQuestionBlocks(englishExpansionSource)
+  : (() => {
+      const marker = 'makeExpansionQuestion({';
+      const found = [];
+      let cursor = 0;
+      while (true) {
+        const start = englishExpansionSource.indexOf(marker, cursor);
+        if (start < 0) break;
+        let depth = 0;
+        let inString = false;
+        let quote = '';
+        let escaped = false;
+        let end = -1;
+        for (let i = start + marker.length - 1; i < englishExpansionSource.length; i += 1) {
+          const char = englishExpansionSource[i];
+          if (inString) {
+            if (escaped) escaped = false;
+            else if (char === '\\') escaped = true;
+            else if (char === quote) inString = false;
+            continue;
+          }
+          if (char === "'" || char === '"' || char === '\`') {
+            inString = true;
+            quote = char;
+            continue;
+          }
+          if (char === '{') depth += 1;
+          if (char === '}') {
+            depth -= 1;
+            if (depth === 0) {
+              end = i;
+              break;
+            }
+          }
+        }
+        if (end < 0) break;
+        found.push(englishExpansionSource.slice(start, end + 1));
+        cursor = end + 1;
+      }
+      return found;
+    })();
+
+assert(blocks.length >= 100, 'expected at least 100 legacy English createQuestion records, found ' + blocks.length);
+assert(expansionBlocks.length === 50, 'expected exactly 50 English expansion questions, found ' + expansionBlocks.length);
 
 const chapterCounts = new Map();
 const eligibleByChapter = new Map();
+const topicCounts = new Map();
+const eligibleByTopic = new Map();
 const ids = new Set();
 
-for (const block of blocks) {
+for (const block of [...blocks, ...expansionBlocks]) {
   const id = block.match(/\bid:\s*['"]([^'"]+)['"]/)?.[1];
   const chapterId = block.match(/\bchapterId:\s*['"]([^'"]+)['"]/)?.[1];
   const type = block.match(/\btype:\s*['"]([^'"]+)['"]/)?.[1];
@@ -66,25 +114,45 @@ for (const block of blocks) {
   assert(!ids.has(id), 'duplicate English question ID ' + id);
   ids.add(id);
   chapterCounts.set(chapterId, (chapterCounts.get(chapterId) ?? 0) + 1);
+  if (topicId) topicCounts.set(topicId, (topicCounts.get(topicId) ?? 0) + 1);
 
   const optionCount = (block.match(/options:\s*\[/)?.[0] ? (block.match(/\{\s*id:\s*['"]opt_/g) ?? []).length : 0);
   const correctCount = (block.match(/correctOptionIds:\s*\[/)?.[0] ? (block.match(/correctOptionIds:\s*\[([^\]]*)\]/)?.[1].match(/['"]opt_/g) ?? []).length : 0);
   if (type === 'mcq' && optionCount === 4 && correctCount === 1) {
     eligibleByChapter.set(chapterId, (eligibleByChapter.get(chapterId) ?? 0) + 1);
+    if (topicId) eligibleByTopic.set(topicId, (eligibleByTopic.get(topicId) ?? 0) + 1);
   }
 }
 
-assert(ids.size >= 100, 'English IDs are not unique');
+assert(ids.size === 150, 'English question bank should contain exactly 150 unique IDs, found ' + ids.size);
+for (const topicId of [
+  'top_eng_01_01','top_eng_02_01','top_eng_02_02','top_eng_02_03',
+  'top_eng_03_01','top_eng_03_02','top_eng_03_03',
+  'top_eng_04_01','top_eng_04_02','top_eng_04_03',
+]) {
+  assert((topicCounts.get(topicId) ?? 0) === 15, topicId + ' should contain exactly 15 questions');
+  assert((eligibleByTopic.get(topicId) ?? 0) >= 10, topicId + ' should contain at least 10 JNVST-compatible MCQs');
+}
 for (const chapter of ['chap_eng_01', 'chap_eng_02', 'chap_eng_03', 'chap_eng_04']) {
-  const dedicated = chapter === 'chap_eng_01' ? 20 : 0;
-  assert((eligibleByChapter.get(chapter) ?? 0) + dedicated >= 20, chapter + ' has fewer than 20 total Challenger-eligible questions');
+  assert((eligibleByChapter.get(chapter) ?? 0) >= 20, chapter + ' has fewer than 20 Challenger-eligible questions in the combined bank');
 }
 
-const challengerIds = [...challengerSource.matchAll(/make\(\s*['"]([^'"]+)['"]/g)].map((match) => match[1]);
-assert(challengerIds.length >= 20, 'English chapter Challenger source must contain at least 20 dedicated questions');
+const challengerSources = [challengerSource, challengerExtraSource];
+const challengerIds = challengerSources.flatMap((source) =>
+  [...source.matchAll(/make\(\s*['"]([^'"]+)['"]/g)].map((match) => match[1]),
+);
+assert(challengerIds.length === 80, 'English chapter Challenger source must contain exactly 80 dedicated questions, found ' + challengerIds.length);
 assert(new Set(challengerIds).size === challengerIds.length, 'duplicate dedicated Challenger IDs');
-const optionArrays = [...challengerSource.matchAll(/make\([^]*?\[\s*'([^']*)'\s*,\s*'([^']*)'\s*,\s*'([^']*)'\s*,\s*'([^']*)'\s*\]/g)];
-assert(optionArrays.length >= 20, 'dedicated Challenger options could not be audited');
+
+const optionArrays = challengerSources.flatMap((source) =>
+  [...source.matchAll(/make\([^]*?\[\s*'([^']*)'\s*,\s*'([^']*)'\s*,\s*'([^']*)'\s*,\s*'([^']*)'\s*\]/g)],
+);
+assert(optionArrays.length === 80, 'dedicated Challenger options could not be fully audited');
+for (const chapter of ['chap_eng_01','chap_eng_02','chap_eng_03','chap_eng_04']) {
+  const chapterCount = challengerSources.reduce((count, source) =>
+    count + [...source.matchAll(new RegExp('chapterId[\\s\\S]*?' + chapter, 'g'))].length, 0);
+  if (chapter === 'chap_eng_01') assert(chapterCount >= 1, 'Chapter 1 dedicated Challenger source missing');
+}
 
 const translationIds = [...labSource.matchAll(/\{ id:'(tr_[^']+)'/g)].map((match) => match[1]);
 const vocabularyIds = [...labSource.matchAll(/\{id:'(v_[^']+)'/g)].map((match) => match[1]);
@@ -103,5 +171,7 @@ for (const level of ['beginner','basic','intermediate','jnvst','challenge']) {
 console.log('English mastery audit passed.');
 console.log('Eligible bank MCQs:', Object.fromEntries(eligibleByChapter));
 console.log('Dedicated English Challenger questions:', challengerIds.length);
+console.log('English questions by topic:', Object.fromEntries(topicCounts));
+console.log('JNVST-compatible English MCQs by topic:', Object.fromEntries(eligibleByTopic));
 console.log('Translation Lab items:', translationIds.length);
 console.log('Vocabulary Lab items:', vocabularyIds.length);
