@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { useMemo, useState } from "react";
 import { useProgressStore } from "../store/progress";
-import { useProgressStore } from "../store/progress";
 import { hindiUnseenPassages, type HindiUnseenPassageQuestion } from "../data/hindiUnseenPassages";
 
 const levelClass = (level: string) => level.toLowerCase().replace(/[^a-z]+/g, "-");
