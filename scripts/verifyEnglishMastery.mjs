@@ -109,6 +109,7 @@ const ids = new Set();
 for (const block of [...blocks, ...expansionBlocks]) {
   const id = block.match(/\bid:\s*['"]([^'"]+)['"]/)?.[1];
   const chapterId = block.match(/\bchapterId:\s*['"]([^'"]+)['"]/)?.[1];
+  const topicId = block.match(/\btopicId:\s*['"]([^'"]+)['"]/)?.[1];
   const type = block.match(/\btype:\s*['"]([^'"]+)['"]/)?.[1];
   if (!id || !chapterId) continue;
   assert(!ids.has(id), 'duplicate English question ID ' + id);
@@ -148,10 +149,9 @@ const optionArrays = challengerSources.flatMap((source) =>
   [...source.matchAll(/make\([^]*?\[\s*'([^']*)'\s*,\s*'([^']*)'\s*,\s*'([^']*)'\s*,\s*'([^']*)'\s*\]/g)],
 );
 assert(optionArrays.length === 80, 'dedicated Challenger options could not be fully audited');
-for (const chapter of ['chap_eng_01','chap_eng_02','chap_eng_03','chap_eng_04']) {
-  const chapterCount = challengerSources.reduce((count, source) =>
-    count + [...source.matchAll(new RegExp('chapterId[\\s\\S]*?' + chapter, 'g'))].length, 0);
-  if (chapter === 'chap_eng_01') assert(chapterCount >= 1, 'Chapter 1 dedicated Challenger source missing');
+for (const chapterNumber of ['01','02','03','04']) {
+  const count = challengerIds.filter((id) => id.startsWith('q_eng_ch_' + chapterNumber + '_')).length;
+  assert(count === 20, 'Chapter ' + chapterNumber + ' dedicated Challenger bank must contain exactly 20 questions; found ' + count);
 }
 
 const translationIds = [...labSource.matchAll(/\{ id:'(tr_[^']+)'/g)].map((match) => match[1]);
