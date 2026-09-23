@@ -1,1 +1,0 @@
-The app uses hash routing in App.fixed.tsx; this file records the intended fix for static hosting.
