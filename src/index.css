@@ -2836,3 +2836,24 @@ a { color: inherit; text-decoration: none; }
   .auth-v3-shell,.auth-v3-orb-a,.auth-v3-orb-b,.auth-live-dot,.auth-v3-message,.auth-v3-submit:disabled b,.auth-v3-reveal{animation:none!important}
   .auth-v3-submit,.auth-v3-input input,.auth-v3-show,.auth-v3-consent{transition:none!important}
 }
+
+/* Google OAuth control */
+.auth-v3-social-divider{
+  display:flex;align-items:center;gap:9px;margin:17px 0 10px;
+  color:#b0b8c3;font-size:8px;letter-spacing:.14em;font-weight:900;
+}
+.auth-v3-social-divider::before,.auth-v3-social-divider::after{
+  content:"";height:1px;background:#e8edf2;flex:1;
+}
+.auth-v3-google{
+  width:100%;min-height:49px;display:flex;align-items:center;justify-content:center;gap:10px;
+  position:relative;border:1px solid #dce3eb;border-radius:13px;background:#fff;color:#304b66;
+  font-size:12px;font-weight:900;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+}
+.auth-v3-google svg{width:18px;height:18px;flex:0 0 auto}
+.auth-v3-google b{position:absolute;right:15px;font-size:15px;color:#8492a3;font-weight:700}
+.auth-v3-google:hover{
+  transform:translateY(-1px);border-color:#c9d5e2;box-shadow:0 9px 22px rgba(31,56,84,.08);
+}
+.auth-v3-google:active{transform:translateY(0)}
+@media(prefers-reduced-motion:reduce){.auth-v3-google{transition:none!important}}

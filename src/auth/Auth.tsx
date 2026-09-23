@@ -126,6 +126,7 @@ interface AuthContextValue {
   syncStatus: SyncStatus;
   authError: string;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signUp: (displayName: string, email: string, password: string, analyticsConsent: boolean) => Promise<{ requiresConfirmation: boolean }>;
   signOut: () => Promise<void>;
   analyticsConsent: boolean;
@@ -291,6 +292,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const signInWithGoogle = async () => {
+    if (!supabase) throw new Error('Supabase अभी configure नहीं है।');
+    setAuthError('');
+    const redirectTo = window.location.origin + window.location.pathname;
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo },
+    });
+    if (error) {
+      const message = normalizeAuthError(error.message);
+      setAuthError(message);
+      throw new Error(message);
+    }
+  };
+
   const signUp = async (displayName: string, email: string, password: string, consent: boolean) => {
     if (!supabase) throw new Error('Supabase अभी configure नहीं है।');
     setAuthError('');
@@ -365,6 +381,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     syncStatus,
     authError,
     signIn,
+    signInWithGoogle,
     signUp,
     signOut,
     analyticsConsent,
@@ -396,7 +413,7 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AuthPage = () => {
-  const { signIn, signUp, authError } = useAuth();
+  const { signIn, signInWithGoogle, signUp, authError } = useAuth();
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
@@ -563,6 +580,23 @@ const AuthPage = () => {
             <b aria-hidden="true">{working ? '◌' : '→'}</b>
           </button>
         </form>
+
+        <div className="auth-v3-social-divider"><span>OR CONTINUE WITH</span></div>
+        <button
+          type="button"
+          className="auth-v3-google"
+          onClick={() => { void signInWithGoogle().catch((error) => setMessage(error instanceof Error ? error.message : String(error))); }}
+          aria-label="Continue with Google"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285F4" d="M21.6 12.23c0-.79-.07-1.55-.2-2.28H12v4.31h5.38a4.6 4.6 0 0 1-1.99 3.02v2.51h3.23c1.89-1.74 2.98-4.3 2.98-7.56Z"/>
+            <path fill="#34A853" d="M12 22c2.7 0 4.96-.89 6.61-2.41l-3.23-2.51c-.9.6-2.04.95-3.38.95-2.6 0-4.8-1.76-5.59-4.12H3.07v2.59A10 10 0 0 0 12 22Z"/>
+            <path fill="#FBBC05" d="M6.41 13.91A6.03 6.03 0 0 1 6.09 12c0-.66.11-1.3.32-1.91V7.5H3.07A10 10 0 0 0 2 12c0 1.61.39 3.13 1.07 4.5l3.34-2.59Z"/>
+            <path fill="#EA4335" d="M12 5.97c1.47 0 2.79.51 3.83 1.51l2.87-2.87C16.95 2.92 14.7 2 12 2a10 10 0 0 0-8.93 5.5l3.34 2.59C7.2 7.73 9.4 5.97 12 5.97Z"/>
+          </svg>
+          <span>Continue with Google</span>
+          <b aria-hidden="true">→</b>
+        </button>
 
         <div className="auth-v3-divider"><span>ACCOUNT ACCESS</span></div>
         <div className="auth-v3-switch">
