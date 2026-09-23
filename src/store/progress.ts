@@ -128,7 +128,7 @@ export const useProgressStore = create<Store>()(
       migrate: (persistedState) => {
         const previous = (persistedState ?? {}) as Partial<ProgressState>;
         return {
-          ...initial,
+          ...emptyProgressState,
           ...previous,
           lessonActivity: { ...emptyProgressState.lessonActivity, ...(previous.lessonActivity ?? {}) },
           questionAttempts: { ...emptyProgressState.questionAttempts, ...(previous.questionAttempts ?? {}) },
