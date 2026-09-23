@@ -125,6 +125,7 @@ assert(weakDedicatedHindi.length === 0, 'all 220 dedicated Hindi Challenger ques
 
 
 const typesSource = fs.readFileSync(path.join(root, 'src', 'types', 'index.ts'), 'utf8');
+const appSource = fs.readFileSync(path.join(root, 'src', 'App.tsx'), 'utf8');
 const progressStoreSource = fs.readFileSync(path.join(root, 'src', 'store', 'progress.ts'), 'utf8');
 const unseenPageSource = fs.readFileSync(path.join(root, 'src', 'pages', 'HindiUnseenPassagePage.tsx'), 'utf8');
 const phase4IntelligenceSource = fs.readFileSync(path.join(root, 'src', 'utils', 'jnvstIntelligence.ts'), 'utf8');
@@ -151,7 +152,6 @@ assert(richChapterSource.includes('chap_eng_01:'), 'English rich chapter content
 assert(richChapterSource.includes('chap_sci_01:'), 'Science rich chapter content must remain');
 // Phase 1–3 behavioral/source checks.
 const intelligenceSource = fs.readFileSync(path.join(root, 'src', 'utils', 'jnvstIntelligence.ts'), 'utf8');
-const appSource = fs.readFileSync(path.join(root, 'src', 'App.tsx'), 'utf8');
 
 const canonicalMcqCount = [...canonicalHindiQuestionRecords.values()].filter((record) => record.type === 'mcq').length;
 assert(canonicalMcqCount === 150, 'Hindi exam-compatible MCQ pool should contain exactly 150 MCQs, found ' + canonicalMcqCount);
