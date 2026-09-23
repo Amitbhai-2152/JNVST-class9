@@ -145,71 +145,220 @@ const Card = ({ children, className = '' }: { children: React.ReactNode; classNa
 const Dashboard = () => {
   const p = useProgressStore();
   const summary = getPerformanceSummary(p);
+  const performances = getTopicPerformances(p);
   const recommendations = getSmartRecommendations(p, 3);
   const weakTopics = getWeakTopics(p, 3);
   const revisionTopics = getRevisionTopics(p, 3);
 
+  const subjectStats = subjects.map((subject) => {
+    const rows = performances.filter((topic) => topic.subjectId === subject.id);
+    const attempts = rows.reduce((sum, topic) => sum + topic.attempts, 0);
+    const correct = rows.reduce((sum, topic) => sum + topic.correct, 0);
+    const attemptedTopics = rows.filter((topic) => topic.attempts > 0).length;
+    const totalTopics = rows.length;
+    const accuracy = attempts ? Math.round((correct / attempts) * 100) : 0;
+    const subjectQuestions = getJnvstQuestionsBySubject(subject.id).length;
+    return {
+      ...subject,
+      attempts,
+      attemptedTopics,
+      totalTopics,
+      accuracy,
+      subjectQuestions,
+      coverage: totalTopics ? Math.round((attemptedTopics / totalTopics) * 100) : 0,
+    };
+  });
+
+  const latestStudy = p.recentlyStudied?.[0];
+  const latestLesson = latestStudy?.type === 'lesson' ? allLessons.find((lesson) => lesson.id === latestStudy.id) : undefined;
+  const latestTopicId = latestLesson?.topicId ?? (latestStudy?.type === 'topic' ? latestStudy.id : undefined);
+  const latestTopic = latestTopicId ? topics.find((topic) => topic.id === latestTopicId) : undefined;
+  const latestChapter = latestTopic ? chapters.find((chapter) => chapter.id === latestTopic.chapterId) : undefined;
+  const continueTitle = latestStudy
+    ? latestLesson?.title ?? latestTopic?.title ?? latestStudy.title
+    : recommendations[0]?.topicTitle ?? 'अपनी JNVST तैयारी शुरू करें';
+  const continueLabel = latestStudy?.type === 'lesson' ? 'पढ़ना जारी रखें' : latestStudy?.type === 'topic' ? 'अभ्यास जारी रखें' : 'तैयारी शुरू करें';
+  const continueTo = latestLesson
+    ? '/lessons/' + latestLesson.id
+    : latestTopic
+      ? '/practice/' + latestTopic.id
+      : recommendations[0]
+        ? '/practice/' + recommendations[0].topicId
+        : '/subjects';
+
+  const mission = [
+    recommendations[0] ? { icon: '🎯', label: recommendations[0].action === 'सीखना' ? 'नया विषय सीखें' : recommendations[0].action, title: recommendations[0].topicTitle, href: '/practice/' + recommendations[0].topicId } : null,
+    weakTopics[0] ? { icon: '⚠️', label: 'कमजोर क्षेत्र', title: weakTopics[0].topicTitle, href: '/practice/' + weakTopics[0].topicId } : null,
+    revisionTopics[0] ? { icon: '🔁', label: 'पुनरावृत्ति', title: revisionTopics[0].topicTitle, href: '/practice/' + revisionTopics[0].topicId } : null,
+  ].filter(Boolean) as Array<{ icon: string; label: string; title: string; href: string }>;
+
+  const completedLessons = Object.values(p.lessonActivity ?? {}).filter((item) => item.status === 'completed').length;
+  const questionCoverage = allQuestions.length ? Math.round((summary.totalAttempts / allQuestions.length) * 100) : 0;
+  const mockResults = p.mockTestResults ?? [];
+  const bestMock = mockResults.length ? Math.max(...mockResults.map((result) => result.totalMarks ? Math.round((result.score / result.totalMarks) * 100) : 0)) : null;
+
   return <Shell>
-    <section className="hero">
-      <div>
-        <span className="eyebrow">JAWAHAR NAVODAYA VIDYALAYA</span>
-        <h1>JNVST कक्षा 9 Learning Hub</h1>
-        <p>पढ़ें, अभ्यास करें, अपनी कमजोरियाँ पहचानें और JNVST पैटर्न पर तैयारी करें।</p>
-        <div className="actions">
-          <Link className="btn primary" to="/subjects">पढ़ाई शुरू करें</Link>
-          <Link className="btn" to="/smart-practice">स्मार्ट अभ्यास</Link>
-          <Link className="btn" to="/mock-tests">मॉक टेस्ट</Link>
+    <div className="dashboard">
+      <section className="dashboard-hero">
+        <div className="dashboard-hero-copy">
+          <span className="dashboard-kicker">JNVST CLASS 9 • PREPARATION COMMAND CENTER</span>
+          <h1>आपकी तैयारी, एक नज़र में।</h1>
+          <p>अध्याय पढ़ें, अभ्यास करें, कमजोर क्षेत्रों को सुधारें और धीरे-धीरे JNVST readiness बढ़ाएँ।</p>
+          <div className="actions">
+            <Link className="btn primary" to={continueTo}>▶ {continueLabel}</Link>
+            <Link className="btn dashboard-hero-btn" to="/smart-practice">🎯 स्मार्ट अभ्यास</Link>
+            <Link className="btn dashboard-hero-btn" to="/mock-tests">📝 मॉक टेस्ट</Link>
+          </div>
         </div>
-      </div>
-      <div className="hero-stat"><b>{allQuestions.length}</b><span>अभ्यास प्रश्न</span><small>{jnvstExamQuestions.length} परीक्षा-योग्य MCQ</small></div>
-    </section>
+        <div className="dashboard-hero-side">
+          <div className="dashboard-hero-number">{summary.totalAttempts}</div>
+          <div>कुल प्रश्न प्रयास</div>
+          <small>{summary.overallAccuracy}% overall accuracy</small>
+        </div>
+      </section>
 
-    <section className="stats">
-      <Card><b>{Object.values(p.lessonActivity).filter(x => x.status === 'completed').length}</b><span>पूर्ण पाठ</span></Card>
-      <Card><b>{summary.totalAttempts}</b><span>प्रश्न प्रयास</span></Card>
-      <Card><b>{summary.overallAccuracy}%</b><span>सटीकता</span></Card>
-      <Card><b>{allLessons.length}</b><span>कुल पाठ</span></Card>
-    </section>
+      <section className="dashboard-metrics" aria-label="तैयारी के मुख्य आँकड़े">
+        <Card className="dashboard-metric">
+          <span>विषय कवरेज</span>
+          <b>{summary.attemptedTopics}/{summary.totalTopics}</b>
+          <small>{summary.totalTopics ? Math.round((summary.attemptedTopics / summary.totalTopics) * 100) : 0}% topics पर अभ्यास</small>
+        </Card>
+        <Card className="dashboard-metric">
+          <span>सटीकता</span>
+          <b>{summary.totalAttempts ? summary.overallAccuracy + '%' : '—'}</b>
+          <small>{summary.totalAttempts ? 'आपके दर्ज attempts से' : 'अभी डेटा नहीं'}</small>
+        </Card>
+        <Card className="dashboard-metric">
+          <span>पूरे किए पाठ</span>
+          <b>{completedLessons}</b>
+          <small>कुल {allLessons.length} lessons में</small>
+        </Card>
+        <Card className="dashboard-metric">
+          <span>Mock प्रदर्शन</span>
+          <b>{bestMock !== null ? bestMock + '%' : '—'}</b>
+          <small>{mockResults.length ? mockResults.length + ' mock attempts' : 'पहला mock दें'}</small>
+        </Card>
+      </section>
 
-    <section>
-      <div className="page-head">
-        <h2>आपके लिए अगला कदम</h2>
-        <p>{summary.totalAttempts > 0 ? summary.attemptedTopics + ' / ' + summary.totalTopics + ' विषयांशों पर आपका अभ्यास दर्ज है।' : 'अभी आपकी अभ्यास-इतिहास खाली है। शुरुआत के लिए ये विषयांश चुने गए हैं।'}</p>
-      </div>
-      <div className="grid">
-        {recommendations.map((item) => <Card key={item.topicId}>
-          <div className="topic-top"><h3>{item.topicTitle}</h3><span className="count">{item.action}</span></div>
-          <p><b>{item.subjectTitle}</b></p>
-          <p>{item.reason}</p>
-          <div className="actions"><Link className="btn primary" to={'/practice/' + item.topicId}>{item.action === 'सीखना' ? 'पढ़कर अभ्यास करें' : item.action}</Link></div>
-        </Card>)}
-      </div>
-    </section>
+      <section className="dashboard-readiness">
+        <div className="dashboard-section-head">
+          <div>
+            <span className="dashboard-label">PREPARATION HEALTH</span>
+            <h2>JNVST Readiness Indicators</h2>
+            <p>एक single score के बजाय आपकी तैयारी के अलग-अलग measurable संकेतक।</p>
+          </div>
+        </div>
+        <div className="dashboard-readiness-grid">
+          <Card className="dashboard-readiness-card">
+            <div className="dashboard-readiness-top"><div><b>Topic coverage</b><span>{summary.attemptedTopics} / {summary.totalTopics}</span></div><strong>{summary.totalTopics ? Math.round((summary.attemptedTopics / summary.totalTopics) * 100) : 0}%</strong></div>
+            <div className="dashboard-track"><span style={{ width: (summary.totalTopics ? Math.round((summary.attemptedTopics / summary.totalTopics) * 100) : 0) + '%' }} /></div>
+            <small>कम-से-कम हर topic पर अभ्यास शुरू करना लक्ष्य रखें।</small>
+          </Card>
+          <Card className="dashboard-readiness-card">
+            <div className="dashboard-readiness-top"><div><b>Question coverage</b><span>{summary.totalAttempts} / {allQuestions.length}</span></div><strong>{questionCoverage}%</strong></div>
+            <div className="dashboard-track"><span style={{ width: questionCoverage + '%' }} /></div>
+            <small>जितने अधिक meaningful attempts, उतना बेहतर practice history।</small>
+          </Card>
+          <Card className="dashboard-readiness-card">
+            <div className="dashboard-readiness-top"><div><b>Practice accuracy</b><span>{summary.totalAttempts ? summary.overallAccuracy + '%' : 'कोई data नहीं'}</span></div><strong>{summary.totalAttempts ? summary.overallAccuracy + '%' : '—'}</strong></div>
+            <div className="dashboard-track"><span style={{ width: summary.overallAccuracy + '%' }} /></div>
+            <small>Accuracy को coverage के साथ देखें; दोनों का संतुलन जरूरी है।</small>
+          </Card>
+        </div>
+      </section>
 
-    {weakTopics.length > 0 && <section>
-      <div className="page-head"><h2>कमजोर क्षेत्र</h2><p>जहाँ आपकी सटीकता 80% से कम है, वहाँ targeted practice पहले करें।</p></div>
-      <div className="grid">
-        {weakTopics.map((topic) => <Card key={topic.topicId}>
-          <div className="topic-top"><h3>{topic.topicTitle}</h3><span className="count">{topic.accuracy}%</span></div>
-          <p>{topic.subjectTitle} · {topic.attempts} प्रयास · {topic.correct} सही</p>
-          <div className="actions"><Link className="btn primary" to={'/practice/' + topic.topicId}>अभ्यास करें</Link></div>
-        </Card>)}
-      </div>
-    </section>}
+      <section className="dashboard-continue">
+        <Card className="dashboard-continue-card">
+          <div className="dashboard-continue-copy">
+            <span className="dashboard-label">CONTINUE PREPARATION</span>
+            <h2>{continueTitle}</h2>
+            <p>{latestChapter ? latestChapter.title + ' · ' : ''}{latestTopic?.title ?? 'आपकी अगली तैयारी यहीं से शुरू हो सकती है।'}</p>
+            <div className="actions"><Link className="btn primary" to={continueTo}>{continueLabel} →</Link></div>
+          </div>
+          <div className="dashboard-continue-meta">
+            <span>{latestStudy ? 'सबसे हाल में पढ़ा/अभ्यास किया' : 'अभी शुरुआत बाकी है'}</span>
+            <b>{latestStudy ? new Date(latestStudy.timestamp).toLocaleDateString('hi-IN', { day: 'numeric', month: 'short' }) : 'START'}</b>
+          </div>
+        </Card>
+      </section>
 
-    {revisionTopics.length > 0 && <section>
-      <div className="page-head"><h2>पुनरावृत्ति सूची</h2><p>जिन topics पर पिछले 7 दिनों से अभ्यास नहीं हुआ, उन्हें दोहराएँ।</p></div>
-      <div className="grid">
-        {revisionTopics.map((topic) => <Card key={topic.topicId}>
-          <div className="topic-top"><h3>{topic.topicTitle}</h3><span className="count">{topic.accuracy}%</span></div>
-          <p>{topic.subjectTitle}</p>
-          <div className="actions"><Link className="btn" to={'/practice/' + topic.topicId}>पुनरावृत्ति करें</Link></div>
-        </Card>)}
-      </div>
-    </section>}
+      <section className="dashboard-section">
+        <div className="dashboard-section-head">
+          <div>
+            <span className="dashboard-label">YOUR SUBJECTS</span>
+            <h2>चारों विषयों की स्थिति</h2>
+            <p>हर subject का coverage, accuracy और practice volume एक साथ देखें।</p>
+          </div>
+          <Link className="dashboard-text-link" to="/subjects">सभी विषय →</Link>
+        </div>
+        <div className="dashboard-subject-grid">
+          {subjectStats.map((subject) => <Link key={subject.id} to={'/subjects/' + subject.id} className="dashboard-subject-link">
+            <Card className="dashboard-subject-card">
+              <div className="dashboard-subject-head">
+                <div className={'dashboard-subject-icon dashboard-subject-' + subject.id}>{subject.iconRef}</div>
+                <div><h3>{subject.title}</h3><span>{subject.attemptedTopics}/{subject.totalTopics} topics attempted</span></div>
+              </div>
+              <div className="dashboard-subject-score">
+                <div><b>{subject.coverage}%</b><span>coverage</span></div>
+                <div><b>{subject.attempts}</b><span>attempts</span></div>
+                <div><b>{subject.attempts ? subject.accuracy + '%' : '—'}</b><span>accuracy</span></div>
+              </div>
+              <div className="dashboard-track light"><span style={{ width: subject.coverage + '%' }} /></div>
+              <div className="dashboard-subject-footer">
+                <small>{subject.subjectQuestions} exam-compatible MCQs</small>
+                <span>विषय खोलें →</span>
+              </div>
+            </Card>
+          </Link>)}
+        </div>
+      </section>
 
-    <h2>विषय</h2>
-    <div className="grid">{subjects.map(s => <Link key={s.id} to={'/subjects/' + s.id}><Card className="subject-card"><div className="icon">{s.iconRef}</div><h3>{s.title}</h3><p>{s.description}</p><span className="linkish">अध्याय देखें →</span></Card></Link>)}</div>
+      <section className="dashboard-focus-grid">
+        <Card className="dashboard-panel">
+          <div className="dashboard-panel-head">
+            <div><span className="dashboard-label">NEXT ACTIONS</span><h2>अभी क्या करें?</h2></div>
+            <span className="dashboard-panel-badge">{mission.length ? mission.length + ' focus' : 'START'}</span>
+          </div>
+          {mission.length ? <div className="dashboard-mission-list">{mission.map((item) => <Link key={item.label + item.title} to={item.href} className="dashboard-mission-item"><span className="dashboard-mission-icon">{item.icon}</span><span><small>{item.label}</small><b>{item.title}</b></span><em>→</em></Link>)}</div> : <div className="dashboard-empty-focus"><p>अभी आपकी history खाली है। किसी subject से शुरुआत करें और dashboard आपके लिए अगला कदम बनाना शुरू कर देगा।</p><Link className="btn primary" to="/subjects">विषय चुनें →</Link></div>}
+        </Card>
+
+        <Card className="dashboard-panel">
+          <div className="dashboard-panel-head">
+            <div><span className="dashboard-label">REVISION RADAR</span><h2>दोहराने की सूची</h2></div>
+            <span className="dashboard-panel-badge">{revisionTopics.length || 0}</span>
+          </div>
+          {revisionTopics.length ? <div className="dashboard-list">{revisionTopics.map((topic) => <Link key={topic.topicId} to={'/practice/' + topic.topicId} className="dashboard-list-row"><span><b>{topic.topicTitle}</b><small>{topic.subjectTitle} · {topic.accuracy}% accuracy</small></span><em>पुनरावृत्ति →</em></Link>)}</div> : <div className="dashboard-empty-focus"><p>{summary.totalAttempts ? 'अभी कोई topic 7-दिन revision threshold पर नहीं पहुँचा। नियमित अभ्यास जारी रखें।' : 'अभी revision queue नहीं बनी है। पहले कुछ topics पर अभ्यास करें।'}</p></div>}
+        </Card>
+      </section>
+
+      <section className="dashboard-section">
+        <div className="dashboard-section-head">
+          <div>
+            <span className="dashboard-label">WEAK AREA MONITOR</span>
+            <h2>जहाँ extra practice चाहिए</h2>
+            <p>80% से कम accuracy वाले topics को यहाँ प्राथमिकता मिलती है।</p>
+          </div>
+        </div>
+        {weakTopics.length ? <div className="dashboard-weak-grid">{weakTopics.map((topic) => <Card className="dashboard-weak-card" key={topic.topicId}>
+          <div className="dashboard-weak-top"><span>⚠</span><strong>{topic.accuracy}%</strong></div>
+          <h3>{topic.topicTitle}</h3>
+          <p>{topic.subjectTitle} · {topic.attempts} attempts · {topic.correct} correct</p>
+          <div className="actions"><Link className="btn primary" to={'/practice/' + topic.topicId}>लक्षित अभ्यास</Link></div>
+        </Card>)}</div> : <Card className="dashboard-success-card"><b>अभी कोई weak topic नहीं है।</b><p>कम से कम एक topic पर पर्याप्त attempts दर्ज होने के बाद यह section आपकी सबसे कमजोर areas दिखाएगा।</p></Card>}
+      </section>
+
+      <section className="dashboard-quick">
+        <div className="dashboard-section-head"><div><span className="dashboard-label">QUICK ACCESS</span><h2>सीधे काम पर जाएँ</h2></div></div>
+        <div className="dashboard-quick-grid">
+          <Link to="/smart-practice"><span>🎯</span><b>Smart Practice</b><small>History के आधार पर targeted questions</small></Link>
+          <Link to="/english-translation-lab"><span>🔤</span><b>English Translation Lab</b><small>Translation practice और language confidence</small></Link>
+          <Link to="/english-vocabulary-lab"><span>📚</span><b>Vocabulary Lab</b><small>Word knowledge को मजबूत करें</small></Link>
+          <Link to="/mock-tests"><span>📝</span><b>Mock Test Center</b><small>Full JNVST या subject-wise mock</small></Link>
+          <Link to="/bookmarks"><span>🔖</span><b>Bookmarks</b><small>Saved questions और lessons</small></Link>
+          <Link to="/subjects"><span>📖</span><b>All Subjects</b><small>चारों subjects का complete map</small></Link>
+        </div>
+      </section>
+    </div>
   </Shell>;
 };
 
