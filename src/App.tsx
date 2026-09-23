@@ -422,7 +422,9 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
     if (section === 'subjects') return location.pathname.startsWith('/subjects');
     return location.pathname.startsWith('/mock-tests');
   };
-  const syncLabel = syncStatus === 'saving' ? 'सिंक हो रहा है…' : syncStatus === 'error' ? 'सिंक त्रुटि' : 'सिंक सुरक्षित';
+  const syncLabel = user
+    ? (syncStatus === 'saving' ? 'सिंक हो रहा है…' : syncStatus === 'error' ? 'सिंक त्रुटि' : 'सिंक सुरक्षित')
+    : 'Local progress';
 
   return <div className="app-shell">
     {toastNotification && <aside className="notification-toast" role="status" aria-live="polite">
@@ -543,8 +545,8 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
             >
               <span className="account-avatar" aria-hidden="true">{email.slice(0, 1).toUpperCase()}</span>
               <span className="account-trigger-copy">
-                <strong>Student</strong>
-                <small>{email}</small>
+                <strong>{user ? 'Student' : 'Guest'}</strong>
+                <small>{user ? email : 'Login for cloud sync'}</small>
               </span>
               <span className="account-chevron" aria-hidden="true">⌄</span>
             </button>
@@ -558,41 +560,56 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
                 </div>
               </div>
 
-              <div className="account-menu-status">
-                <span className={'account-menu-status-dot ' + syncStatus}></span>
-                <div>
-                  <strong>Cloud progress</strong>
-                  <span>{syncLabel}</span>
+              {user ? <>
+                <div className="account-menu-status">
+                  <span className={'account-menu-status-dot ' + syncStatus}></span>
+                  <div>
+                    <strong>Cloud progress</strong>
+                    <span>{syncLabel}</span>
+                  </div>
                 </div>
-              </div>
 
-              <button
-                type="button"
-                className="account-menu-action"
-                role="menuitem"
-                onClick={() => { void setAnalyticsConsent(!analyticsConsent); }}
-              >
-                <span className="account-menu-action-icon">◉</span>
-                <span>
-                  <strong>Analytics</strong>
-                  <small>{analyticsConsent ? 'ON — optional analytics enabled' : 'OFF — only essential account sync'}</small>
-                </span>
-                <b>{analyticsConsent ? 'ON' : 'OFF'}</b>
-              </button>
+                <button
+                  type="button"
+                  className="account-menu-action"
+                  role="menuitem"
+                  onClick={() => { void setAnalyticsConsent(!analyticsConsent); }}
+                >
+                  <span className="account-menu-action-icon">◉</span>
+                  <span>
+                    <strong>Analytics</strong>
+                    <small>{analyticsConsent ? 'ON — optional analytics enabled' : 'OFF — only essential account sync'}</small>
+                  </span>
+                  <b>{analyticsConsent ? 'ON' : 'OFF'}</b>
+                </button>
 
-              <div className="account-menu-note">
-                <span aria-hidden="true">✓</span>
-                <span>Your learning progress is tied to this student account and synced to the cloud.</span>
-              </div>
+                <div className="account-menu-note">
+                  <span aria-hidden="true">✓</span>
+                  <span>Your learning progress is tied to this student account and synced to the cloud.</span>
+                </div>
 
-              <button
-                type="button"
-                className="account-menu-logout"
-                role="menuitem"
-                onClick={() => { setAccountMenuOpen(false); void signOut(); }}
-              >
-                <span aria-hidden="true">↪</span> लॉग आउट
-              </button>
+                <button
+                  type="button"
+                  className="account-menu-logout"
+                  role="menuitem"
+                  onClick={() => { setAccountMenuOpen(false); void signOut(); }}
+                >
+                  <span aria-hidden="true">↪</span> लॉग आउट
+                </button>
+              </> : <>
+                <div className="account-menu-note">
+                  <span aria-hidden="true">📚</span>
+                  <span>अभी lessons और practice browse करें। Login करने पर आपकी progress cloud में sync होगी।</span>
+                </div>
+                <Link
+                  className="account-menu-logout"
+                  role="menuitem"
+                  to="/login"
+                  onClick={() => setAccountMenuOpen(false)}
+                >
+                  <span aria-hidden="true">🔐</span> Student Login
+                </Link>
+              </>}
             </div>}
           </div>
         </div>
