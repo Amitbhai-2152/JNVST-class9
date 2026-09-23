@@ -19,7 +19,7 @@ const shuffleIndices = (id: string) => {
   const random = () => {
     seed = Math.imul(seed ^ (seed >>> 16), 2246822519) >>> 0;
     seed = Math.imul(seed ^ (seed >>> 13), 3266489917) >>> 0;
-    return (seed ^ (seed >>> 16)) / 4294967296;
+    return ((seed ^ (seed >>> 16)) >>> 0) / 4294967296;
   };
   for (let index = indices.length - 1; index > 0; index -= 1) {
     const swapIndex = Math.floor(random() * (index + 1));
