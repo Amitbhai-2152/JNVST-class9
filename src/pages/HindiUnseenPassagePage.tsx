@@ -167,9 +167,9 @@ const PassageQuestion = ({
             सही उत्तर: <b>{String.fromCharCode(65 + displayCorrectIndex)}. {question.options[question.correctIndex]}</b>
           </p>
           <p><b>कैसे हल करें:</b> {question.explanation}</p>
-          {!isCorrect && state.selected !== null && (
+          {!isCorrect && state.selectedSourceIndex !== null && (
             <p className="unseen-mistake">
-              आपने {String.fromCharCode(65 + state.selected)} चुना। अब passage की संबंधित पंक्ति या संकेत दोबारा खोजें।
+              आपने {String.fromCharCode(65 + (selectedDisplayIndex ?? 0))} चुना। अब passage की संबंधित पंक्ति या संकेत दोबारा खोजें।
             </p>
           )}
         </div>
