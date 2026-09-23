@@ -120,18 +120,18 @@ assert(expansionRecords.length === 55, 'Hindi expansion records must total 55');
 
 const canonicalQuestionCountByFile = canonicalSources.map((file) => {
   const source = read('src/data/questions/' + file);
-  const questionCount = (source.match(/\\bid:\\s*['"]q_hin_/g) ?? []).length;
-  const explanationCount = (source.match(/explanationPlain:\\s*['"]/g) ?? []).length;
-  const optionArrayCount = (source.match(/options:\\s*\\[/g) ?? []).length;
+  const questionCount = (source.match(/\bid:\s*['"]q_hin_/g) ?? []).length;
+  const explanationCount = (source.match(/explanationPlain:\s*['"]/g) ?? []).length;
+  const optionArrayCount = (source.match(/options:\s*\[/g) ?? []).length;
   assert(questionCount === explanationCount, file + ' must provide one explanationPlain for every canonical question');
   assert(questionCount === optionArrayCount, file + ' must provide one options array for every canonical question');
   return questionCount;
 });
 assert(canonicalQuestionCountByFile.reduce((sum, value) => sum + value, 0) === 110, 'legacy Hindi canonical question fields must total 110');
 
-const expansionQuestionCount = (expansion.match(/\\bid:\\s*['"]q_hin_x_/g) ?? []).length;
+const expansionQuestionCount = (expansion.match(/\bid:\s*['"]q_hin_x_/g) ?? []).length;
 const expansionExplanationCount = (expansion.match(/explanationPlain:\\s*['"]/g) ?? []).length;
-const expansionMakeCount = (expansion.match(/\\bmake\\(\\{/g) ?? []).length;
+const expansionMakeCount = (expansion.match(/\bmake\(\{/g) ?? []).length;
 assert(expansionQuestionCount === 55 && expansionExplanationCount === 55 && expansionMakeCount === 55, 'Hindi expansion must contain 55 complete generated records');
 
 const challengerFiles = [
