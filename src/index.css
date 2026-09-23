@@ -3744,3 +3744,99 @@ a { color: inherit; text-decoration: none; }
     transition:none!important;
   }
 }
+
+
+/* PHASE 5 — signup onboarding and email verification polish */
+.auth-v5 .auth-v4-match-label{
+  font-size:8.5px;
+  font-weight:900;
+  letter-spacing:.01em;
+}
+.auth-v5 .auth-v4-match-label.match{color:#2f8963}
+.auth-v5 .auth-v4-match-label.no-match{color:#a95656}
+.auth-v5 .auth-v4-inline-help{
+  display:block;
+  margin-top:7px;
+  color:#9aa4b0;
+  font-size:8.5px;
+  line-height:1.45;
+}
+.auth-v5 .auth-v4-confirmation-card{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  gap:11px 10px;
+  align-items:center;
+  padding:12px;
+  border:1px solid #dfe3f2;
+  border-radius:13px;
+  background:linear-gradient(135deg,#f8f8ff,#fbfcff);
+  animation:authV5MessageIn .34s ease both;
+}
+.auth-v5 .auth-v4-confirmation-icon{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:10px;
+  background:#eeeaff;
+  color:#6040c1;
+  font-size:16px;
+  font-weight:900;
+}
+.auth-v5 .auth-v4-confirmation-copy{
+  min-width:0;
+  display:grid;
+  gap:2px;
+}
+.auth-v5 .auth-v4-confirmation-copy strong{
+  color:#29364b;
+  font-size:10px;
+}
+.auth-v5 .auth-v4-confirmation-copy span{
+  color:#66758a;
+  font-size:8.5px;
+  overflow-wrap:anywhere;
+}
+.auth-v5 .auth-v4-confirmation-copy small{
+  color:#99a3af;
+  font-size:8px;
+  line-height:1.4;
+}
+.auth-v5 .auth-v4-confirmation-card>button{
+  grid-column:1 / -1;
+  width:100%;
+  min-height:36px;
+  border:1px solid #d7d0ef;
+  border-radius:10px;
+  background:#fff;
+  color:#5a39b7;
+  font-size:9px;
+  font-weight:900;
+  cursor:pointer;
+  transition:transform .18s ease,background .18s ease,border-color .18s ease,color .18s ease;
+}
+.auth-v5 .auth-v4-confirmation-card>button:hover:not(:disabled){
+  transform:translateY(-1px);
+  background:#f7f3ff;
+  border-color:#c9bce7;
+}
+.auth-v5 .auth-v4-confirmation-card>button:disabled{
+  opacity:.62;
+  cursor:wait;
+}
+.auth-v5 .auth-v4-confirmation-card + .auth-v4-submit{
+  margin-top:2px;
+}
+
+@media(max-width:560px){
+  .auth-v5 .auth-v4-confirmation-card{
+    padding:11px;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .auth-v5 .auth-v4-confirmation-card,
+  .auth-v5 .auth-v4-confirmation-card>button{
+    animation:none!important;
+    transition:none!important;
+  }
+}
