@@ -626,8 +626,9 @@ export const getTopicChallengerQuestions = (
     new Set(question.options.map((option) => option.text.trim().toLowerCase())).size === 4;
 
   if (topicId.startsWith('top_hin_')) {
-    const dedicated = hindiTopicChallengers.filter(eligible);
-    const source = dedicated.length >= target ? dedicated : [...dedicated, ...allQuestions.filter(eligible)];
+    const dedicated = [...hindiTopicChallengers, ...hindiChapterChallengers].filter(eligible);
+    const uniqueDedicated = [...new Map(dedicated.map((question) => [question.id, question])).values()];
+    const source = uniqueDedicated.length >= target ? uniqueDedicated : [...uniqueDedicated, ...allQuestions.filter(eligible)];
     return rankChallengerCandidates(source, seed + ':' + topicId)
       .slice(0, target)
       .map((question, index) => arrangeChallengerOptions(question, index, seed + ':' + topicId));
