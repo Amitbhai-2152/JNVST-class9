@@ -5,7 +5,7 @@ import { scienceLessonLens } from "../data/scienceLessonCore";
 import { mathMasteryUnitMap } from "../data/mathMastery";
 import { scienceMasteryUnits } from "../data/sciencePrep";
 import { englishMasteryUnits } from "../data/englishPrep";
-import { hindiMasteryUnitMap } from "../data/hindiPrep";
+import { hindiMasteryUnitMap, hindiMasteryUnits } from "../data/hindiPrep";
 import { getScienceChapterStudyPages, getChapterStudyPages } from "../data/lessons/chapterStudy";
 import { allLessons } from "../data";
 import { MathAwareText, MathText } from "../components/MathText";
@@ -191,7 +191,7 @@ export default function ChapterStudyPage() {
       .filter(Boolean) as typeof topics;
     const chapterUnits = chapterTopics
       .map((item) => hindiMasteryUnitMap.get(item.id))
-      .filter(Boolean) as typeof import("../data/hindiPrep").hindiMasteryUnits;
+      .filter(Boolean) as typeof hindiMasteryUnits;
     const current = pages[page] ?? [];
     const progress = Math.round(((page + 1) / Math.max(1, pages.length)) * 100);
     const currentTitle = cleanPageTitle(current, "अध्याय अध्ययन");
