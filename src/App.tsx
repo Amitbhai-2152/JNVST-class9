@@ -40,7 +40,7 @@ const SEOController = () => {
   const location = useLocation();
 
   useEffect(() => {
-    const path = location.pathname.replace(/\\/+$/, '') || '/';
+    const path = location.pathname.replace(/\/+$/, '') || '/';
     const subject = subjects.find((item) => path === '/subjects/' + item.id);
     const chapter = chapters.find((item) => path === '/chapters/' + item.id || path === '/chapters/' + item.id + '/study');
     const lesson = path.startsWith('/lessons/') ? allLessons.find((item) => '/lessons/' + item.id === path) : undefined;
