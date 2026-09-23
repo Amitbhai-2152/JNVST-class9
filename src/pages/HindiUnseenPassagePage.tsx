@@ -175,7 +175,7 @@ export default function HindiUnseenPassagePage() {
   if (!active) return null;
 
   return (
-    <div className="app-shell">
+    <div className="app-shell hindi-unseen-lab">
       <header className="topbar">
         <Link to="/" className="brand">JNVST कक्षा 9</Link>
         <nav>
