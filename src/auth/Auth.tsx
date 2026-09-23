@@ -128,9 +128,13 @@ interface AuthContextValue {
   authError: string;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
+  finishRecovery: () => void;
   signUp: (displayName: string, email: string, password: string, analyticsConsent: boolean) => Promise<{ requiresConfirmation: boolean }>;
   signOut: () => Promise<void>;
   analyticsConsent: boolean;
+  recoveryMode: boolean;
   setAnalyticsConsent: (enabled: boolean) => Promise<void>;
 }
 
@@ -149,6 +153,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
   const [authError, setAuthError] = useState('');
   const [analyticsConsent, setAnalyticsConsentValue] = useState(false);
+  const [recoveryMode, setRecoveryMode] = useState(false);
   const syncTimerRef = useRef<number | null>(null);
   const syncCleanupRef = useRef<(() => void) | null>(null);
   const syncRunRef = useRef(0);
@@ -268,8 +273,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     let active = true;
-    const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (!active) return;
+      if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true);
+      if (event === 'SIGNED_OUT') setRecoveryMode(false);
       window.setTimeout(() => {
         if (active) void connectUser(nextSession);
       }, 0);
@@ -307,6 +314,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       throw new Error(message);
     }
   };
+
+  const resetPassword = async (email: string) => {
+    if (!supabase) throw new Error('Supabase अभी configure नहीं है।');
+    const cleanedEmail = email.trim();
+    if (!cleanedEmail) throw new Error('पासवर्ड reset करने के लिए अपना ईमेल दर्ज करें।');
+    setAuthError('');
+    const redirectTo = window.location.origin + window.location.pathname;
+    const { error } = await supabase.auth.resetPasswordForEmail(cleanedEmail, { redirectTo });
+    if (error) {
+      const message = normalizeAuthError(error.message);
+      setAuthError(message);
+      throw new Error(message);
+    }
+  };
+
+  const updatePassword = async (password: string) => {
+    if (!supabase) throw new Error('Supabase अभी configure नहीं है।');
+    if (password.length < 8) throw new Error('पासवर्ड कम से कम 8 अक्षरों का होना चाहिए।');
+    setAuthError('');
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) {
+      const message = normalizeAuthError(error.message);
+      setAuthError(message);
+      throw new Error(message);
+    }
+  };
+
+  const finishRecovery = () => setRecoveryMode(false);
 
   const signUp = async (displayName: string, email: string, password: string, consent: boolean) => {
     if (!supabase) throw new Error('Supabase अभी configure नहीं है।');
@@ -383,11 +418,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     authError,
     signIn,
     signInWithGoogle,
+    resetPassword,
+    updatePassword,
+    finishRecovery,
     signUp,
     signOut,
     analyticsConsent,
+    recoveryMode,
     setAnalyticsConsent: updateAnalyticsConsent,
-  }), [loading, session, syncStatus, authError, analyticsConsent]);
+  }), [loading, session, syncStatus, authError, analyticsConsent, recoveryMode]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
@@ -403,7 +442,7 @@ const AuthHeroArtwork = () => <div className="auth-v5-artwork" aria-hidden="true
 </div>;
 
 export const AuthGate = ({ children }: { children: React.ReactNode }) => {
-  const { configured, loading, user } = useAuth();
+  const { configured, loading, user, recoveryMode } = useAuth();
   if (!configured) {
     return <main className="auth-screen"><section className="auth-setup">
       <span className="auth-brand">JNVST CLASS 9</span>
@@ -413,12 +452,123 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
     </section></main>;
   }
   if (loading) return <main className="auth-loading">आपका student data सुरक्षित रूप से load हो रहा है…</main>;
+  if (user && recoveryMode) return <PasswordRecoveryPage />;
   if (user) return <>{children}</>;
   return <AuthPage />;
 };
 
+
+const PasswordRecoveryPage = () => {
+  const { updatePassword, finishRecovery } = useAuth();
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [working, setWorking] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const score = [password.length >= 8, password.length >= 12, /[A-Z]/.test(password), /[0-9]/.test(password), /[^A-Za-z0-9]/.test(password)].filter(Boolean).length;
+  const tone = score <= 2 ? 'low' : score <= 3 ? 'mid' : 'high';
+  const label = score <= 2 ? 'कमज़ोर' : score <= 3 ? 'ठीक' : 'मज़बूत';
+
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setMessage('');
+    setWorking(true);
+    try {
+      if (password.length < 8) throw new Error('पासवर्ड कम से कम 8 अक्षरों का होना चाहिए।');
+      if (password !== confirmPassword) throw new Error('दोनों पासवर्ड एक जैसे नहीं हैं।');
+      await updatePassword(password);
+      setMessage('Password बदल गया है। अब आप अपनी तैयारी पर वापस जा सकते हैं।');
+      setPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : String(error));
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const success = message.includes('बदल गया');
+
+  return <main className="auth-screen auth-v5 auth-v5-recovery">
+    <div className="auth-v4-shell">
+      <section className="auth-v4-visual" aria-label="JNVST Class 9 learning overview">
+        <AuthHeroArtwork />
+        <div className="auth-v4-grid" aria-hidden="true"></div>
+        <div className="auth-v4-brand">
+          <span className="auth-v4-brand-mark">J9</span>
+          <div><strong>JNVST CLASS 9</strong><small>Learning Hub</small></div>
+        </div>
+        <div className="auth-v5-recovery-copy">
+          <span className="auth-v4-overline"><i></i> ACCOUNT SECURITY</span>
+          <h1>अपना password<br /><em>फिर से सुरक्षित</em> करें।</h1>
+          <p>एक नया password चुनें जिसे आप आसानी से याद रख सकें और दूसरों के साथ share न करें.</p>
+        </div>
+      </section>
+
+      <section className="auth-v4-form-panel">
+        <div className="auth-v4-panel-head">
+          <div>
+            <span className="auth-v4-eyebrow">PASSWORD RECOVERY</span>
+            <h2>नया password सेट करें</h2>
+            <p>आपके account की recovery session सुरक्षित है।</p>
+          </div>
+          <span className="auth-v4-secure"><span>✓</span> Secure</span>
+        </div>
+
+        <form className="auth-v4-form" onSubmit={submit}>
+          <div className="auth-v4-field">
+            <div className="auth-v4-label-row">
+              <label htmlFor="auth-recovery-password">नया password</label>
+              {password.length > 0 && <span className={'auth-v4-strength-label ' + tone}>{label}</span>}
+            </div>
+            <div className="auth-v4-input">
+              <span className="auth-v4-input-icon" aria-hidden="true">●</span>
+              <input id="auth-recovery-password" type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" minLength={8} aria-describedby="auth-recovery-help" placeholder="कम से कम 8 अक्षर" required autoFocus />
+              <button type="button" className="auth-v4-password-toggle" onClick={() => setShowPassword((visible) => !visible)}>{showPassword ? 'छिपाएँ' : 'दिखाएँ'}</button>
+            </div>
+            <div className="auth-v4-strength">
+              <div className="auth-v4-strength-track">{[1, 2, 3, 4, 5].map((bar) => <i key={bar} className={score >= bar ? tone : ''}></i>)}</div>
+              <small id="auth-recovery-help">कम से कम 8 अक्षर रखें। Numbers और symbols password को मजबूत बनाते हैं.</small>
+            </div>
+          </div>
+
+          <div className="auth-v4-field">
+            <label htmlFor="auth-recovery-confirm">password फिर से लिखें</label>
+            <div className="auth-v4-input">
+              <span className="auth-v4-input-icon" aria-hidden="true">●</span>
+              <input id="auth-recovery-confirm" type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} autoComplete="new-password" minLength={8} placeholder="password दोबारा लिखें" required />
+            </div>
+          </div>
+
+          {message && <div className={'auth-v4-message ' + (success ? 'success' : 'error')} role="status" aria-live="polite">
+            <span className="auth-v4-message-icon">{success ? '✓' : '!'}</span>
+            <p>{message}</p>
+          </div>}
+
+          {success ? (
+            <button type="button" className="auth-v4-submit" onClick={finishRecovery}>
+              <span>Learning Hub पर वापस जाएँ</span><b aria-hidden="true">→</b>
+            </button>
+          ) : (
+            <button type="submit" className="auth-v4-submit" disabled={working} aria-busy={working}>
+              <span>{working ? 'Password बदल रहे हैं…' : 'नया password सुरक्षित करें'}</span>
+              <b aria-hidden="true">{working ? '◌' : '✓'}</b>
+            </button>
+          )}
+        </form>
+
+        <div className="auth-v4-trust">
+          <span>✓</span><span>Secure recovery</span><i></i>
+          <span>✓</span><span>Student account</span>
+        </div>
+      </section>
+    </div>
+  </main>;
+};
+
 const AuthPage = () => {
-  const { signIn, signInWithGoogle, signUp, authError } = useAuth();
+  const { signIn, signInWithGoogle, resetPassword, signUp, authError } = useAuth();
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
@@ -428,6 +578,7 @@ const AuthPage = () => {
   const [message, setMessage] = useState('');
   const [analyticsConsent, setAnalyticsConsent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [recoveryWorking, setRecoveryWorking] = useState(false);
 
   const passwordStrength = (() => {
     let score = 0;
@@ -466,6 +617,38 @@ const AuthPage = () => {
       setMessage(error instanceof Error ? error.message : String(error));
     } finally {
       setWorking(false);
+    }
+  };
+
+  useEffect(() => {
+    window.requestAnimationFrame(() => {
+      const targetId = mode === 'login' ? 'auth-v4-email' : 'auth-v4-name';
+      document.getElementById(targetId)?.focus();
+    });
+  }, [mode]);
+
+  const handleModeKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+    event.preventDefault();
+    const buttons = Array.from(event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('button[role="tab"]') ?? []);
+    const index = buttons.indexOf(event.currentTarget);
+    if (index < 0 || buttons.length === 0) return;
+    const direction = event.key === 'ArrowRight' ? 1 : -1;
+    const target = buttons[(index + direction + buttons.length) % buttons.length];
+    target.focus();
+    target.click();
+  };
+
+  const sendPasswordReset = async () => {
+    setMessage('');
+    setRecoveryWorking(true);
+    try {
+      await resetPassword(email);
+      setMessage('Password reset link आपके ईमेल पर भेज दिया गया है। Inbox के साथ spam folder भी देख लें।');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : String(error));
+    } finally {
+      setRecoveryWorking(false);
     }
   };
 
@@ -546,11 +729,11 @@ const AuthPage = () => {
         </div>
 
         <div className="auth-v4-switcher" role="tablist" aria-label="Account mode">
-          <button type="button" role="tab" aria-selected={mode === 'login'} className={mode === 'login' ? 'active' : ''} onClick={() => switchMode('login')}>Login</button>
-          <button type="button" role="tab" aria-selected={mode === 'signup'} className={mode === 'signup' ? 'active' : ''} onClick={() => switchMode('signup')}>Create account</button>
+          <button type="button" role="tab" tabIndex={mode === 'login' ? 0 : -1} aria-selected={mode === 'login'} className={mode === 'login' ? 'active' : ''} onKeyDown={handleModeKeyDown} onClick={() => switchMode('login')}>Login</button>
+          <button type="button" role="tab" tabIndex={mode === 'signup' ? 0 : -1} aria-selected={mode === 'signup'} className={mode === 'signup' ? 'active' : ''} onKeyDown={handleModeKeyDown} onClick={() => switchMode('signup')}>Create account</button>
         </div>
 
-        <button type="button" className={'auth-v4-google ' + (googleWorking ? 'loading' : '')} onClick={() => { void continueWithGoogle(); }} disabled={googleWorking}>
+        <button type="button" className={'auth-v4-google ' + (googleWorking ? 'loading' : '')} onClick={() => { void continueWithGoogle(); }} disabled={googleWorking || working} aria-busy={googleWorking}>
           <span className="auth-v4-google-logo" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M21.6 12.23c0-.79-.07-1.55-.2-2.28H12v4.31h5.38a4.6 4.6 0 0 1-1.99 3.02v2.51h3.23c1.89-1.74 2.98-4.3 2.98-7.56Z"/><path fill="#34A853" d="M12 22c2.7 0 4.96-.89 6.61-2.41l-3.23-2.51c-.9.6-2.04.95-3.38.95-2.6 0-4.8-1.76-5.59-4.12H3.07v2.59A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.41 13.91A6.03 6.03 0 0 1 6.09 12c0-.66.11-1.3.32-1.91V7.5H3.07A10 10 0 0 0 2 12c0 1.61.39 3.13 1.07 4.5l3.34-2.59Z"/><path fill="#EA4335" d="M12 5.97c1.47 0 2.79.51 3.83 1.51l2.87-2.87C16.95 2.92 14.7 2 12 2a10 10 0 0 0-8.93 5.5l3.34 2.59C7.2 7.73 9.4 5.97 12 5.97Z"/></svg>
           </span>
@@ -580,16 +763,22 @@ const AuthPage = () => {
           <div className="auth-v4-field">
             <div className="auth-v4-label-row">
               <label htmlFor="auth-v4-password">पासवर्ड</label>
-              {mode === 'signup' && password.length > 0 && <span className={'auth-v4-strength-label ' + passwordStrength.tone}>{passwordStrength.label}</span>}
+              {mode === 'login' ? (
+                <button type="button" className="auth-v4-label-link" onClick={() => { void sendPasswordReset(); }} disabled={recoveryWorking}>
+                  {recoveryWorking ? 'Link भेज रहे हैं…' : 'पासवर्ड भूल गए?'}
+                </button>
+              ) : password.length > 0 ? (
+                <span className={'auth-v4-strength-label ' + passwordStrength.tone}>{passwordStrength.label}</span>
+              ) : null}
             </div>
             <div className="auth-v4-input">
               <span className="auth-v4-input-icon" aria-hidden="true">●</span>
-              <input id="auth-v4-password" type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength={8} placeholder="अपना पासवर्ड दर्ज करें" required />
+              <input id="auth-v4-password" type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength={8} aria-describedby={mode === 'signup' ? 'auth-v4-strength-help' : undefined} placeholder="अपना पासवर्ड दर्ज करें" required />
               <button type="button" className="auth-v4-password-toggle" onClick={() => setShowPassword((visible) => !visible)}>{showPassword ? 'छिपाएँ' : 'दिखाएँ'}</button>
             </div>
             {mode === 'signup' && <div className="auth-v4-strength">
               <div className="auth-v4-strength-track">{[1, 2, 3, 4, 5].map((bar) => <i key={bar} className={passwordStrength.score >= bar ? passwordStrength.tone : ''}></i>)}</div>
-              <small>कम से कम 8 अक्षर रखें। Numbers और symbols password को मजबूत बनाते हैं.</small>
+              <small id="auth-v4-strength-help">कम से कम 8 अक्षर रखें। Numbers और symbols password को मजबूत बनाते हैं.</small>
             </div>}
           </div>
 
@@ -598,12 +787,12 @@ const AuthPage = () => {
             <span><strong>Optional analytics</strong> — Learning Hub को बेहतर बनाने में मदद करें। Phone, exact location, school या DOB नहीं लिए जाते।</span>
           </label>}
 
-          {(message || authError) && <div className={'auth-v4-message ' + (authError ? 'error' : 'success')} role="status">
+          {(message || authError) && <div className={'auth-v4-message ' + (authError ? 'error' : 'success')} role="status" aria-live="polite">
             <span className="auth-v4-message-icon">{authError ? '!' : '✓'}</span>
             <p>{message || authError}</p>
           </div>}
 
-          <button type="submit" className="auth-v4-submit" disabled={working || googleWorking}>
+          <button type="submit" className="auth-v4-submit" disabled={working || googleWorking || recoveryWorking} aria-busy={working}>
             <span>{working ? (mode === 'login' ? 'Signing you in…' : 'Creating your account…') : (mode === 'login' ? 'Login to my preparation' : 'Create my account')}</span>
             <b aria-hidden="true">{working ? '◌' : '→'}</b>
           </button>
