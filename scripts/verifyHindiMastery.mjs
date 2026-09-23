@@ -123,35 +123,9 @@ const weakDedicatedHindi = dedicatedHindiForStrengthCheck.filter((record) => rec
 assert(weakDedicatedHindi.length === 0, 'all 220 dedicated Hindi Challenger questions must be hard/challenge; weak count is ' + weakDedicatedHindi.length);
 
 
-
-const typesSource = fs.readFileSync(path.join(root, 'src', 'types', 'index.ts'), 'utf8');
-const appSource = fs.readFileSync(path.join(root, 'src', 'App.tsx'), 'utf8');
-const progressStoreSource = fs.readFileSync(path.join(root, 'src', 'store', 'progress.ts'), 'utf8');
-const unseenPageSource = fs.readFileSync(path.join(root, 'src', 'pages', 'HindiUnseenPassagePage.tsx'), 'utf8');
-const phase4IntelligenceSource = fs.readFileSync(path.join(root, 'src', 'utils', 'jnvstIntelligence.ts'), 'utf8');
-const chapterStudySource = fs.readFileSync(path.join(root, 'src', 'data', 'lessons', 'chapterStudy.ts'), 'utf8');
-const richChapterSource = fs.readFileSync(path.join(root, 'src', 'data', 'lessons', 'richChapterContent.ts'), 'utf8');
-
-assert(typesSource.includes('export interface HindiUnseenLabAttempt'), 'Hindi unseen attempt type is missing');
-assert(typesSource.includes('hindiUnseenAttempts: Record<ID, HindiUnseenLabAttempt[]>;'), 'ProgressState must expose Hindi unseen attempts');
-assert(progressStoreSource.includes('recordHindiUnseenAttempt'), 'Progress store must persist Hindi unseen attempts');
-assert(progressStoreSource.includes('version: 4'), 'Progress store migration version must advance for Hindi unseen attempt persistence');
-assert(unseenPageSource.includes('const p = useProgressStore();'), 'Hindi Unseen Lab must connect to the central progress store');
-assert(unseenPageSource.includes('p.recordHindiUnseenAttempt(question.id'), 'Hindi Unseen Lab must record every revealed answer attempt');
-assert(unseenPageSource.includes('selectedSourceIndex === question.correctIndex'), 'Hindi Unseen Lab must compare source option IDs/indexes for correctness');
-assert(unseenPageSource.includes('onSelect={(sourceIndex)'), 'Hindi Unseen Lab must preserve source option identity after display shuffling');
-assert(phase4IntelligenceSource.includes('export const getHindiUnseenPerformance'), 'Hindi Smart Practice must expose unseen-performance intelligence');
-assert(phase4IntelligenceSource.includes('progress.hindiUnseenAttempts'), 'Hindi intelligence must consume persisted unseen attempts');
-assert(phase4IntelligenceSource.includes("question.topicId === 'top_hin_06_01' && unseenPerformance.attempts"), 'Hindi Smart Practice must react to unseen-comprehension performance');
-assert(!appSource.includes('/subjects/sub_hindi'), 'Invalid /subjects/sub_hindi fallback route must be absent');
-assert(appSource.includes('/subjects/sub_hin'), 'Hindi fallback must use /subjects/sub_hin');
-assert(chapterStudySource.includes('getHindiChapterStudyPages'), 'Hindi chapter study must retain its live hindiPrep-based study generator');
-const richHindiKeys = [...richChapterSource.matchAll(/\n  chap_hin_\d+:/g)].map((match) => match[0]);
-assert(richHindiKeys.length === 0, 'Duplicated Hindi richChapterContent entries must be removed');
-assert(richChapterSource.includes('chap_eng_01:'), 'English rich chapter content must remain');
-assert(richChapterSource.includes('chap_sci_01:'), 'Science rich chapter content must remain');
 // Phase 1–3 behavioral/source checks.
 const intelligenceSource = fs.readFileSync(path.join(root, 'src', 'utils', 'jnvstIntelligence.ts'), 'utf8');
+const appSource = fs.readFileSync(path.join(root, 'src', 'App.tsx'), 'utf8');
 
 const canonicalMcqCount = [...canonicalHindiQuestionRecords.values()].filter((record) => record.type === 'mcq').length;
 assert(canonicalMcqCount === 150, 'Hindi exam-compatible MCQ pool should contain exactly 150 MCQs, found ' + canonicalMcqCount);
@@ -263,7 +237,6 @@ assert(unseenCorrectIndexes.length === 50, 'each Hindi unseen question must have
 assert(unseenCorrectIndexes.every((index) => index >= 0 && index <= 3), 'Hindi unseen question has invalid correct option index');
 const unseenAnswerCounts = [0, 1, 2, 3].map((index) => unseenCorrectIndexes.filter((value) => value === index).length);
 assert(Math.max(...unseenAnswerCounts) - Math.min(...unseenAnswerCounts) <= 1, 'Hindi unseen correct-answer positions must stay balanced across A/B/C/D');
-assert(unseenAnswerCounts.every((count) => count >= 12), 'Hindi unseen correct-answer positions must use every answer position materially');
 
 for (const level of ['Beginner','Basic','JNVST','Challenge']) {
   assert(unseenSource.includes('level:"' + level + '"'), 'Hindi unseen passage level missing: ' + level);

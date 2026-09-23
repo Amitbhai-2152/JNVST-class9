@@ -1598,7 +1598,7 @@ const TopicChallengerPage = () => {
     : [];
 
   if (!topic || !chapter || (!isMath && !isHindi)) {
-    return <Shell><Card className="empty"><h1>विषयांश Challenger नहीं मिला</h1><p>यह Challenger अभी Maths और Hindi के official subtopics के लिए उपलब्ध है।</p><Link className="btn" to={isHindi ? "/subjects/sub_hin" : "/subjects/sub_math"}>{isHindi ? "हिंदी तैयारी केंद्र" : "गणित तैयारी केंद्र"}</Link></Card></Shell>;
+    return <Shell><Card className="empty"><h1>विषयांश Challenger नहीं मिला</h1><p>यह Challenger अभी Maths और Hindi के official subtopics के लिए उपलब्ध है।</p><Link className="btn" to={isHindi ? "/subjects/sub_hindi" : "/subjects/sub_math"}>{isHindi ? "हिंदी तैयारी केंद्र" : "गणित तैयारी केंद्र"}</Link></Card></Shell>;
   }
 
   const subjectLabel = isHindi ? 'HINDI' : 'MATH';

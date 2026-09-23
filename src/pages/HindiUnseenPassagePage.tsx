@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { useMemo, useState } from "react";
-import { useProgressStore } from "../store/progress";
 import { hindiUnseenPassages, type HindiUnseenPassageQuestion } from "../data/hindiUnseenPassages";
 
 const levelClass = (level: string) => level.toLowerCase().replace(/[^a-z]+/g, "-");
@@ -87,7 +86,7 @@ const allSkills = Array.from(new Set(
   hindiUnseenPassages.flatMap((passage) => passage.questions.map((question) => question.skill)),
 ));
 
-type QuestionState = { selectedSourceIndex: number | null; revealed: boolean };
+type QuestionState = { selected: number | null; revealed: boolean };
 
 const PassageQuestion = ({
   question,
@@ -100,14 +99,13 @@ const PassageQuestion = ({
   question: HindiUnseenPassageQuestion;
   index: number;
   state: QuestionState;
-  onSelect: (sourceIndex: number) => void;
+  onSelect: (optionIndex: number) => void;
   onReveal: () => void;
   onReset: () => void;
 }) => {
   const order = shuffleIndices(question.id, question.correctIndex);
   const displayCorrectIndex = order.findIndex((sourceIndex) => sourceIndex === question.correctIndex);
-  const selectedDisplayIndex = state.selectedSourceIndex === null ? null : order.findIndex((sourceIndex) => sourceIndex === state.selectedSourceIndex);
-  const isCorrect = state.selectedSourceIndex === question.correctIndex;
+  const isCorrect = state.selected === displayCorrectIndex;
   const isLocked = state.revealed;
 
   return (
@@ -119,37 +117,45 @@ const PassageQuestion = ({
       <h3>{question.question}</h3>
 
       <div className="unseen-options" role="radiogroup" aria-label={"प्रश्न " + (index + 1) + " विकल्प"}>
-        {order.map((sourceIndex, optionIndex) => {
-          const optionText = question.options[sourceIndex];
-          const stateClass = state.revealed
-            ? optionIndex === displayCorrectIndex
-              ? "correct"
-              : selectedDisplayIndex === optionIndex
-                ? "wrong"
-                : ""
-            : selectedDisplayIndex === optionIndex
-              ? "selected"
-              : "";
+        {(() => {
+          const order = shuffleIndices(question.id, question.correctIndex);
+          const displayOptions = order.map((sourceIndex) => ({
+            sourceIndex,
+            text: question.options[sourceIndex],
+          }));
+          const displayCorrectIndex = displayOptions.findIndex((item) => item.sourceIndex === question.correctIndex);
 
-          return (
-            <button
-              key={optionText}
-              type="button"
-              className={"unseen-option " + stateClass}
-              disabled={isLocked}
-              aria-pressed={selectedDisplayIndex === optionIndex}
-              onClick={() => onSelect(sourceIndex)}
-            >
-              <span>{String.fromCharCode(65 + optionIndex)}</span>
-              <span>{optionText}</span>
-            </button>
-          );
-        })}
+          return displayOptions.map((option, optionIndex) => {
+            const stateClass = state.revealed
+              ? optionIndex === displayCorrectIndex
+                ? "correct"
+                : state.selected === optionIndex
+                  ? "wrong"
+                  : ""
+              : state.selected === optionIndex
+                ? "selected"
+                : "";
+
+            return (
+              <button
+                key={option.text}
+                type="button"
+                className={"unseen-option " + stateClass}
+                disabled={isLocked}
+                aria-pressed={state.selected === optionIndex}
+                onClick={() => onSelect(optionIndex)}
+              >
+                <span>{String.fromCharCode(65 + optionIndex)}</span>
+                <span>{option.text}</span>
+              </button>
+            );
+          });
+        })()}
       </div>
 
       <div className="unseen-question-actions">
         {!state.revealed ? (
-          <button className="btn" type="button" disabled={state.selectedSourceIndex === null} onClick={onReveal}>
+          <button className="btn" type="button" disabled={state.selected === null} onClick={onReveal}>
             उत्तर और प्रमाण देखें
           </button>
         ) : (
@@ -167,9 +173,9 @@ const PassageQuestion = ({
             सही उत्तर: <b>{String.fromCharCode(65 + displayCorrectIndex)}. {question.options[question.correctIndex]}</b>
           </p>
           <p><b>कैसे हल करें:</b> {question.explanation}</p>
-          {!isCorrect && state.selectedSourceIndex !== null && (
+          {!isCorrect && state.selected !== null && (
             <p className="unseen-mistake">
-              आपने {String.fromCharCode(65 + (selectedDisplayIndex ?? 0))} चुना। अब passage की संबंधित पंक्ति या संकेत दोबारा खोजें।
+              आपने {String.fromCharCode(65 + state.selected)} चुना। अब passage की संबंधित पंक्ति या संकेत दोबारा खोजें।
             </p>
           )}
         </div>
@@ -179,7 +185,6 @@ const PassageQuestion = ({
 };
 
 export default function HindiUnseenPassagePage() {
-  const p = useProgressStore();
   const [activeId, setActiveId] = useState(hindiUnseenPassages[0]?.id ?? "");
   const [level, setLevel] = useState("All");
   const [skill, setSkill] = useState("All");
@@ -205,7 +210,7 @@ export default function HindiUnseenPassagePage() {
   const activeCorrect = active?.questions.reduce(
     (sum, question) => {
       const state = responses[question.id];
-      return sum + (state?.revealed && state.selectedSourceIndex === question.correctIndex ? 1 : 0);
+      return sum + (state?.revealed && state.selected === question.correctIndex ? 1 : 0);
     },
     0,
   ) ?? 0;
@@ -379,29 +384,16 @@ export default function HindiUnseenPassagePage() {
                 <div className="unseen-questions">
                   {visibleQuestions.map((question) => {
                     const originalIndex = active.questions.findIndex((item) => item.id === question.id);
-                    const state = responses[question.id] ?? { selectedSourceIndex: null, revealed: false };
+                    const state = responses[question.id] ?? { selected: null, revealed: false };
                     return (
                       <PassageQuestion
                         key={question.id}
                         question={question}
                         index={originalIndex}
                         state={state}
-                        onSelect={(sourceIndex) => setQuestionState(question.id, { selectedSourceIndex: sourceIndex, revealed: false })}
-                        onReveal={() => {
-                          if (state.selectedSourceIndex === null) return;
-                          const now = Date.now();
-                          p.recordHindiUnseenAttempt(question.id, {
-                            questionId: question.id,
-                            passageId: active.id,
-                            skill: question.skill,
-                            selectedOptionIndex: state.selectedSourceIndex,
-                            correct: state.selectedSourceIndex === question.correctIndex,
-                            timestamp: now,
-                            mode: "unseen",
-                          });
-                          setQuestionState(question.id, { selectedSourceIndex: state.selectedSourceIndex, revealed: true });
-                        }}
-                        onReset={() => setQuestionState(question.id, { selectedSourceIndex: null, revealed: false })}
+                        onSelect={(optionIndex) => setQuestionState(question.id, { selected: optionIndex, revealed: false })}
+                        onReveal={() => setQuestionState(question.id, { selected: state.selected, revealed: true })}
+                        onReset={() => setQuestionState(question.id, { selected: null, revealed: false })}
                       />
                     );
                   })}

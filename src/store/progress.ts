@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { ID, MockTestResult, ProgressState, QuestionAttempt, EnglishLabAttempt, HindiUnseenLabAttempt } from '../types';
+import type { ID, MockTestResult, ProgressState, QuestionAttempt, EnglishLabAttempt } from '../types';
 
 type Store = ProgressState & {
   completeLesson: (id: ID, title: string) => void;
@@ -12,7 +12,6 @@ type Store = ProgressState & {
   recordStudy: (id: ID, title: string, type: 'lesson' | 'topic') => void;
   saveMockResult: (result: MockTestResult) => void;
   recordEnglishLabAttempt: (id: ID, attempt: EnglishLabAttempt) => void;
-  recordHindiUnseenAttempt: (id: ID, attempt: HindiUnseenLabAttempt) => void;
 };
 
 const initial: ProgressState = {
@@ -23,7 +22,6 @@ const initial: ProgressState = {
   recentlyStudied: [],
   mockTestResults: [],
   englishLabAttempts: {},
-  hindiUnseenAttempts: {},
 };
 
 const recent = (current: ProgressState['recentlyStudied'], item: ProgressState['recentlyStudied'][number]) =>
@@ -84,16 +82,10 @@ export const useProgressStore = create<Store>()(
           [id]: [...(state.englishLabAttempts?.[id] ?? []), attempt].slice(-30),
         },
       })),
-      recordHindiUnseenAttempt: (id, attempt) => set((state) => ({
-        hindiUnseenAttempts: {
-          ...(state.hindiUnseenAttempts ?? {}),
-          [id]: [...(state.hindiUnseenAttempts?.[id] ?? []), attempt].slice(-30),
-        },
-      })),
     }),
     {
       name: 'jnvst-class9-progress-v2',
-      version: 4,
+      version: 3,
       migrate: (persistedState) => {
         const previous = (persistedState ?? {}) as Partial<ProgressState>;
         return {
@@ -109,7 +101,6 @@ export const useProgressStore = create<Store>()(
           recentlyStudied: previous.recentlyStudied ?? [],
           mockTestResults: previous.mockTestResults ?? [],
           englishLabAttempts: previous.englishLabAttempts ?? {},
-          hindiUnseenAttempts: previous.hindiUnseenAttempts ?? {},
         };
       },
     },

@@ -278,7 +278,6 @@ export const getEnglishSmartPracticeQuestions = (
     .sort((a, b) => (chapterOrder.get(a.chapterId)! - chapterOrder.get(b.chapterId)!) || (a.order - b.order));
   const candidates = jnvstExamQuestions.filter((question) => question.subjectId === 'sub_eng');
   const performances = getTopicPerformances(progress);
-  const unseenPerformance = getHindiUnseenPerformance(progress);
   const scored = candidates.map((question) => {
     const attempts = progress.questionAttempts?.[question.id] ?? [];
     const latest = attempts[attempts.length - 1];
@@ -321,28 +320,6 @@ export const getEnglishSmartPracticeQuestions = (
   return result;
 };
 
-export interface HindiUnseenPerformance {
-  attempts: number;
-  correct: number;
-  accuracy: number;
-  lastAttemptAt: number | null;
-}
-
-export const getHindiUnseenPerformance = (progress: ProgressState): HindiUnseenPerformance => {
-  const attempts = Object.values(progress.hindiUnseenAttempts ?? {}).flat();
-  const correct = attempts.filter((attempt) => attempt.correct).length;
-  const lastAttemptAt = attempts.length
-    ? Math.max(...attempts.map((attempt) => attempt.timestamp))
-    : null;
-
-  return {
-    attempts: attempts.length,
-    correct,
-    accuracy: attempts.length ? Math.round((correct / attempts.length) * 100) : 0,
-    lastAttemptAt,
-  };
-};
-
 export const getHindiSmartPracticeQuestions = (
   progress: ProgressState,
   limit = 12,
@@ -353,7 +330,6 @@ export const getHindiSmartPracticeQuestions = (
     .sort((a, b) => (chapterOrder.get(a.chapterId)! - chapterOrder.get(b.chapterId)!) || (a.order - b.order));
   const candidates = jnvstExamQuestions.filter((question) => question.subjectId === 'sub_hin');
   const performances = getTopicPerformances(progress);
-  const unseenPerformance = getHindiUnseenPerformance(progress);
   const scored = candidates.map((question) => {
     const attempts = progress.questionAttempts?.[question.id] ?? [];
     const latest = attempts[attempts.length - 1];
@@ -368,16 +344,6 @@ export const getHindiSmartPracticeQuestions = (
     if (!performance?.attempts) score += 20;
     if (question.difficulty === 'hard') score += 8;
     if (question.difficulty === 'challenge') score += 12;
-
-    // Unseen comprehension performance feeds the Hindi comprehension topic.
-    if (question.topicId === 'top_hin_06_01' && unseenPerformance.attempts) {
-      if (unseenPerformance.accuracy < 60) score += 90;
-      else if (unseenPerformance.accuracy < 80) score += 65;
-      else if (unseenPerformance.accuracy < 90) score += 30;
-      if (unseenPerformance.lastAttemptAt && Date.now() - unseenPerformance.lastAttemptAt >= 7 * 24 * 60 * 60 * 1000) {
-        score += 20;
-      }
-    }
     return { question, score };
   }).sort((a, b) => b.score - a.score || a.question.id.localeCompare(b.question.id));
   const result: Question[] = [];
