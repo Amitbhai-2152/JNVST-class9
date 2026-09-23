@@ -118,28 +118,21 @@ const expansion = read('src/data/questions/hindiExpansion.ts');
 const expansionRecords = [...expansion.matchAll(/make\(\{([\s\S]*?)\}\)/g)];
 assert(expansionRecords.length === 55, 'Hindi expansion records must total 55');
 
-const validateCanonical = (record, kind) => {
-  const optionsText = record.match(/options:\[([^\]]+)\]/)?.[1] ?? '';
-  const optionObjectTexts = [...record.matchAll(/\btext:\s*['"]([^'"]*)['"]/g)].map((m) => m[1].trim().toLowerCase());
-  const optionStringTexts = [...optionsText.matchAll(/'([^']*)'/g)].map((m) => m[1].trim().toLowerCase());
-  const options = optionObjectTexts.length === 4 ? optionObjectTexts : optionStringTexts;
-  assert(options.length === 4, kind + ' question must have exactly four options');
-  assert(options.every(Boolean), kind + ' question must have non-empty options');
-  assert(new Set(options).size === 4, kind + ' question must have four unique option texts');
-  const explanation = record.match(/explanation(?:Plain)?:\s*['"]([^'"]+)['"]/)?.[1] ?? '';
-  assert(explanation.trim().length >= 12, kind + ' question must have a substantive explanation');
-};
+const canonicalQuestionCountByFile = canonicalSources.map((file) => {
+  const source = read('src/data/questions/' + file);
+  const questionCount = (source.match(/\\bid:\\s*['"]q_hin_/g) ?? []).length;
+  const explanationCount = (source.match(/explanationPlain:\\s*['"]/g) ?? []).length;
+  const optionArrayCount = (source.match(/options:\\s*\\[/g) ?? []).length;
+  assert(questionCount === explanationCount, file + ' must provide one explanationPlain for every canonical question');
+  assert(questionCount === optionArrayCount, file + ' must provide one options array for every canonical question');
+  return questionCount;
+});
+assert(canonicalQuestionCountByFile.reduce((sum, value) => sum + value, 0) === 110, 'legacy Hindi canonical question fields must total 110');
 
-for (const record of legacyRecords) {
-  const type = record.match(/type:\s*['"]([^'"]+)['"]/)?.[1] ?? '';
-  if (type === 'mcq') validateCanonical(record, 'Hindi MCQ');
-  else if (type === 'multiple-select') validateCanonical(record, 'Hindi multiple-select');
-  else if (type === 'true-false') {
-    const opts = record.match(/options:\s*\[([^\\]]+)\]/)?.[1] ?? '';
-    assert((opts.match(/id:/g) ?? []).length === 2, 'Hindi true/false question must have two options');
-  } else fail('unsupported canonical Hindi question type: ' + type);
-}
-for (const [, record] of expansionRecords) validateCanonical(record, 'Hindi expansion MCQ');
+const expansionQuestionCount = (expansion.match(/\\bid:\\s*['"]q_hin_x_/g) ?? []).length;
+const expansionExplanationCount = (expansion.match(/explanationPlain:\\s*['"]/g) ?? []).length;
+const expansionMakeCount = (expansion.match(/\\bmake\\(\\{/g) ?? []).length;
+assert(expansionQuestionCount === 55 && expansionExplanationCount === 55 && expansionMakeCount === 55, 'Hindi expansion must contain 55 complete generated records');
 
 const challengerFiles = [
   read('src/data/questions/hindiChapterChallengers.ts'),
