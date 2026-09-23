@@ -353,7 +353,7 @@ export const vocabularyLabItems: VocabularyItem[] = [
 ];
 
 
-export const translationLevelsvels = [
+export const translationLevels = [
   { level:1, title:'Foundation', hindi:'बहुत आसान वाक्य और रोज़मर्रा की भाषा' },
   { level:2, title:'Everyday English', hindi:'सरल दैनिक वाक्य' },
   { level:3, title:'Grammar Builder', hindi:'मुख्य tenses, modals और prepositions' },
