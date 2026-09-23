@@ -1570,24 +1570,31 @@ const TopicChallengerPage = () => {
   const topic = topics.find((item) => item.id === topicId);
   const chapter = topic ? chapters.find((item) => item.id === topic.chapterId) : undefined;
   const isMath = Boolean(topic?.id.startsWith('top_math_'));
-  const questions = isMath && topic
+  const isHindi = Boolean(topic?.id.startsWith('top_hin_'));
+  const questions = (isMath || isHindi) && topic
     ? getTopicChallengerQuestions(topic.id, 20, 'jnvst-topic-challenger-' + topic.id)
     : [];
 
-  if (!topic || !chapter || !isMath) {
-    return <Shell><Card className="empty"><h1>विषयांश Challenger नहीं मिला</h1><p>यह Challenger केवल Maths के official subtopics के लिए उपलब्ध है।</p><Link className="btn" to="/subjects/sub_math">गणित तैयारी केंद्र</Link></Card></Shell>;
+  if (!topic || !chapter || (!isMath && !isHindi)) {
+    return <Shell><Card className="empty"><h1>विषयांश Challenger नहीं मिला</h1><p>यह Challenger अभी Maths और Hindi के official subtopics के लिए उपलब्ध है।</p><Link className="btn" to={isHindi ? "/subjects/sub_hindi" : "/subjects/sub_math"}>{isHindi ? "हिंदी तैयारी केंद्र" : "गणित तैयारी केंद्र"}</Link></Card></Shell>;
   }
+
+  const subjectLabel = isHindi ? 'HINDI' : 'MATH';
 
   return <AssessmentRunner
     questions={questions}
     title={'⚡ ' + topic.title + ' — Challenger'}
     backTo={'/chapters/' + chapter.id}
     backLabel={chapter.title}
-    description="20-प्रश्न subtopic Challenger — concept, calculation और application को कठिन स्तर पर परखें। हर प्रश्न में चार अलग और meaningful विकल्प, एक सही उत्तर और non-guessable answer positions हैं।"
-    badge="MATH SUBTOPIC CHALLENGER"
+    description={isHindi
+      ? "20-प्रश्न विषयांश Challenger — नियम, पहचान, भाषा-प्रयोग और JNVST-style reasoning को कठिन स्तर पर परखें। हर प्रश्न में चार अलग और meaningful विकल्प, एक सही उत्तर और non-guessable answer positions हैं।"
+      : "20-प्रश्न subtopic Challenger — concept, calculation और application को कठिन स्तर पर परखें। हर प्रश्न में चार अलग और meaningful विकल्प, एक सही उत्तर और non-guessable answer positions हैं।"}
+    badge={subjectLabel + " SUBTOPIC CHALLENGER"}
     bannerLink={{ to: '/chapters/' + chapter.id + '/study', label: '📖 अध्याय अध्ययन →' }}
     emptyTitle="इस विषयांश में Challenger Questions उपलब्ध नहीं हैं"
-    emptyText="इस Maths subtopic के लिए Challenger question pool उपलब्ध होने पर यह test यहाँ दिखाई देगा।"
+    emptyText={isHindi
+      ? "इस Hindi subtopic के लिए dedicated Challenger question pool उपलब्ध होना चाहिए।"
+      : "इस Maths subtopic के लिए Challenger question pool उपलब्ध होने पर यह test यहाँ दिखाई देगा।"}
   />;
 };
 
