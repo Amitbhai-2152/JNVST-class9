@@ -910,7 +910,33 @@ const Dashboard = () => {
   </Shell>;
 };
 
-const SubjectsPage = () => <Shell><div className="page-head"><h1>विषय</h1><p>विषय चुनें और अभ्यास शुरू करें।</p></div><div className="grid">{subjects.map(s => <Link key={s.id} to={`/subjects/${s.id}`}><Card className="subject-card"><div className="icon">{s.iconRef}</div><h2>{s.title}</h2><p>{s.description}</p></Card></Link>)}</div></Shell>;
+const SubjectsPage = () => <Shell>
+  <div className="page-head">
+    <span className="eyebrow">JNVST • CLASS 9</span>
+    <h1>विषय</h1>
+    <p>अपना विषय चुनें और chapter-wise तैयारी, lessons और practice शुरू करें।</p>
+  </div>
+  <div className="grid subjects-grid" aria-label="JNVST कक्षा 9 विषय">
+    {subjects.map((s) => (
+      <Link key={s.id} to={`/subjects/${s.id}`} className="subject-card-link" aria-label={`${s.title} विषय खोलें`}>
+        <Card className="subject-card">
+          <div className="subject-card-top">
+            <span className="subject-card-number">{String(s.order).padStart(2, '0')}</span>
+            <span className="subject-card-label">विषय</span>
+          </div>
+          <div className="subject-card-content">
+            <h2>{s.title}</h2>
+            <p>{s.description}</p>
+          </div>
+          <div className="subject-card-footer">
+            <span>{s.chapterIds.length} अध्याय</span>
+            <strong>तैयारी शुरू करें <span aria-hidden="true">→</span></strong>
+          </div>
+        </Card>
+      </Link>
+    ))}
+  </div>
+</Shell>;
 
 const TopicCard = ({ topicId }: { topicId: ID }) => {
   const t = topics.find(x => x.id === topicId)!;
