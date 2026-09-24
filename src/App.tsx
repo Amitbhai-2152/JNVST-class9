@@ -423,7 +423,7 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
     return location.pathname.startsWith('/mock-tests');
   };
   const syncLabel = user
-    ? (syncStatus === 'saving' ? 'सिंक हो रहा है…' : syncStatus === 'error' ? 'सिंक त्रुटि' : 'सिंक सुरक्षित')
+    ? (syncStatus === 'saving' ? 'सिंक हो रहा है…' : syncStatus === 'error' ? 'सिंक त्रुटि' : 'प्रगति सुरक्षित')
     : 'Local progress';
 
   return <div className="app-shell">
