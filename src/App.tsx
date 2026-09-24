@@ -649,7 +649,6 @@ const Dashboard = () => {
         <section className="grid" aria-label="JNVST Class 9 subjects">
           {subjects.map((subject) => <Link to={'/subjects/' + subject.id} key={subject.id}>
             <Card className="subject-card">
-              <div className="icon">{subject.iconRef === 'book' ? 'अ' : subject.iconRef === 'edit' ? 'क' : subject.iconRef === 'calculator' ? '∑' : '⚗'}</div>
               <h2>{subject.title}</h2>
               <p>{subject.description}</p>
               <span className="linkish">तैयारी खोलें →</span>
