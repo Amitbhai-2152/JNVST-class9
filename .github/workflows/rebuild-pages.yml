@@ -43,6 +43,12 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
         run: npm run build
 
+      - name: Verify Question Bank production entry
+        run: |
+          test -f dist/index.html
+          grep -R "/question-bank" dist/assets dist/index.html >/dev/null
+          echo "Question Bank production entry verified"
+
       - name: Publish production files to repository root
         run: |
           rm -rf assets
