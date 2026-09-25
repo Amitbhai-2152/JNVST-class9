@@ -214,3 +214,14 @@
   .question-bank-selection-toggle button{flex:1}
   .question-bank-practice-intelligence{align-items:flex-start;flex-direction:column;gap:5px}
 }
+
+.question-bank-session-kind{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:18px;padding:15px 16px;border:1px solid #e0e7f0;border-radius:16px;background:#f7fbff}
+.question-bank-session-kind strong{display:block;margin-top:4px;color:#24405f;font-size:14px}
+.question-bank-session-kind p{margin:5px 0 0;color:#6f7c90;font-size:11px;line-height:1.55;max-width:740px}
+.question-bank-session-kind .question-bank-selection-toggle{display:flex;gap:7px;flex:0 0 auto}
+.question-bank-filters select:disabled{opacity:.62;cursor:not-allowed;background:#f2f5f8}
+@media (max-width:700px){
+  .question-bank-session-kind{align-items:stretch;flex-direction:column}
+  .question-bank-session-kind .question-bank-selection-toggle{width:100%}
+  .question-bank-session-kind .question-bank-selection-toggle button{flex:1}
+}
