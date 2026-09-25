@@ -6,7 +6,7 @@ import { questionBank, questionBankById, questionBankStats, questionBankTaxonomy
 import { useProgressStore } from '../store/progress';
 import { getQuestionBankProgressSummary, getQuestionPerformance } from '../utils/questionBankProgress';
 import { getSelectionRationale, selectQuestionBankSession, type QuestionBankSelectionMode } from '../utils/questionBankSmartSelection';
-import { getDedicatedChapterChallengers, getDedicatedGlobalChallengers, getDedicatedSubjectChallengers, getDedicatedTopicChallengers, hasDedicatedChallengerForScope } from '../utils/questionBankChallengers';
+import { getDedicatedChapterChallengers, getDedicatedGlobalChallengers, getDedicatedSubjectChallengers, getDedicatedTopicChallengers } from '../utils/questionBankChallengers';
 import type { Difficulty, ID, Question, QuestionBankSessionKind } from '../types';
 
 type FilterValue = ID | 'all';
