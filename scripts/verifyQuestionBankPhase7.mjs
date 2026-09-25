@@ -81,10 +81,22 @@ try {
       fail.push('Subject/chapter mismatch: ' + question.id);
     }
 
-    if (question.type !== 'mcq') warnings.push('Non-MCQ canonical question: ' + question.id);
+    const expectedCompatible =
+      question.type === 'mcq' &&
+      question.options.length === 4 &&
+      question.correctOptionIds.length === 1;
 
-    if (question.options.length !== 4) {
-      fail.push('Canonical question must have exactly 4 options: ' + question.id);
+    if (question.type === 'mcq' && question.options.length !== 4) {
+      fail.push('MCQ must have exactly 4 options: ' + question.id);
+    }
+    if (question.type === 'true-false' && question.options.length !== 2) {
+      fail.push('True/False question must have exactly 2 options: ' + question.id);
+    }
+    if (question.type === 'multiple-select' && question.options.length !== 4) {
+      fail.push('Multiple-select question must have exactly 4 options: ' + question.id);
+    }
+    if (question.options.length < 2) {
+      fail.push('Question must have at least 2 options: ' + question.id);
     }
 
     const normalizedOptions = question.options.map((option) => normalize(option.text));
@@ -98,11 +110,21 @@ try {
       fail.push('Guessable label-only option: ' + question.id);
     }
 
-    if (question.correctOptionIds.length !== 1) {
-      fail.push('Canonical question must have exactly one correct option: ' + question.id);
-    } else {
+    if (question.correctOptionIds.length < 1) {
+      fail.push('Question must have at least one correct option: ' + question.id);
+    }
+    for (const correctId of question.correctOptionIds) {
+      if (!question.options.some((option) => option.id === correctId)) {
+        fail.push('Correct option ID missing: ' + question.id + ' -> ' + correctId);
+      }
+    }
+
+    if (Boolean(question.metadata?.jnvstCompatible) !== expectedCompatible) {
+      fail.push('JNVST compatibility metadata mismatch: ' + question.id);
+    }
+
+    if (expectedCompatible) {
       const answerIndex = question.options.findIndex((option) => option.id === question.correctOptionIds[0]);
-      if (answerIndex < 0) fail.push('Correct option ID missing: ' + question.id);
       if (answerIndex >= 0) {
         answerPositions[question.subjectId] ??= [0, 0, 0, 0];
         answerPositions[question.subjectId][answerIndex] += 1;
@@ -119,9 +141,7 @@ try {
         fail.push('Missing metadata ' + field + ': ' + question.id);
       }
     }
-    if (question.metadata?.jnvstCompatible !== true) {
-      fail.push('Canonical question is not marked JNVST-compatible: ' + question.id);
-    }
+
 
     const fingerprint = [
       question.subjectId,
@@ -208,9 +228,7 @@ try {
   for (const subjectId of Object.keys(answerPositions)) {
     const subjectQuestions = questions.filter((question) =>
       question.subjectId === subjectId &&
-      question.type === 'mcq' &&
-      question.options.length === 4 &&
-      question.correctOptionIds.length === 1,
+      question.metadata?.jnvstCompatible === true,
     );
     let previous = -1;
     let currentRun = 0;
