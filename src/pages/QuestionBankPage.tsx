@@ -393,8 +393,7 @@ const QuestionBankPage = () => {
             </div>
 
             <div className="question-bank-question-text">
-              {cleanBlocks(currentQuestion, 'text').split('
-').map((line, index) => (
+              {cleanBlocks(currentQuestion, 'text').split('\\n').map((line, index) => (
                 <p key={index}><MathAwareText text={line} /></p>
               ))}
             </div>
@@ -447,8 +446,7 @@ const QuestionBankPage = () => {
                 {cleanBlocks(currentQuestion, 'explanation') && (
                   <div className="question-bank-explanation">
                     <span>व्याख्या</span>
-                    {cleanBlocks(currentQuestion, 'explanation').split('
-').map((line, index) => (
+                    {cleanBlocks(currentQuestion, 'explanation').split('\\n').map((line, index) => (
                       <p key={index}><MathAwareText text={line} /></p>
                     ))}
                   </div>
@@ -527,8 +525,7 @@ const QuestionBankPage = () => {
                   {cleanBlocks(question, 'explanation') && (
                     <details>
                       <summary>व्याख्या देखें</summary>
-                      {cleanBlocks(question, 'explanation').split('
-').map((line, lineIndex) => (
+                      {cleanBlocks(question, 'explanation').split('\\n').map((line, lineIndex) => (
                         <p key={lineIndex}><MathAwareText text={line} /></p>
                       ))}
                     </details>
