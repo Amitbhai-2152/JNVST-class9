@@ -239,7 +239,7 @@ const QuestionBankPage = () => {
           <article className="question-bank-question-card">
             <div className="question-bank-question-meta">
               <span>{currentQuestion.id}</span>
-              <span>{currentQuestion.estimatedSeconds ? currentQuestion.estimatedSeconds + ' sec' : 'Practice'}</span>
+              <span>Practice</span>
             </div>
             <div className="question-bank-question-text">
               {cleanText(currentQuestion).split('\n').map((line, index) => <p key={index}><MathAwareText text={line} /></p>)}
