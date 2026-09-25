@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { ID, MockTestResult, ProgressState, QuestionAttempt, EnglishLabAttempt, HindiUnseenLabAttempt } from '../types';
+import type { ID, MockTestResult, ProgressState, QuestionAttempt, EnglishLabAttempt, HindiUnseenLabAttempt, QuestionBankSessionState } from '../types';
 import { trackEvent } from '../lib/analytics';
 
 type Store = ProgressState & {
@@ -15,6 +15,7 @@ type Store = ProgressState & {
   saveMockResult: (result: MockTestResult) => void;
   recordEnglishLabAttempt: (id: ID, attempt: EnglishLabAttempt) => void;
   recordHindiUnseenAttempt: (id: ID, attempt: HindiUnseenLabAttempt) => void;
+  saveQuestionBankSession: (session: QuestionBankSessionState | null) => void;
 };
 
 const recent = (current: ProgressState['recentlyStudied'], item: ProgressState['recentlyStudied'][number]) =>
@@ -29,6 +30,7 @@ export const emptyProgressState: ProgressState = {
   mockTestResults: [],
   englishLabAttempts: {},
   hindiUnseenAttempts: {},
+  questionBankSession: null,
 };
 
 export const getProgressSnapshot = (): ProgressState => {
@@ -45,6 +47,7 @@ export const getProgressSnapshot = (): ProgressState => {
     mockTestResults: state.mockTestResults ?? [],
     englishLabAttempts: state.englishLabAttempts ?? {},
     hindiUnseenAttempts: state.hindiUnseenAttempts ?? {},
+    questionBankSession: state.questionBankSession ?? null,
   };
 };
 
@@ -64,6 +67,7 @@ export const useProgressStore = create<Store>()(
         mockTestResults: nextProgress.mockTestResults ?? [],
         englishLabAttempts: nextProgress.englishLabAttempts ?? {},
         hindiUnseenAttempts: nextProgress.hindiUnseenAttempts ?? {},
+        questionBankSession: nextProgress.questionBankSession ?? null,
       })),
       completeLesson: (id, title) => {
         set((state) => ({
@@ -166,6 +170,7 @@ export const useProgressStore = create<Store>()(
           mockTestResults: previous.mockTestResults ?? [],
           englishLabAttempts: previous.englishLabAttempts ?? {},
           hindiUnseenAttempts: previous.hindiUnseenAttempts ?? {},
+          questionBankSession: previous.questionBankSession ?? null,
         };
       },
     },
