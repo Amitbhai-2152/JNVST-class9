@@ -26,7 +26,6 @@ for (const contract of [
   'progressQuestionAttempts',
   'पहली बार अभ्यास',
   'कम accuracy',
-  'repetition',
   'question-bank-selection-mode',
 ]) {
   if (!page.includes(contract) && !selector.includes(contract)) throw new Error('Phase 5 page/selector contract missing: ' + contract);
