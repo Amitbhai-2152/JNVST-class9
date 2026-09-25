@@ -110,6 +110,25 @@ export interface HindiUnseenLabAttempt {
   mode: 'unseen';
 }
 
+export interface QuestionBankSessionState {
+  status: 'practice' | 'finished';
+  questionIds: ID[];
+  answers: Record<ID, ID[]>;
+  markedForReview: ID[];
+  checkedQuestionIds: ID[];
+  currentIndex: number;
+  filters: {
+    subjectId: ID | 'all';
+    chapterId: ID | 'all';
+    topicId: ID | 'all';
+    difficulty: 'all' | Difficulty;
+    sessionSize: number;
+  };
+  startedAt: number;
+  updatedAt: number;
+  attemptsRecorded: boolean;
+}
+
 export interface ProgressState {
   lessonActivity: Record<ID, { status: 'completed' | 'in-progress'; lastAccessed: number }>;
   questionAttempts: Record<ID, QuestionAttempt[]>;
