@@ -123,10 +123,22 @@ const stableHash = (value: string): number => {
   return hash >>> 0;
 };
 
+const seededShuffle = <T,>(items: T[], seed: string): T[] => {
+  const copy = [...items];
+  let state = stableHash(seed);
+  for (let index = copy.length - 1; index > 0; index -= 1) {
+    state ^= index;
+    state = Math.imul(state, 16777619);
+    const swapIndex = (state >>> 0) % (index + 1);
+    [copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]];
+  }
+  return copy;
+};
+
 const rebalanceCanonicalOptionPositions = (questions: Question[]): Question[] => {
   const bySubject = new Map<string, number[]>();
   questions.forEach((question, index) => {
-    if (question.type !== 'mcq' || question.options.length !== 4 || question.correctOptionIds.length !== 1) return;
+    if (question.metadata?.jnvstCompatible !== true) return;
     const indices = bySubject.get(question.subjectId) ?? [];
     indices.push(index);
     bySubject.set(question.subjectId, indices);
@@ -134,8 +146,10 @@ const rebalanceCanonicalOptionPositions = (questions: Question[]): Question[] =>
 
   const balancedTargetPositions = new Map<number, number>();
   for (const [subjectId, indices] of bySubject.entries()) {
-    const targetPositions = indices.map((_, index) => index % 4);
-    targetPositions.sort((a, b) => stableHash(subjectId + ':position:' + a + ':' + b) - stableHash(subjectId + ':position:' + b + ':' + a));
+    const targetPositions = seededShuffle(
+      indices.map((_, index) => index % 4),
+      subjectId + ':canonical-answer-positions',
+    );
     indices.forEach((questionIndex, positionIndex) => {
       balancedTargetPositions.set(questionIndex, targetPositions[positionIndex]);
     });
