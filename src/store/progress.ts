@@ -150,6 +150,7 @@ export const useProgressStore = create<Store>()(
         }));
         void trackEvent('lab_attempted', { mode: attempt.mode });
       },
+      saveQuestionBankSession: (session) => set(() => ({ questionBankSession: session })),
     }),
     {
       name: 'jnvst-class9-progress-v2',
