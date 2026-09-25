@@ -18,6 +18,7 @@ import { hindiMasteryUnits } from './data/hindiPrep';
 import { EnglishTranslationLabPage, EnglishVocabularyLabPage, EnglishTranslationPracticePage, EnglishVocabularyPracticePage } from './pages/EnglishLabsPage';
 import EnglishUnseenPassagePage from './pages/EnglishUnseenPassagePage';
 import HindiUnseenPassagePage from './pages/HindiUnseenPassagePage';
+import QuestionBankPage from './pages/QuestionBankPage';
 import { siteNotifications, type SiteNotification } from './data/notifications';
 
 const examSections = [
@@ -635,6 +636,7 @@ const Dashboard = () => {
             <div className="actions">
               <Link className="btn primary" to="/subjects">📚 विषय और अध्याय देखें</Link>
               <Link className="btn dashboard-hero-btn" to="/mock-tests">📝 Mock Test देखें</Link>
+              <Link className="btn dashboard-hero-btn dashboard-question-bank-btn" to="/question-bank">📚 Question Bank</Link>
               <Link className="btn dashboard-hero-btn" to="/login">🔐 Student Login</Link>
             </div>
           </div>
@@ -665,6 +667,7 @@ const Dashboard = () => {
             <Link className="btn" to="/hindi-revision">Hindi Revision</Link>
             <Link className="btn" to="/math-formulas">Math Formula Sheet</Link>
             <Link className="btn" to="/science-revision">Science Revision</Link>
+            <Link className="btn primary dashboard-question-bank-btn" to="/question-bank">📚 Question Bank</Link>
           </div>
         </section>
       </div>
@@ -752,6 +755,7 @@ const Dashboard = () => {
             <Link className="btn primary" to={continueTo}>▶ {continueLabel}</Link>
             <Link className="btn dashboard-hero-btn" to="/smart-practice">🎯 स्मार्ट अभ्यास</Link>
             <Link className="btn dashboard-hero-btn" to="/mock-tests">📝 मॉक टेस्ट</Link>
+            <Link className="btn dashboard-hero-btn dashboard-question-bank-btn" to="/question-bank">📚 Question Bank</Link>
           </div>
         </div>
         <div className="dashboard-hero-side">
@@ -2644,6 +2648,6 @@ const appBasename = window.location.hostname.endsWith('.github.io') ? '/JNVST-cl
 export default function App() {
   return <BrowserRouter basename={appBasename}>
     <SEOController />
-    <Routes><Route path="/" element={<Dashboard />} /><Route path="/login" element={<AuthPage />} /><Route path="/subjects" element={<SubjectsPage />} /><Route path="/subjects/:subjectId" element={<SubjectPage />} /><Route path="/chapters/:chapterId" element={<ChapterPage />} /><Route path="/chapters/:chapterId/study" element={<ChapterStudyPage />} /><Route path="/chapters/:chapterId/challenger" element={<ChapterChallengerPage />} /><Route path="/topics/:topicId/challenger" element={<TopicChallengerPage />} /><Route path="/lessons/:lessonId" element={<LessonPage />} /><Route path="/math-formulas" element={<Shell><MathFormulaSheet /></Shell>} /><Route path="/english-revision" element={<EnglishRevisionPage />} /><Route path="/hindi-revision" element={<HindiRevisionPage />} /><Route path="/hindi-smart-practice" element={<HindiSmartPracticePage />} /><Route path="/hindi-mock-test" element={<HindiMockTestPage />} /><Route path="/hindi-unseen-passage" element={<HindiUnseenPassagePage />} /><Route path="/english-smart-practice" element={<EnglishSmartPracticePage />} /><Route path="/english-mock-test" element={<EnglishMockTestPage />} /><Route path="/english-translation-lab" element={<EnglishTranslationLabPage />} /><Route path="/english-translation-practice" element={<EnglishTranslationPracticePage />} /><Route path="/english-vocabulary-lab" element={<EnglishVocabularyLabPage />} /><Route path="/english-vocabulary-practice" element={<EnglishVocabularyPracticePage />} /><Route path="/english-unseen-passage" element={<EnglishUnseenPassagePage />} /><Route path="/science-revision" element={<ScienceRevisionPage />} /><Route path="/science-smart-practice" element={<ScienceSmartPracticePage />} /><Route path="/science-mock-test" element={<ScienceMockTestPage />} /><Route path="/practice/:topicId" element={<PracticePage />} /><Route path="/smart-practice" element={<SmartPracticePage />} /><Route path="/math-smart-practice" element={<MathSmartPracticePage />} /><Route path="/bookmarks" element={<BookmarksPage />} /><Route path="/mock-tests" element={<MockTestsPage />} /><Route path="/math-mock-test" element={<MathMockTestPage />} /><Route path="*" element={<Dashboard />} /></Routes>
+    <Routes><Route path="/" element={<Dashboard />} /><Route path="/login" element={<AuthPage />} /><Route path="/subjects" element={<SubjectsPage />} /><Route path="/subjects/:subjectId" element={<SubjectPage />} /><Route path="/chapters/:chapterId" element={<ChapterPage />} /><Route path="/chapters/:chapterId/study" element={<ChapterStudyPage />} /><Route path="/chapters/:chapterId/challenger" element={<ChapterChallengerPage />} /><Route path="/topics/:topicId/challenger" element={<TopicChallengerPage />} /><Route path="/lessons/:lessonId" element={<LessonPage />} /><Route path="/math-formulas" element={<Shell><MathFormulaSheet /></Shell>} /><Route path="/english-revision" element={<EnglishRevisionPage />} /><Route path="/hindi-revision" element={<HindiRevisionPage />} /><Route path="/hindi-smart-practice" element={<HindiSmartPracticePage />} /><Route path="/hindi-mock-test" element={<HindiMockTestPage />} /><Route path="/hindi-unseen-passage" element={<HindiUnseenPassagePage />} /><Route path="/english-smart-practice" element={<EnglishSmartPracticePage />} /><Route path="/english-mock-test" element={<EnglishMockTestPage />} /><Route path="/english-translation-lab" element={<EnglishTranslationLabPage />} /><Route path="/english-translation-practice" element={<EnglishTranslationPracticePage />} /><Route path="/english-vocabulary-lab" element={<EnglishVocabularyLabPage />} /><Route path="/english-vocabulary-practice" element={<EnglishVocabularyPracticePage />} /><Route path="/english-unseen-passage" element={<EnglishUnseenPassagePage />} /><Route path="/question-bank" element={<Shell><QuestionBankPage /></Shell>} /><Route path="/science-revision" element={<ScienceRevisionPage />} /><Route path="/science-smart-practice" element={<ScienceSmartPracticePage />} /><Route path="/science-mock-test" element={<ScienceMockTestPage />} /><Route path="/practice/:topicId" element={<PracticePage />} /><Route path="/smart-practice" element={<SmartPracticePage />} /><Route path="/math-smart-practice" element={<MathSmartPracticePage />} /><Route path="/bookmarks" element={<BookmarksPage />} /><Route path="/mock-tests" element={<MockTestsPage />} /><Route path="/math-mock-test" element={<MathMockTestPage />} /><Route path="*" element={<Dashboard />} /></Routes>
   </BrowserRouter>;
 }
