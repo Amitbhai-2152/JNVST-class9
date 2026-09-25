@@ -36,6 +36,7 @@ const toProgress = (value: unknown): ProgressState | null => {
     mockTestResults: Array.isArray(raw.mockTestResults) ? raw.mockTestResults : [],
     englishLabAttempts: raw.englishLabAttempts && typeof raw.englishLabAttempts === 'object' ? raw.englishLabAttempts : {},
     hindiUnseenAttempts: raw.hindiUnseenAttempts && typeof raw.hindiUnseenAttempts === 'object' ? raw.hindiUnseenAttempts : {},
+    questionBankSession: raw.questionBankSession && typeof raw.questionBankSession === 'object' ? raw.questionBankSession : null,
   };
 };
 
@@ -117,7 +118,10 @@ const mergeProgress = (local: ProgressState, remote: ProgressState | null): Prog
     mockTestResults,
     englishLabAttempts,
     hindiUnseenAttempts,
-    questionBankSession: local.questionBankSession ?? remote?.questionBankSession ?? null,
+    questionBankSession:
+      local.questionBankSession && remote?.questionBankSession
+        ? (local.questionBankSession.updatedAt >= remote.questionBankSession.updatedAt ? local.questionBankSession : remote.questionBankSession)
+        : (local.questionBankSession ?? remote?.questionBankSession ?? null),
   };
 };
 
