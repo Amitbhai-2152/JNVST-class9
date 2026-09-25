@@ -114,7 +114,52 @@ const smartEnrich = (question: Question): Question => ({
   },
 });
 
-export const allQuestions: Question[] = rawQuestions.map(smartEnrich);
+const stableHash = (value: string): number => {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+};
+
+const rebalanceCanonicalOptionPositions = (questions: Question[]): Question[] => {
+  const bySubject = new Map<string, number[]>();
+  questions.forEach((question, index) => {
+    if (question.type !== 'mcq' || question.options.length !== 4 || question.correctOptionIds.length !== 1) return;
+    const indices = bySubject.get(question.subjectId) ?? [];
+    indices.push(index);
+    bySubject.set(question.subjectId, indices);
+  });
+
+  const balancedTargetPositions = new Map<number, number>();
+  for (const [subjectId, indices] of bySubject.entries()) {
+    const targetPositions = indices.map((_, index) => index % 4);
+    targetPositions.sort((a, b) => stableHash(subjectId + ':position:' + a + ':' + b) - stableHash(subjectId + ':position:' + b + ':' + a));
+    indices.forEach((questionIndex, positionIndex) => {
+      balancedTargetPositions.set(questionIndex, targetPositions[positionIndex]);
+    });
+  }
+
+  return questions.map((question, index) => {
+    const targetIndex = balancedTargetPositions.get(index);
+    if (targetIndex === undefined) return question;
+
+    const correctId = question.correctOptionIds[0];
+    const correctOption = question.options.find((option) => option.id === correctId);
+    if (!correctOption || question.options.findIndex((option) => option.id === correctId) === targetIndex) return question;
+
+    const distractors = question.options.filter((option) => option.id !== correctId);
+    const options: Question['options'] = [];
+    let distractorIndex = 0;
+    for (let optionIndex = 0; optionIndex < 4; optionIndex += 1) {
+      options.push(optionIndex === targetIndex ? correctOption : distractors[distractorIndex++]);
+    }
+    return { ...question, options };
+  });
+};
+
+export const allQuestions: Question[] = rebalanceCanonicalOptionPositions(rawQuestions.map(smartEnrich));
 
 const counts = {
   sub_eng: englishQuestionBank.length,
