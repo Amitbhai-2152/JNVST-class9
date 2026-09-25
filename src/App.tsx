@@ -239,6 +239,18 @@ const scienceStageMeta = [
 ];
 
 
+
+const RouteUXController = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    // Keep route transitions predictable on phones/tablets and avoid landing mid-page.
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [location.pathname]);
+
+  return null;
+};
+
 const Shell = ({ children }: { children: React.ReactNode }) => {
   const { user, signOut, syncStatus, analyticsConsent, setAnalyticsConsent } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -456,12 +468,13 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
           className="mobile-menu-toggle"
           aria-label={mobileMenuOpen ? 'मेन्यू बंद करें' : 'मेन्यू खोलें'}
           aria-expanded={mobileMenuOpen}
+          aria-controls="primary-navigation-panel"
           onClick={() => setMobileMenuOpen((open) => !open)}
         >
           {mobileMenuOpen ? '×' : '☰'}
         </button>
       </div>
-      <div className="topbar-content">
+      <div id="primary-navigation-panel" className="topbar-content">
         <nav aria-label="मुख्य नेविगेशन">
           <Link to="/" className={isActive('dashboard') ? 'active' : ''} aria-current={isActive('dashboard') ? 'page' : undefined}>
             <span className="nav-icon">⌂</span><span>डैशबोर्ड</span>
@@ -616,7 +629,7 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
         </div>
       </div>
     </header>
-    <main className="shell">{children}</main>
+    <a className="skip-link" href="#main-content">मुख्य सामग्री पर जाएँ</a><main id="main-content" className="shell">{children}</main>
   </div>;
 };
 const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => <div className={`card ${className}`}>{children}</div>;
@@ -2648,6 +2661,7 @@ const appBasename = window.location.hostname.endsWith('.github.io') ? '/JNVST-cl
 export default function App() {
   return <BrowserRouter basename={appBasename}>
     <SEOController />
+    <RouteUXController />
     <Routes><Route path="/" element={<Dashboard />} /><Route path="/login" element={<AuthPage />} /><Route path="/subjects" element={<SubjectsPage />} /><Route path="/subjects/:subjectId" element={<SubjectPage />} /><Route path="/chapters/:chapterId" element={<ChapterPage />} /><Route path="/chapters/:chapterId/study" element={<ChapterStudyPage />} /><Route path="/chapters/:chapterId/challenger" element={<ChapterChallengerPage />} /><Route path="/topics/:topicId/challenger" element={<TopicChallengerPage />} /><Route path="/lessons/:lessonId" element={<LessonPage />} /><Route path="/math-formulas" element={<Shell><MathFormulaSheet /></Shell>} /><Route path="/english-revision" element={<EnglishRevisionPage />} /><Route path="/hindi-revision" element={<HindiRevisionPage />} /><Route path="/hindi-smart-practice" element={<HindiSmartPracticePage />} /><Route path="/hindi-mock-test" element={<HindiMockTestPage />} /><Route path="/hindi-unseen-passage" element={<HindiUnseenPassagePage />} /><Route path="/english-smart-practice" element={<EnglishSmartPracticePage />} /><Route path="/english-mock-test" element={<EnglishMockTestPage />} /><Route path="/english-translation-lab" element={<EnglishTranslationLabPage />} /><Route path="/english-translation-practice" element={<EnglishTranslationPracticePage />} /><Route path="/english-vocabulary-lab" element={<EnglishVocabularyLabPage />} /><Route path="/english-vocabulary-practice" element={<EnglishVocabularyPracticePage />} /><Route path="/english-unseen-passage" element={<EnglishUnseenPassagePage />} /><Route path="/question-bank" element={<Shell><QuestionBankPage /></Shell>} /><Route path="/science-revision" element={<ScienceRevisionPage />} /><Route path="/science-smart-practice" element={<ScienceSmartPracticePage />} /><Route path="/science-mock-test" element={<ScienceMockTestPage />} /><Route path="/practice/:topicId" element={<PracticePage />} /><Route path="/smart-practice" element={<SmartPracticePage />} /><Route path="/math-smart-practice" element={<MathSmartPracticePage />} /><Route path="/bookmarks" element={<BookmarksPage />} /><Route path="/mock-tests" element={<MockTestsPage />} /><Route path="/math-mock-test" element={<MathMockTestPage />} /><Route path="*" element={<Dashboard />} /></Routes>
   </BrowserRouter>;
 }
