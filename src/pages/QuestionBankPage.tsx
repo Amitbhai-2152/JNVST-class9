@@ -111,6 +111,9 @@ const QuestionBankPage = () => {
     return true;
   }), [subjectId, chapterId, topicId, difficulty]);
 
+  const currentQuestion = session[currentIndex];
+  const answerFor = currentQuestion ? (answers[currentQuestion.id] ?? []) : [];
+
   const progressSummary = useMemo(
     () => getQuestionBankProgressSummary(
       { questionAttempts: progressQuestionAttempts ?? {} },
@@ -144,8 +147,6 @@ const QuestionBankPage = () => {
     }).format(timestamp);
   };
 
-  const currentQuestion = session[currentIndex];
-  const answerFor = currentQuestion ? (answers[currentQuestion.id] ?? []) : [];
   const answeredCount = session.filter((question) => (answers[question.id] ?? []).length > 0).length;
   const unansweredCount = session.length - answeredCount;
   const markedCount = session.filter((question) => markedForReview[question.id]).length;
