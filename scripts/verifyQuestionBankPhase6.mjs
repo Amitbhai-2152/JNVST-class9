@@ -23,7 +23,6 @@ for (const contract of [
   'getDedicatedChapterChallengers',
   'getDedicatedSubjectChallengers',
   'getDedicatedGlobalChallengers',
-  'hasDedicatedChallengerForScope',
   'challengerQuestions',
   'challengerScopeReady',
   "mode: sessionKind === 'challenger' ? 'revision' as const : 'practice' as const",
