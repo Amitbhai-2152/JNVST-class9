@@ -251,7 +251,6 @@ const QuestionBankPage = () => {
     ? challengerQuestions.length
     : filteredQuestions.length;
 
-  const challengerScope = topicId !== 'all' ? 'topic' : chapterId !== 'all' ? 'chapter' : subjectId !== 'all' ? 'subject' : 'global';
   const challengerScopeReady = challengerQuestions.length >= 20;
 
   const startPractice = () => {
@@ -345,7 +344,7 @@ const QuestionBankPage = () => {
               selectedOptionIds,
               isCorrect: sameAnswers(selectedOptionIds, question.correctOptionIds),
               timestamp: Date.now(),
-              mode: 'practice' as const,
+              mode: sessionKind === 'challenger' ? 'revision' as const : 'practice' as const,
             },
           };
         })
@@ -495,8 +494,8 @@ const QuestionBankPage = () => {
               </label>
 
               <label>
-                <span>कठिनाई</span>
-                <select value={difficulty} onChange={(event) => setDifficulty(event.target.value as 'all' | Difficulty)}>
+                <span>{sessionKind === 'challenger' ? 'कठिनाई (Challenger में pool-locked)' : 'कठिनाई'}</span>
+                <select disabled={sessionKind === 'challenger'} value={difficulty} onChange={(event) => setDifficulty(event.target.value as 'all' | Difficulty)}>
                   <option value="all">सभी स्तर</option>
                   {Object.entries(difficultyLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                 </select>
@@ -743,7 +742,7 @@ const QuestionBankPage = () => {
       {sessionState === 'finished' && (
         <section className="question-bank-finished">
           <span className="question-bank-label">SESSION COMPLETE</span>
-          <h2>अभ्यास सत्र पूरा हुआ</h2>
+          <h2>{sessionKind === 'challenger' ? 'Challenger सत्र पूरा हुआ' : 'अभ्यास सत्र पूरा हुआ'}</h2>
           <div className="question-bank-score">{score}<span> / {session.length}</span></div>
           <p>आपकी accuracy: <strong>{session.length ? Math.round((score / session.length) * 100) : 0}%</strong></p>
 
