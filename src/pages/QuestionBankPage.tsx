@@ -1,13 +1,15 @@
 import '../question-bank.css';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MathAwareText } from '../components/MathText';
-import { questionBank, questionBankStats, questionBankTaxonomy } from '../data/questionBank';
+import { questionBank, questionBankById, questionBankStats, questionBankTaxonomy } from '../data/questionBank';
 import { useProgressStore } from '../store/progress';
+import { getQuestionBankProgressSummary, getQuestionPerformance } from '../utils/questionBankProgress';
 import type { Difficulty, ID, Question } from '../types';
 
 type FilterValue = ID | 'all';
 type SessionState = 'setup' | 'practice' | 'finished';
+type PerformanceView = 'topic' | 'chapter' | 'difficulty';
 
 const difficultyLabels: Record<Difficulty, string> = {
   easy: 'आसान',
@@ -69,8 +71,16 @@ const QuestionBankPage = () => {
   const [checked, setChecked] = useState<Record<ID, boolean>>({});
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   const [attemptsRecorded, setAttemptsRecorded] = useState(false);
+  const [sessionStartedAt, setSessionStartedAt] = useState(0);
+  const [performanceView, setPerformanceView] = useState<PerformanceView>('topic');
+  const [restoredFromSavedSession, setRestoredFromSavedSession] = useState(false);
+  const restoredSessionRef = useRef(false);
 
   const recordAttempts = useProgressStore((state) => state.recordAttempts);
+  const savedQuestionBankSession = useProgressStore((state) => state.questionBankSession);
+  const saveQuestionBankSession = useProgressStore((state) => state.saveQuestionBankSession);
+  const clearQuestionBankSession = useProgressStore((state) => state.saveQuestionBankSession);
+  const progressQuestionAttempts = useProgressStore((state) => state.questionAttempts);
 
   const subjects = questionBankTaxonomy.subjects;
   const chapters = questionBankTaxonomy.chapters;
@@ -101,6 +111,39 @@ const QuestionBankPage = () => {
     return true;
   }), [subjectId, chapterId, topicId, difficulty]);
 
+  const progressSummary = useMemo(
+    () => getQuestionBankProgressSummary(
+      { questionAttempts: progressQuestionAttempts ?? {} },
+      questionBankById,
+      questionBankTaxonomy,
+    ),
+    [progressQuestionAttempts],
+  );
+
+  const currentQuestionPerformance = useMemo(
+    () => currentQuestion ? getQuestionPerformance(
+      { questionAttempts: progressQuestionAttempts ?? {} },
+      currentQuestion.id,
+    ) : null,
+    [currentQuestion, progressQuestionAttempts],
+  );
+
+  const performanceRows = performanceView === 'topic'
+    ? progressSummary.byTopic
+    : performanceView === 'chapter'
+      ? progressSummary.byChapter
+      : progressSummary.byDifficulty;
+
+  const formatDateTime = (timestamp: number | null) => {
+    if (!timestamp) return 'अभी तक कोई अभ्यास नहीं';
+    return new Intl.DateTimeFormat('hi-IN', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(timestamp);
+  };
+
   const currentQuestion = session[currentIndex];
   const answerFor = currentQuestion ? (answers[currentQuestion.id] ?? []) : [];
   const answeredCount = session.filter((question) => (answers[question.id] ?? []).length > 0).length;
@@ -123,6 +166,69 @@ const QuestionBankPage = () => {
     sameAnswers(answers[question.id] ?? [], question.correctOptionIds),
   ).filter((question) => (answers[question.id] ?? []).length > 0).length;
 
+  useEffect(() => {
+    if (restoredSessionRef.current) return;
+    restoredSessionRef.current = true;
+
+    if (!savedQuestionBankSession) return;
+
+    const restoredQuestions = savedQuestionBankSession.questionIds
+      .map((id) => questionBankById.get(id))
+      .filter((question): question is Question => Boolean(question));
+
+    if (!restoredQuestions.length) {
+      clearQuestionBankSession(null);
+      return;
+    }
+
+    setSession(restoredQuestions);
+    setAnswers(savedQuestionBankSession.answers ?? {});
+    setMarkedForReview(Object.fromEntries((savedQuestionBankSession.markedForReview ?? []).map((id) => [id, true])));
+    setChecked(Object.fromEntries((savedQuestionBankSession.checkedQuestionIds ?? []).map((id) => [id, true])));
+    setCurrentIndex(Math.min(savedQuestionBankSession.currentIndex ?? 0, Math.max(restoredQuestions.length - 1, 0)));
+    setSessionStartedAt(savedQuestionBankSession.startedAt || Date.now());
+    setAttemptsRecorded(Boolean(savedQuestionBankSession.attemptsRecorded));
+    setSubjectId(savedQuestionBankSession.filters?.subjectId ?? 'all');
+    setChapterId(savedQuestionBankSession.filters?.chapterId ?? 'all');
+    setTopicId(savedQuestionBankSession.filters?.topicId ?? 'all');
+    setDifficulty(savedQuestionBankSession.filters?.difficulty ?? 'all');
+    setSessionSize(savedQuestionBankSession.filters?.sessionSize ?? restoredQuestions.length);
+    setRestoredFromSavedSession(true);
+    setSessionState(savedQuestionBankSession.status);
+  }, [savedQuestionBankSession, clearQuestionBankSession]);
+
+  useEffect(() => {
+    if (!session.length || sessionState === 'setup' || !sessionStartedAt) return;
+
+    saveQuestionBankSession({
+      status: sessionState,
+      questionIds: session.map((question) => question.id),
+      answers,
+      markedForReview: Object.entries(markedForReview).filter(([, marked]) => marked).map(([id]) => id),
+      checkedQuestionIds: Object.entries(checked).filter(([, isChecked]) => isChecked).map(([id]) => id),
+      currentIndex,
+      filters: { subjectId, chapterId, topicId, difficulty, sessionSize },
+      startedAt: sessionStartedAt,
+      updatedAt: Date.now(),
+      attemptsRecorded,
+    });
+  }, [
+    session,
+    sessionState,
+    currentIndex,
+    answers,
+    markedForReview,
+    checked,
+    attemptsRecorded,
+    sessionStartedAt,
+    subjectId,
+    chapterId,
+    topicId,
+    difficulty,
+    sessionSize,
+    saveQuestionBankSession,
+  ]);
+
   const startPractice = () => {
     const nextSession = getUniqueQuestions(filteredQuestions, sessionSize);
     if (!nextSession.length) return;
@@ -133,6 +239,8 @@ const QuestionBankPage = () => {
     setCurrentIndex(0);
     setShowFinishConfirm(false);
     setAttemptsRecorded(false);
+    setSessionStartedAt(Date.now());
+    setRestoredFromSavedSession(false);
     setSessionState('practice');
   };
 
@@ -144,7 +252,10 @@ const QuestionBankPage = () => {
     setCurrentIndex(0);
     setShowFinishConfirm(false);
     setAttemptsRecorded(false);
+    setSessionStartedAt(0);
+    setRestoredFromSavedSession(false);
     setSessionState('setup');
+    clearQuestionBankSession(null);
   };
 
   const selectAnswer = (optionId: ID) => {
@@ -233,7 +344,7 @@ const QuestionBankPage = () => {
       <div className="question-bank-head">
         <div>
           <Link className="question-bank-back" to="/">← डैशबोर्ड</Link>
-          <span className="question-bank-eyebrow">QUESTION BANK • PHASE 3</span>
+          <span className="question-bank-eyebrow">QUESTION BANK • PHASE 4</span>
           <h1>Question Bank</h1>
           <p>विषय, अध्याय, विषयांश और कठिनाई के अनुसार प्रश्न चुनें और structured practice session चलाएँ।</p>
         </div>
@@ -245,6 +356,69 @@ const QuestionBankPage = () => {
 
       {sessionState === 'setup' && (
         <>
+          <section className="question-bank-performance-card">
+            <div className="question-bank-performance-head">
+              <div>
+                <span className="question-bank-label">YOUR PROGRESS</span>
+                <h2>आपकी Question Bank performance</h2>
+                <p>
+                  {progressSummary.totalAttempts
+                    ? `${progressSummary.attemptedQuestions} अलग प्रश्नों पर ${progressSummary.totalAttempts} अभ्यास प्रयास दर्ज हैं।`
+                    : 'अभी कोई Question Bank practice attempt दर्ज नहीं है। पहला set शुरू करके progress बनाइए।'}
+                </p>
+              </div>
+              <span className="question-bank-last-practice">{formatDateTime(progressSummary.lastAttemptAt)}</span>
+            </div>
+
+            <div className="question-bank-performance-metrics">
+              <div><b>{progressSummary.attemptedQuestions}</b><span>अलग प्रश्न</span></div>
+              <div><b>{progressSummary.totalAttempts}</b><span>कुल प्रयास</span></div>
+              <div><b>{progressSummary.correctAttempts}</b><span>सही प्रयास</span></div>
+              <div><b>{progressSummary.incorrectAttempts}</b><span>गलत प्रयास</span></div>
+              <div><b>{progressSummary.accuracy}%</b><span>accuracy</span></div>
+            </div>
+
+            <div className="question-bank-performance-tabs" role="tablist" aria-label="Question Bank performance breakdown">
+              {([
+                ['topic', 'विषयांश'],
+                ['chapter', 'अध्याय'],
+                ['difficulty', 'कठिनाई'],
+              ] as Array<[PerformanceView, string]>).map(([value, label]) => (
+                <button
+                  type="button"
+                  key={value}
+                  className={performanceView === value ? 'active' : ''}
+                  onClick={() => setPerformanceView(value)}
+                  role="tab"
+                  aria-selected={performanceView === value}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {performanceRows.length ? (
+              <div className="question-bank-performance-list">
+                {performanceRows.map((bucket) => (
+                  <div className="question-bank-performance-row" key={bucket.id}>
+                    <div className="question-bank-performance-row-main">
+                      <strong>{performanceView === 'difficulty' ? (difficultyLabels[bucket.id as Difficulty] ?? bucket.label) : bucket.label}</strong>
+                      <span>{bucket.attemptedQuestions} प्रश्न · {bucket.totalAttempts} प्रयास</span>
+                    </div>
+                    <div className="question-bank-performance-bar" aria-hidden="true">
+                      <span style={{ width: `${bucket.accuracy}%` }}></span>
+                    </div>
+                    <b className={bucket.accuracy < 60 ? 'weak' : bucket.accuracy < 80 ? 'average' : 'strong'}>{bucket.accuracy}%</b>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="question-bank-performance-empty">
+                इस breakdown में अभी कोई practice data नहीं है।
+              </div>
+            )}
+          </section>
+
           <section className="question-bank-filter-card">
             <div className="question-bank-section-title">
               <div>
@@ -386,11 +560,25 @@ const QuestionBankPage = () => {
             </div>
           </div>
 
+          {restoredFromSavedSession && (
+            <div className="question-bank-resume-notice">
+              ↻ पिछला Question Bank session resume किया गया है। आपके answers और current position सुरक्षित हैं।
+            </div>
+          )}
+
           <article className="question-bank-question-card">
             <div className="question-bank-question-meta">
               <span>{currentQuestion.id}</span>
               <span>{checked[currentQuestion.id] ? 'उत्तर जाँचा गया' : currentQuestion.type === 'multiple-select' ? 'एक से अधिक विकल्प चुनें' : 'एक विकल्प चुनें'}</span>
             </div>
+
+            {currentQuestionPerformance && currentQuestionPerformance.totalAttempts > 0 && (
+              <div className="question-bank-question-history">
+                <span>इस प्रश्न का इतिहास</span>
+                <b>{currentQuestionPerformance.accuracy}% accuracy</b>
+                <span>{currentQuestionPerformance.totalAttempts} attempts · {currentQuestionPerformance.correctAttempts} सही · {currentQuestionPerformance.incorrectAttempts} गलत</span>
+              </div>
+            )}
 
             <div className="question-bank-question-text">
               {cleanBlocks(currentQuestion, 'text').split('\n').map((line, index) => (
@@ -487,10 +675,10 @@ const QuestionBankPage = () => {
           </div>
 
           <div className="question-bank-finished-actions">
-            <button type="button" className="question-bank-start" onClick={() => { setCurrentIndex(0); setSessionState('practice'); }}>
+            <button type="button" className="question-bank-start" onClick={() => { setCurrentIndex(0); setRestoredFromSavedSession(false); setSessionState('practice'); }}>
               प्रश्न समीक्षा खोलें
             </button>
-            <button type="button" className="question-bank-secondary" onClick={() => { setAnswers({}); setMarkedForReview({}); setChecked({}); setCurrentIndex(0); setAttemptsRecorded(false); setSessionState('practice'); }}>
+            <button type="button" className="question-bank-secondary" onClick={() => { setAnswers({}); setMarkedForReview({}); setChecked({}); setCurrentIndex(0); setAttemptsRecorded(false); setSessionStartedAt(Date.now()); setRestoredFromSavedSession(false); setSessionState('practice'); }}>
               यही set फिर से करें
             </button>
             <button type="button" className="question-bank-secondary" onClick={resetSetup}>
