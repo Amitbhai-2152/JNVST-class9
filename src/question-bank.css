@@ -225,3 +225,106 @@
   .question-bank-session-kind .question-bank-selection-toggle{width:100%}
   .question-bank-session-kind .question-bank-selection-toggle button{flex:1}
 }
+
+
+/* PHASE 9 — question-bank mobile refinement */
+.question-bank-page,
+.question-bank-page > *,
+.question-bank-question-card,
+.question-bank-filter-card {
+  min-width: 0;
+}
+.question-bank-question-text,
+.question-bank-result-question,
+.question-bank-performance-row-main {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 820px) {
+  .question-bank-head h1 {
+    line-height: 1.08;
+  }
+  .question-bank-filter-card,
+  .question-bank-question-card,
+  .question-bank-finished,
+  .question-bank-performance-card {
+    box-shadow: 0 8px 24px rgba(26,48,79,.05);
+  }
+  .question-bank-options .question-bank-option {
+    min-height: 50px;
+  }
+}
+@media (max-width: 560px) {
+  .question-bank-filters select {
+    min-height: 48px;
+    font-size: 16px;
+  }
+  .question-bank-section-title,
+  .question-bank-practice-head,
+  .question-bank-performance-head {
+    gap: 10px;
+  }
+  .question-bank-section-title h2,
+  .question-bank-performance-head h2,
+  .question-bank-practice-head h2 {
+    font-size: 22px;
+    line-height: 1.2;
+  }
+  .question-bank-count,
+  .question-bank-last-practice {
+    white-space: normal;
+  }
+  .question-bank-option {
+    grid-template-columns: 30px minmax(0,1fr);
+    padding: 13px 12px;
+    font-size: 14px;
+  }
+  .question-bank-option > span {
+    width: 26px;
+    height: 26px;
+  }
+  .question-bank-progress-strip > div {
+    padding: 11px 10px;
+  }
+  .question-bank-progress-strip b {
+    font-size: 18px;
+  }
+  .question-bank-palette {
+    padding: 13px;
+  }
+  .question-bank-palette-grid {
+    gap: 6px;
+  }
+  .question-bank-palette-btn {
+    min-height: 40px;
+    border-radius: 9px;
+  }
+  .question-bank-result-list-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .question-bank-result-item-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .question-bank-result-item {
+    padding: 15px;
+  }
+}
+@media (max-width: 390px) {
+  .question-bank-page {
+    padding-bottom: 28px;
+  }
+  .question-bank-head h1 {
+    font-size: 30px;
+  }
+  .question-bank-question-text {
+    font-size: 15px;
+    line-height: 1.7;
+  }
+  .question-bank-option {
+    font-size: 13.5px;
+  }
+  .question-bank-palette-grid {
+    grid-template-columns: repeat(5, minmax(0,1fr));
+  }
+}
