@@ -108,7 +108,17 @@ const mergeProgress = (local: ProgressState, remote: ProgressState | null): Prog
     lessonIds: Array.from(new Set([...remote.bookmarks.lessonIds, ...local.bookmarks.lessonIds])),
   };
 
-  return { lessonActivity, questionAttempts, bookmarks, revisionHistory, recentlyStudied, mockTestResults, englishLabAttempts, hindiUnseenAttempts };
+  return {
+    lessonActivity,
+    questionAttempts,
+    bookmarks,
+    revisionHistory,
+    recentlyStudied,
+    mockTestResults,
+    englishLabAttempts,
+    hindiUnseenAttempts,
+    questionBankSession: local.questionBankSession ?? remote?.questionBankSession ?? null,
+  };
 };
 
 const normalizeAuthError = (message: string) => {
