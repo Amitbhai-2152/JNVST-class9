@@ -138,4 +138,5 @@ export interface ProgressState {
   mockTestResults: MockTestResult[];
   englishLabAttempts: Record<ID, EnglishLabAttempt[]>;
   hindiUnseenAttempts: Record<ID, HindiUnseenLabAttempt[]>;
+  questionBankSession: QuestionBankSessionState | null;
 }
