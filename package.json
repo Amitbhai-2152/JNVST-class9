@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit",
-    "verify": "node scripts/verifyQuestionBankPhase3.mjs && node scripts/verifyQuestionBankPhase2.mjs && node scripts/verifyQuestionBankFoundation.mjs && node scripts/verifyQuestionBanks.mjs && node scripts/verifyEnglishMastery.mjs && node scripts/verifyHindiMastery.mjs && node scripts/verifyHindiRelease.mjs",
+    "verify": "node scripts/verifyQuestionBankPhase4.mjs && node scripts/verifyQuestionBankPhase3.mjs && node scripts/verifyQuestionBankPhase2.mjs && node scripts/verifyQuestionBankFoundation.mjs && node scripts/verifyQuestionBanks.mjs && node scripts/verifyEnglishMastery.mjs && node scripts/verifyHindiMastery.mjs && node scripts/verifyHindiRelease.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
