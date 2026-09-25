@@ -43,12 +43,6 @@ const shuffle = <T,>(items: T[], seed = ''): T[] => {
   return copy;
 };
 
-const subjectForChapter = new Map(chapters.map((chapter) => [chapter.id, chapter.subjectId]));
-const topicByChapter = new Map<ID, ID[]>();
-topics.forEach((topic) => {
-  topicByChapter.set(topic.chapterId, [...(topicByChapter.get(topic.chapterId) ?? []), topic.id]);
-});
-
 const chapterPool = (chapterId: ID): Question[] =>
   unique(dedicatedChallengerQuestions.filter((question) => question.chapterId === chapterId));
 
