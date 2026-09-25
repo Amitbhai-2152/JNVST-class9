@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Question Bank Demo — JNVST Class 9</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#23364d;background:#f5f8fc}
+*{box-sizing:border-box}body{margin:0}.wrap{max-width:1180px;margin:auto;padding:24px}
+.top{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:18px}.brand{display:flex;gap:12px;align-items:center}.logo{width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,#173b68,#3765c8);color:white;display:grid;place-items:center;font-weight:900}.brand h1{font-size:18px;margin:0}.brand p{font-size:11px;color:#718198;margin:3px 0 0}.demo{padding:7px 10px;border:1px solid #e2e8f0;border-radius:999px;background:#fff;color:#7150c8;font-size:10px;font-weight:900}
+.hero{background:linear-gradient(135deg,#183c69,#355fc1);color:#fff;border-radius:24px;padding:26px;box-shadow:0 16px 38px #203f7022}.hero h2{margin:0 0 7px;font-size:27px}.hero p{margin:0;color:#dce8fb;max-width:720px;font-size:13px;line-height:1.6}
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:18px;margin-top:18px}.card{background:#fff;border:1px solid #e1e8f0;border-radius:20px;box-shadow:0 8px 24px #263c5610}.filters{padding:17px;height:max-content;position:sticky;top:16px}.filters h3{margin:0 0 13px;font-size:14px}.label{display:block;color:#77869a;font-size:10px;font-weight:900;margin:15px 0 7px}.choices{display:grid;grid-template-columns:1fr 1fr;gap:7px}.choice{border:1px solid #dfe6ee;background:#f9fbfd;border-radius:10px;padding:9px 7px;font-size:10px;font-weight:900;color:#596b81;cursor:pointer}.choice.active{background:#eef3ff;border-color:#bfcff3;color:#2858c9}.session{margin-top:15px;padding-top:15px;border-top:1px solid #edf1f5}.session button{width:100%;border:0;background:#2858c9;color:#fff;border-radius:11px;padding:11px;font-weight:900;cursor:pointer}
+.main{padding:18px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px}.stat{padding:11px;border:1px solid #e5ebf2;border-radius:13px;background:#fbfcfe}.stat b{display:block;font-size:17px}.stat span{font-size:9px;color:#8390a0}.question-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.badge{padding:5px 8px;border-radius:999px;font-size:9px;font-weight:900}.medium{background:#fff4db;color:#9b6b17}.progress{font-size:10px;color:#8290a1;font-weight:800}.bar{height:6px;background:#edf1f5;border-radius:999px;overflow:hidden;margin:9px 0 20px}.bar i{display:block;width:20%;height:100%;background:linear-gradient(90deg,#315fc7,#795bd4);border-radius:999px}.q{font-size:18px;font-weight:800;line-height:1.55;margin:8px 0 18px}.options{display:grid;gap:9px}.option{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;border:1px solid #dfe6ee;background:#fff;border-radius:13px;padding:13px;cursor:pointer;color:#3c5068;font-size:13px}.option:hover{border-color:#b9c8dd;background:#fafcff}.option.selected{border-color:#5d76d6;background:#f1f4ff}.circle{width:25px;height:25px;border:1px solid #ccd6e2;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:900;flex:0 0 auto}.selected .circle{background:#315fc7;color:#fff;border-color:#315fc7}.explain{margin-top:15px;padding:13px;border-radius:13px;background:#f7f9fc;border:1px solid #e6ebf2;font-size:11px;line-height:1.6;color:#687a90;display:none}.explain.show{display:block}.actions{display:flex;justify-content:space-between;gap:10px;margin-top:18px}.btn{border:1px solid #dbe3ec;background:#fff;color:#52667e;border-radius:10px;padding:10px 13px;font-weight:900;font-size:11px;cursor:pointer}.btn.primary{background:#2858c9;border-color:#2858c9;color:#fff}.mini{font-size:9px;color:#8793a3;margin-top:12px}.resume{margin-top:12px;padding:12px;border:1px solid #e5ddf7;background:#faf8ff;border-radius:13px;color:#6544ad;font-size:10px;font-weight:800}
+@media(max-width:800px){.layout{grid-template-columns:1fr}.filters{position:static}.choices{grid-template-columns:repeat(4,1fr)}.stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.wrap{padding:13px}.hero{padding:20px;border-radius:18px}.hero h2{font-size:22px}.choices{grid-template-columns:1fr 1fr}.main{padding:13px}.q{font-size:16px}.top{align-items:flex-start}.demo{font-size:8px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div class="brand"><div class="logo">9</div><div><h1>JNVST कक्षा 9 Learning Hub</h1><p>Temporary Question Bank UI Preview</p></div></div><span class="demo">DEMO • बाद में हटाया जाएगा</span></header>
+<section class="hero"><h2>📚 Question Bank</h2><p>यह केवल UI/UX prototype है। वास्तविक bank में questions एक बार store होंगे और यही content Topic Practice, Quick Practice, CBT और PDF generation में reuse होगा।</p></section>
+<div class="layout">
+<aside class="card filters"><h3>अभ्यास चुनें</h3><span class="label">विषय</span><div class="choices"><button class="choice active">गणित</button><button class="choice">विज्ञान</button><button class="choice">हिंदी</button><button class="choice">English</button></div><span class="label">कठिनाई</span><div class="choices"><button class="choice">आसान</button><button class="choice active">मध्यम</button><button class="choice">कठिन</button><button class="choice">Challenger</button></div><span class="label">Session</span><div class="choices"><button class="choice active">10 प्रश्न</button><button class="choice">20 प्रश्न</button><button class="choice">30 प्रश्न</button><button class="choice">Custom</button></div><div class="session"><button onclick="alert('Demo: चुने गए filters के अनुसार नया practice session बनेगा।')">अभ्यास शुरू करें →</button></div><div class="resume">↻ पिछला session: 7/10 completed<br><span style="font-weight:600;color:#8a7aa9">जहाँ छोड़ा था वहीं से जारी करें</span></div><p class="mini">Full Mock अलग होगा: 100 प्रश्न • 150 मिनट</p></aside>
+<main class="card main">
+<div class="stats"><div class="stat"><b>10</b><span>इस session में</span></div><div class="stat"><b>2 / 10</b><span>पूरा</span></div><div class="stat"><b>Medium</b><span>कठिनाई</span></div><div class="stat"><b>1,248+</b><span>bank questions</span></div></div>
+<div class="question-head"><span class="badge medium">मध्यम • Concept + Application</span><span class="progress">प्रश्न 2 / 10</span></div><div class="bar"><i></i></div>
+<div class="q">यदि किसी बिंदु के निर्देशांक (0, 5) हैं, तो वह बिंदु किस अक्ष पर स्थित है?</div>
+<div class="options">
+<button class="option" onclick="select(this)"><span class="circle">A</span><span>x-अक्ष</span></button>
+<button class="option" onclick="select(this)"><span class="circle">B</span><span>y-अक्ष</span></button>
+<button class="option" onclick="select(this)"><span class="circle">C</span><span>मूल बिंदु</span></button>
+<button class="option" onclick="select(this)"><span class="circle">D</span><span>किसी अक्ष पर नहीं</span></button>
+</div>
+<div id="explain" class="explain"><b>व्याख्या:</b> x = 0 होने पर बिंदु y-अक्ष पर स्थित होता है। वास्तविक question bank में explanation question की difficulty और concept के अनुसार दी जाएगी।</div>
+<div class="actions"><button class="btn" onclick="showExplanation()">व्याख्या देखें</button><div style="display:flex;gap:8px"><button class="btn">← पिछला</button><button class="btn primary">अगला प्रश्न →</button></div></div>
+</main>
+</div>
+</div>
+<script>
+function select(el){document.querySelectorAll('.option').forEach(x=>x.classList.remove('selected'));el.classList.add('selected')}
+function showExplanation(){document.getElementById('explain').classList.toggle('show')}
+</script>
+</body>
+</html>
