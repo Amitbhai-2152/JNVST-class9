@@ -146,10 +146,26 @@ const rebalanceCanonicalOptionPositions = (questions: Question[]): Question[] =>
 
   const balancedTargetPositions = new Map<number, number>();
   for (const [subjectId, indices] of bySubject.entries()) {
-    const targetPositions = seededShuffle(
-      indices.map((_, index) => index % 4),
-      subjectId + ':canonical-answer-positions',
-    );
+    const basePositions = indices.map((_, index) => index % 4);
+    let targetPositions = basePositions;
+    const maxRun = (values: number[]): number => {
+      let longest = 0;
+      let run = 0;
+      let previous = -1;
+      for (const value of values) {
+        run = value === previous ? run + 1 : 1;
+        previous = value;
+        longest = Math.max(longest, run);
+      }
+      return longest;
+    };
+    for (let attempt = 0; attempt < 200; attempt += 1) {
+      const candidate = seededShuffle(basePositions, subjectId + ':canonical-answer-positions:' + attempt);
+      if (maxRun(candidate) <= 2) {
+        targetPositions = candidate;
+        break;
+      }
+    }
     indices.forEach((questionIndex, positionIndex) => {
       balancedTargetPositions.set(questionIndex, targetPositions[positionIndex]);
     });
