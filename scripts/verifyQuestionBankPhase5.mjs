@@ -61,7 +61,7 @@ for (const contract of [
 }
 
 if (!page.includes('selectQuestionBankSession(')) throw new Error('Question Bank is not using the Phase 5 selector.');
-if (!page.includes('selectionMode,\n    );')) throw new Error('Selection mode is not passed into the session generator.');
+if (!/selectQuestionBankSession\([\s\S]*selectionMode/.test(page)) throw new Error('Selection mode is not passed into the session generator.');
 if (!page.includes('filters: { subjectId, chapterId, topicId, difficulty, sessionSize, selectionMode }')) {
   throw new Error('Selection mode is not persisted in resumable session state.');
 }
