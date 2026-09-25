@@ -5,6 +5,7 @@ import { MathAwareText } from '../components/MathText';
 import { questionBank, questionBankById, questionBankStats, questionBankTaxonomy } from '../data/questionBank';
 import { useProgressStore } from '../store/progress';
 import { getQuestionBankProgressSummary, getQuestionPerformance } from '../utils/questionBankProgress';
+import { getSelectionRationale, selectQuestionBankSession, type QuestionBankSelectionMode } from '../utils/questionBankSmartSelection';
 import type { Difficulty, ID, Question } from '../types';
 
 type FilterValue = ID | 'all';
@@ -62,6 +63,7 @@ const QuestionBankPage = () => {
   const [topicId, setTopicId] = useState<FilterValue>('all');
   const [difficulty, setDifficulty] = useState<'all' | Difficulty>('all');
   const [sessionSize, setSessionSize] = useState(10);
+  const [selectionMode, setSelectionMode] = useState<QuestionBankSelectionMode>('smart');
 
   const [session, setSession] = useState<Question[]>([]);
   const [sessionState, setSessionState] = useState<SessionState>('setup');
@@ -194,6 +196,7 @@ const QuestionBankPage = () => {
     setTopicId(savedQuestionBankSession.filters?.topicId ?? 'all');
     setDifficulty(savedQuestionBankSession.filters?.difficulty ?? 'all');
     setSessionSize(savedQuestionBankSession.filters?.sessionSize ?? restoredQuestions.length);
+    setSelectionMode(savedQuestionBankSession.filters?.selectionMode ?? 'smart');
     setRestoredFromSavedSession(true);
     setSessionState(savedQuestionBankSession.status);
   }, [savedQuestionBankSession, clearQuestionBankSession]);
@@ -208,7 +211,7 @@ const QuestionBankPage = () => {
       markedForReview: Object.entries(markedForReview).filter(([, marked]) => marked).map(([id]) => id),
       checkedQuestionIds: Object.entries(checked).filter(([, isChecked]) => isChecked).map(([id]) => id),
       currentIndex,
-      filters: { subjectId, chapterId, topicId, difficulty, sessionSize },
+      filters: { subjectId, chapterId, topicId, difficulty, sessionSize, selectionMode },
       startedAt: sessionStartedAt,
       updatedAt: Date.now(),
       attemptsRecorded,
@@ -227,11 +230,18 @@ const QuestionBankPage = () => {
     topicId,
     difficulty,
     sessionSize,
+    selectionMode,
     saveQuestionBankSession,
   ]);
 
   const startPractice = () => {
-    const nextSession = getUniqueQuestions(filteredQuestions, sessionSize);
+    const selected = selectQuestionBankSession(
+      filteredQuestions,
+      progressQuestionAttempts ?? {},
+      sessionSize,
+      selectionMode,
+    );
+    const nextSession = selected.questions;
     if (!nextSession.length) return;
     setSession(nextSession);
     setAnswers({});
@@ -255,6 +265,7 @@ const QuestionBankPage = () => {
     setAttemptsRecorded(false);
     setSessionStartedAt(0);
     setRestoredFromSavedSession(false);
+    setSelectionMode('smart');
     setSessionState('setup');
     clearQuestionBankSession(null);
   };
@@ -347,7 +358,7 @@ const QuestionBankPage = () => {
           <Link className="question-bank-back" to="/">← डैशबोर्ड</Link>
           <span className="question-bank-eyebrow">QUESTION BANK • PHASE 4</span>
           <h1>Question Bank</h1>
-          <p>विषय, अध्याय, विषयांश और कठिनाई के अनुसार प्रश्न चुनें और structured practice session चलाएँ।</p>
+          <p>विषय, अध्याय, विषयांश और कठिनाई के अनुसार प्रश्न चुनें। Smart practice आपकी पिछली performance के आधार पर अगला set चुन सकता है।</p>
         </div>
         <div className="question-bank-stat">
           <strong>{questionBankStats.total}</strong>
@@ -477,6 +488,22 @@ const QuestionBankPage = () => {
               </label>
             </div>
 
+            <div className="question-bank-selection-mode">
+              <div>
+                <span className="question-bank-label">SELECTION MODE</span>
+                <strong>{selectionMode === 'smart' ? 'Smart Practice' : 'Random Practice'}</strong>
+                <p>
+                  {selectionMode === 'smart'
+                    ? 'पहले unattempted प्रश्न, फिर कमजोर या लंबे समय से न दोहराए गए विषयांश और उपयुक्त difficulty को प्राथमिकता दी जाएगी।'
+                    : 'उपलब्ध filtered questions में से random unique questions चुने जाएंगे।'}
+                </p>
+              </div>
+              <div className="question-bank-selection-toggle" role="group" aria-label="Question selection mode">
+                <button type="button" className={selectionMode === 'smart' ? 'active' : ''} onClick={() => setSelectionMode('smart')}>⚡ Smart</button>
+                <button type="button" className={selectionMode === 'random' ? 'active' : ''} onClick={() => setSelectionMode('random')}>⌘ Random</button>
+              </div>
+            </div>
+
             <div className="question-bank-filter-summary">
               <div><b>{filteredQuestions.length}</b><span>matching questions</span></div>
               <div><b>{sessionSize}</b><span>requested session</span></div>
@@ -568,6 +595,22 @@ const QuestionBankPage = () => {
           )}
 
           <article className="question-bank-question-card">
+            <div className="question-bank-practice-intelligence">
+              <span>{selectionMode === 'smart' ? '⚡ Smart practice' : '⌘ Random practice'}</span>
+              {selectionMode === 'smart' && currentQuestionPerformance && currentQuestionPerformance.totalAttempts > 0
+                ? <span>इस प्रश्न के लिए {getSelectionRationale({
+                    questionId: currentQuestion.id,
+                    topicId: currentQuestion.topicId,
+                    attempts: currentQuestionPerformance.totalAttempts,
+                    accuracy: currentQuestionPerformance.accuracy,
+                    lastAttemptAt: currentQuestionPerformance.lastAttempt?.timestamp ?? null,
+                    daysSinceAttempt: currentQuestionPerformance.lastAttempt ? Math.max(0, (Date.now() - currentQuestionPerformance.lastAttempt.timestamp) / (24 * 60 * 60 * 1000)) : null,
+                    needScore: 0,
+                    difficultyFit: 0,
+                  })}</span>
+                : selectionMode === 'smart' ? <span>Smart engine इस set को आपके practice history के अनुसार संतुलित कर रहा है।</span> : <span>Random set — हर session में unique questions.</span>}
+            </div>
+
             <div className="question-bank-question-meta">
               <span>{currentQuestion.id}</span>
               <span>{checked[currentQuestion.id] ? 'उत्तर जाँचा गया' : currentQuestion.type === 'multiple-select' ? 'एक से अधिक विकल्प चुनें' : 'एक विकल्प चुनें'}</span>
