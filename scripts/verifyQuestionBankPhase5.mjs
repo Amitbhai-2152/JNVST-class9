@@ -34,7 +34,7 @@ for (const contract of [
 for (const contract of [
   'needScore',
   'difficultyFit',
-  'attempts.length === 0',
+  '!attempts.length',
   'accuracy < 50',
   'accuracy < 70',
   'daysSinceAttempt',
