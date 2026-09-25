@@ -51,7 +51,7 @@ const emptyTypeCounts = (): Record<QuestionType, number> => ({
   passage: 0,
 });
 
-export const questionBankStats: QuestionBankStats = questionBank.reduce(
+export const questionBankStats: QuestionBankStats = questionBank.reduce<QuestionBankStats>(
   (stats, question) => {
     stats.bySubject[question.subjectId] = (stats.bySubject[question.subjectId] ?? 0) + 1;
     stats.byDifficulty[question.difficulty] += 1;
