@@ -110,8 +110,11 @@ export interface HindiUnseenLabAttempt {
   mode: 'unseen';
 }
 
+export type QuestionBankSessionKind = 'practice' | 'challenger';
+
 export interface QuestionBankSessionState {
   status: 'practice' | 'finished';
+  sessionKind: QuestionBankSessionKind;
   questionIds: ID[];
   answers: Record<ID, ID[]>;
   markedForReview: ID[];
