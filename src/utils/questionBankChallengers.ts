@@ -78,7 +78,7 @@ export const getDedicatedSubjectChallengers = (subjectId: ID, limit = 20, seed =
 
   // Give every chapter a chance before filling remaining positions.
   let cursor = 0;
-  while (selected.length < Math.min(limit, 20) && chapterPools.length) {
+  while (selected.length < limit && chapterPools.length) {
     const entry = chapterPools[cursor % chapterPools.length];
     const next = shuffle(entry.questions, seed + ':' + subjectId + ':' + entry.chapterId + ':' + cursor)
       .find((question) => !selectedIds.has(question.id));
@@ -96,11 +96,18 @@ export const getDedicatedSubjectChallengers = (subjectId: ID, limit = 20, seed =
   );
 
   for (const question of remaining) {
-    if (selected.length >= Math.min(limit, 20)) break;
+    if (selected.length >= limit) break;
     selected.push(question);
   }
 
   return selected;
+};
+
+
+export const getDedicatedGlobalChallengers = (limit = 20, seed = 'question-bank-global-challenger'): Question[] => {
+  const pool = unique([...dedicatedChallengerQuestions]);
+  if (pool.length < 20) return [];
+  return shuffle(pool, seed).slice(0, Math.min(limit, pool.length));
 };
 
 export const getDedicatedChallengerCounts = () => ({
