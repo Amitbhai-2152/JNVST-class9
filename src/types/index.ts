@@ -123,6 +123,7 @@ export interface QuestionBankSessionState {
     topicId: ID | 'all';
     difficulty: 'all' | Difficulty;
     sessionSize: number;
+    selectionMode: 'smart' | 'random';
   };
   startedAt: number;
   updatedAt: number;
