@@ -196,3 +196,21 @@
   .question-bank-performance-row>b{grid-column:2;grid-row:1 / span 2}
   .question-bank-question-history{align-items:flex-start;flex-direction:column;gap:5px}
 }
+
+.question-bank-selection-mode{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:18px;padding:15px 16px;border:1px solid #e0e7f0;border-radius:16px;background:#f8fbff}
+.question-bank-selection-mode>div:first-child{min-width:0}
+.question-bank-selection-mode strong{display:block;margin-top:4px;color:#24405f;font-size:14px}
+.question-bank-selection-mode p{margin:5px 0 0;color:#6f7c90;font-size:11px;line-height:1.55}
+.question-bank-selection-toggle{display:flex;gap:7px;flex:0 0 auto}
+.question-bank-selection-toggle button{min-height:38px;padding:0 12px;border:1px solid #d2ddea;border-radius:10px;background:#fff;color:#53657c;font:inherit;font-size:12px;font-weight:900;cursor:pointer}
+.question-bank-selection-toggle button:hover{border-color:#9fb3cc;background:#fff}
+.question-bank-selection-toggle button.active{border-color:#3f6fb7;background:#2858c9;color:#fff;box-shadow:0 6px 14px rgba(40,88,201,.16)}
+.question-bank-practice-intelligence{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+.question-bank-practice-intelligence span{padding:5px 8px;border-radius:999px;background:#f1f5fa;color:#66758a;font-size:10px;font-weight:850}
+.question-bank-practice-intelligence span:first-child{background:#eef5ff;color:#2858c9}
+@media (max-width:700px){
+  .question-bank-selection-mode{align-items:stretch;flex-direction:column}
+  .question-bank-selection-toggle{width:100%}
+  .question-bank-selection-toggle button{flex:1}
+  .question-bank-practice-intelligence{align-items:flex-start;flex-direction:column;gap:5px}
+}
