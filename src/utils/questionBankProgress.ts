@@ -43,7 +43,7 @@ const sortBuckets = (buckets: QuestionBankPerformanceBucket[]) =>
     );
 
 export const getQuestionBankProgressSummary = (
-  progress: ProgressState,
+  progress: Pick<ProgressState, 'questionAttempts'>,
   questionById: ReadonlyMap<ID, { subjectId: ID; chapterId: ID; topicId: ID; difficulty: Difficulty }>,
   taxonomy: QuestionBankTaxonomy,
 ): QuestionBankProgressSummary => {
