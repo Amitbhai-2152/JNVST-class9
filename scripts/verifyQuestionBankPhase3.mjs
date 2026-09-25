@@ -53,8 +53,8 @@ for (const contract of cssContracts) {
   if (!css.includes(contract)) throw new Error('Phase 3 CSS contract missing: ' + contract);
 }
 
-if (!page.includes('selectedOptionIds,') || !page.includes("mode: 'practice'")) {
-  throw new Error('Practice attempt recording contract is incomplete.');
+if (!page.includes('selectedOptionIds') || !/mode:\s+sessionKind\s+===\s+'challenger'\s+\?\s+'revision'|mode:\s+'practice'/.test(page)) {
+  throw new Error('Practice/Challenger attempt recording contract is incomplete.');
 }
 
 if (!page.includes("setSessionState('finished')")) {
