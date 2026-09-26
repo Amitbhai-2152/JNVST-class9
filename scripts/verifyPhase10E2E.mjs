@@ -20,6 +20,14 @@ const QBPAGE_CSS = read('src/question-bank.css');
 const INDEX_CSS = read('src/index.css');
 const PACKAGE = JSON.parse(read('package.json'));
 
+const QUESTION_BANK_REMOTE_MARKERS = [
+  ['expanded practice heading', 'EXPANDED PRACTICE'],
+  ['hard-plus difficulty filter', 'hard-plus'],
+  ['hard-plus label', 'Hard + Challenge'],
+  ['custom question size controls', 'question-bank-size-presets'],
+  ['custom question size presets', '50,75,100'],
+];
+
 const criticalRoutes = [
   '/',
   '/login',
@@ -290,12 +298,88 @@ const runLocalProductionSmoke = async () => {
   }
 };
 
+
+const checkRemoteQuestionBankBundle = async (baseUrl) => {
+  const origin = baseUrl.replace(/\/$/, '');
+  const routeUrl = origin + '/question-bank/';
+  let lastIssue = '';
+
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const response = await fetchWithRetry(
+      routeUrl,
+      {
+        redirect: 'follow',
+        headers: {
+          'cache-control': 'no-cache, no-store, max-age=0',
+          pragma: 'no-cache',
+          accept: 'text/html,*/*',
+        },
+      },
+      1,
+      0,
+    );
+    const html = await response.text();
+    const hasShell = /id=["']root["']/.test(html);
+    assert('remote Question Bank canonical route', response.status === 200, 'HTTP ' + response.status);
+    assert('remote Question Bank canonical HTML shell', hasShell);
+
+    const scriptMatches = [...html.matchAll(/<script[^>]+src=["']([^"']+\.js)["']/g)].map((match) => match[1]);
+    const stylesheetMatches = [...html.matchAll(/<link[^>]+href=["']([^"']+\.css)["']/g)].map((match) => match[1]);
+    const scriptUrl = scriptMatches.find((value) => value.includes('/assets/'));
+    const stylesheetUrl = stylesheetMatches.find((value) => value.includes('/assets/'));
+
+    if (!scriptUrl || !stylesheetUrl) {
+      lastIssue = 'current Question Bank HTML does not reference Vite assets';
+    } else {
+      const scriptResponse = await fetchWithRetry(
+        origin + scriptUrl,
+        { headers: { 'cache-control': 'no-cache, no-store, max-age=0' } },
+        1,
+        0,
+      );
+      const cssResponse = await fetchWithRetry(
+        origin + stylesheetUrl,
+        { headers: { 'cache-control': 'no-cache, no-store, max-age=0' } },
+        1,
+        0,
+      );
+      const script = await scriptResponse.text();
+      const css = await cssResponse.text();
+      assert('remote Question Bank JS asset', scriptResponse.status === 200, 'HTTP ' + scriptResponse.status);
+      assert('remote Question Bank CSS asset', cssResponse.status === 200, 'HTTP ' + cssResponse.status);
+
+      const missingMarkers = QUESTION_BANK_REMOTE_MARKERS
+        .filter(([label, marker]) => !script.includes(marker) && !css.includes(marker))
+        .map(([label]) => label);
+
+      if (missingMarkers.length === 0) {
+        for (const [label] of QUESTION_BANK_REMOTE_MARKERS) {
+          assert('remote Question Bank ' + label, true);
+        }
+        console.log('PASS — remote Question Bank bundle matches the expanded-practice release');
+        return;
+      }
+
+      lastIssue = 'stale bundle missing: ' + missingMarkers.join(', ');
+    }
+
+    if (attempt < 11) {
+      console.log('WAIT — remote Question Bank bundle propagation: ' + lastIssue);
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
+  }
+
+  fail('FAIL — remote Question Bank bundle freshness: ' + lastIssue);
+};
+
 const runRemoteSmoke = async (baseUrl) => {
   assert('remote URL supplied', /^https?:\/\//.test(baseUrl));
 
   // GitHub Pages can take a short time to expose a freshly deployed directory index.
   // Retry each critical route for a bounded window, then fail on a persistent 404/5xx.
   await checkHtml(baseUrl, 'remote-production', criticalRoutes, { attempts: 12, delayMs: 5000 });
+
+  await checkRemoteQuestionBankBundle(baseUrl);
 
   const notificationUrl = baseUrl.replace(/\/$/, '') + '/notifications.json?_phase10=1';
   const response = await fetchWithRetry(
