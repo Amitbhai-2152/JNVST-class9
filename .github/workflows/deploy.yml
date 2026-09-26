@@ -38,6 +38,8 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: End-to-end production smoke verification
+        run: npm run verify:e2e
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -48,6 +50,8 @@ jobs:
           path: dist
 
   deploy:
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -57,3 +61,24 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+
+
+  smoke:
+    name: Live production smoke test
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify deployed production routes
+        env:
+          PAGE_URL: ${{ needs.deploy.outputs.page_url }}
+        run: |
+          test -n "$PAGE_URL"
+          node scripts/verifyPhase10E2E.mjs --remote "$PAGE_URL"
