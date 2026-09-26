@@ -399,3 +399,38 @@
     width:100%;
   }
 }
+
+
+.question-bank-separation-notice {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: start;
+  margin: 18px 0 22px;
+  padding: 16px 18px;
+  border: 1px solid rgba(59, 130, 246, 0.24);
+  border-radius: 16px;
+  background: rgba(59, 130, 246, 0.06);
+}
+.question-bank-separation-icon {
+  font-size: 1.15rem;
+  line-height: 1.4;
+}
+.question-bank-separation-notice strong {
+  display: block;
+  margin-bottom: 5px;
+}
+.question-bank-separation-notice p {
+  margin: 0;
+  line-height: 1.55;
+}
+.question-bank-separation-notice p + p {
+  margin-top: 7px;
+}
+@media (max-width: 640px) {
+  .question-bank-separation-notice {
+    grid-template-columns: 1fr;
+    gap: 7px;
+    padding: 14px;
+  }
+}
