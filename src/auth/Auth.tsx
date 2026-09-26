@@ -1,7 +1,7 @@
 import jnvstLoginHero from '../assets/jnvst-login-hero.webp';
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
-import { useProgressStore, emptyProgressState, getMainCloudProgressSnapshot, getQuestionBankCloudProgressSnapshot } from '../store/progress';
+import { useProgressStore, emptyProgressState, getProgressSnapshot, getMainCloudProgressSnapshot, getQuestionBankCloudProgressSnapshot } from '../store/progress';
 import type { ProgressState } from '../types';
 import { supabase, supabaseConfigured } from '../lib/supabase';
 import {
