@@ -54,6 +54,26 @@ export const getProgressSnapshot = (): ProgressState => {
   };
 };
 
+export type MainCloudProgress = Omit<ProgressState, 'questionBankAttempts' | 'questionBankSession'>;
+export interface QuestionBankCloudProgress {
+  attempts: ProgressState['questionBankAttempts'];
+  session: ProgressState['questionBankSession'];
+}
+
+export const getMainCloudProgressSnapshot = (): MainCloudProgress => {
+  const snapshot = getProgressSnapshot();
+  const { questionBankAttempts: _questionBankAttempts, questionBankSession: _questionBankSession, ...main } = snapshot;
+  return main;
+};
+
+export const getQuestionBankCloudProgressSnapshot = (): QuestionBankCloudProgress => {
+  const state = useProgressStore.getState();
+  return {
+    attempts: state.questionBankAttempts ?? {},
+    session: state.questionBankSession ?? null,
+  };
+};
+
 export const useProgressStore = create<Store>()(
   persist(
     (set) => ({
