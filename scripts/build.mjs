@@ -1,4 +1,4 @@
-import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 
 const sourcePath = 'index.src.html';
@@ -16,7 +16,7 @@ const extractIds = (source, pattern) => unique([...source.matchAll(pattern)].map
 const assetBasename = (value) => value.split('/').pop() || value;
 
 const getAssetReferences = (html) =>
-  [...html.matchAll(/(?:src|href)=["']([^"']+\.(?:js|css))["']/g)]
+  [...html.matchAll(/(?:src|href)=["']([^"']+.(?:js|css))["']/g)]
     .map((match) => assetBasename(match[1]))
     .filter((name) => name.endsWith('.js') || name.endsWith('.css'));
 
@@ -30,6 +30,33 @@ const preserveLegacyEntryAssets = async (previousHtml, builtHtml) => {
     if (!currentAsset || currentAsset === previousAsset) continue;
 
     await copyFile('dist/assets/' + currentAsset, 'dist/assets/' + previousAsset);
+  }
+};
+
+// The Pages CDN can temporarily serve an older cached HTML shell. The repository
+// root intentionally retains generated assets from prior verified syncs, so keep
+// those historical JS/CSS entry bundles in the deploy artifact as well.
+const preserveRepositoryLegacyAssets = async () => {
+  let assetNames;
+  try {
+    assetNames = await readdir('assets');
+  } catch (error) {
+    if (error && error.code === 'ENOENT') return;
+    throw error;
+  }
+
+  for (const assetName of assetNames) {
+    if (!/\.(?:js|css)$/.test(assetName)) continue;
+
+    const source = 'assets/' + assetName;
+    const target = 'dist/assets/' + assetName;
+
+    try {
+      await readFile(target);
+    } catch (error) {
+      if (error && error.code !== 'ENOENT') throw error;
+      await copyFile(source, target);
+    }
   }
 };
 
@@ -144,6 +171,7 @@ try {
   else {
     const builtIndex = await readFile('dist/index.html', 'utf8');
     await preserveLegacyEntryAssets(previous, builtIndex);
+    await preserveRepositoryLegacyAssets();
     await copyFile('src/data/notifications.json', 'dist/notifications.json');
     await buildSeoFiles();
   }
