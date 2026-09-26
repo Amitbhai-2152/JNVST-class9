@@ -131,7 +131,11 @@ try {
       fail.push('Duplicate dedicated Challenger option text: ' + question.id);
     }
     const isPhase11Question = /^(q_eng_tc_|q_sci_tc_)/.test(question.id);
-    if (isPhase11Question && String(question.explanationPlain ?? '').trim().length < 15) {
+    const explanationText = (question.explanation ?? [])
+      .map((block) => 'text' in block ? block.text : 'expression' in block ? block.expression : '')
+      .join(' ')
+      .trim();
+    if (isPhase11Question && explanationText.length < 15) {
       fail.push('Phase 11 Challenger explanation too short: ' + question.id);
     }
   }
