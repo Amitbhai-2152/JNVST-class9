@@ -6,7 +6,7 @@ import { questionBank, questionBankById, questionBankStats, questionBankTaxonomy
 import { useProgressStore } from '../store/progress';
 import { getQuestionBankProgressSummary, getQuestionPerformance } from '../utils/questionBankProgress';
 import { getSelectionRationale, selectQuestionBankSession, type QuestionBankSelectionMode } from '../utils/questionBankSmartSelection';
-import { getDedicatedChapterChallengers, getDedicatedGlobalChallengers, getDedicatedSubjectChallengers, getDedicatedTopicChallengers, getDedicatedChallengerCounts } from '../utils/questionBankChallengers';
+import { dedicatedChallengerQuestions, getDedicatedChapterChallengers, getDedicatedGlobalChallengers, getDedicatedSubjectChallengers, getDedicatedTopicChallengers, getDedicatedChallengerCounts } from '../utils/questionBankChallengers';
 import type { Difficulty, ID, Question, QuestionBankDifficultyFilter, QuestionBankSessionKind } from '../types';
 
 type FilterValue = ID | 'all';
@@ -66,6 +66,14 @@ const getUniqueQuestions = (items: Question[], size: number) =>
 
 const sameAnswers = (selected: ID[], correct: ID[]) =>
   selected.length === correct.length && selected.every((id) => correct.includes(id));
+
+// Saved sessions may contain either canonical Practice questions or dedicated
+// Challenger questions. Canonical IDs win defensively if an unexpected overlap
+// ever appears, preserving the canonical bank as the source of truth.
+const questionBankSessionById = new Map<ID, Question>([
+  ...dedicatedChallengerQuestions,
+  ...questionBank,
+].map((question) => [question.id, question]));
 
 const QuestionBankPage = () => {
   const [subjectId, setSubjectId] = useState<FilterValue>('all');
@@ -190,7 +198,7 @@ const QuestionBankPage = () => {
     if (!savedQuestionBankSession) return;
 
     const restoredQuestions = savedQuestionBankSession.questionIds
-      .map((id) => questionBankById.get(id))
+      .map((id) => questionBankSessionById.get(id))
       .filter((question): question is Question => Boolean(question));
 
     if (!restoredQuestions.length) {
@@ -227,7 +235,7 @@ const QuestionBankPage = () => {
       markedForReview: Object.entries(markedForReview).filter(([, marked]) => marked).map(([id]) => id),
       checkedQuestionIds: Object.entries(checked).filter(([, isChecked]) => isChecked).map(([id]) => id),
       currentIndex,
-      filters: { subjectId, chapterId, topicId, difficulty, sessionSize, selectionMode },
+      filters: { subjectId, chapterId, topicId, difficulty, sessionSize: effectiveSessionSize, selectionMode },
       startedAt: sessionStartedAt,
       updatedAt: Date.now(),
       attemptsRecorded,
@@ -251,14 +259,16 @@ const QuestionBankPage = () => {
     saveQuestionBankSession,
   ]);
 
-  const challengerQuestions = useMemo(() => {
-    const seed = 'question-bank-challenger:' + subjectId + ':' + chapterId + ':' + topicId;
+  const getChallengerPool = (seedSuffix = '') => {
+    const seed = 'question-bank-challenger:' + subjectId + ':' + chapterId + ':' + topicId + ':' + seedSuffix;
     const poolLimit = 1000;
     if (topicId !== 'all') return getDedicatedTopicChallengers(topicId, poolLimit, seed);
     if (chapterId !== 'all') return getDedicatedChapterChallengers(chapterId, poolLimit, seed);
     if (subjectId !== 'all') return getDedicatedSubjectChallengers(subjectId, poolLimit, seed);
     return getDedicatedGlobalChallengers(poolLimit, seed);
-  }, [subjectId, chapterId, topicId]);
+  };
+
+  const challengerQuestions = useMemo(() => getChallengerPool('setup'), [subjectId, chapterId, topicId]);
 
   const availableCount = sessionKind === 'challenger'
     ? challengerQuestions.length
@@ -267,14 +277,18 @@ const QuestionBankPage = () => {
   const challengerScopeReady = challengerQuestions.length >= 20;
   const maximumSessionSize = Math.max(5, Math.min(100, availableCount || 5));
   const clampSessionSize = (value: number) => Math.max(5, Math.min(maximumSessionSize, Math.round(value) || 5));
+  const effectiveSessionSize = clampSessionSize(sessionSize);
+  const practiceScopeReady = filteredQuestions.length >= 5;
+  const sessionReady = sessionKind === 'challenger' ? challengerScopeReady : practiceScopeReady;
 
   const startPractice = () => {
+    const requestedSize = effectiveSessionSize;
     const nextSession = sessionKind === 'challenger'
-      ? challengerQuestions.slice(0, clampSessionSize(sessionSize))
+      ? getChallengerPool(String(Date.now())).slice(0, requestedSize)
       : selectQuestionBankSession(
           filteredQuestions,
           progressQuestionAttempts ?? {},
-          sessionSize,
+          requestedSize,
           selectionMode,
         ).questions;
     if (!nextSession.length) return;
@@ -524,7 +538,7 @@ const QuestionBankPage = () => {
                   min={5}
                   max={maximumSessionSize}
                   step={1}
-                  value={Math.min(sessionSize, maximumSessionSize)}
+                  value={effectiveSessionSize}
                   onChange={(event) => setSessionSize(clampSessionSize(Number(event.target.value)))}
                   aria-label="कितने प्रश्न चाहिए"
                 />
@@ -566,7 +580,7 @@ const QuestionBankPage = () => {
 
             <div className="question-bank-size-presets" role="group" aria-label="Quick question count">
               {[10, 20, 30, 50, 75, 100].filter((size) => size <= maximumSessionSize).map((size) => (
-                <button type="button" key={size} className={sessionSize === size ? 'active' : ''} onClick={() => setSessionSize(size)}>
+                <button type="button" key={size} className={effectiveSessionSize === size ? 'active' : ''} onClick={() => setSessionSize(size)}>
                   {size}
                 </button>
               ))}
@@ -574,11 +588,11 @@ const QuestionBankPage = () => {
 
             <div className="question-bank-filter-summary">
               <div><b>{availableCount}</b><span>{sessionKind === 'challenger' ? 'dedicated Challenger questions' : 'matching questions'}</span></div>
-              <div><b>{sessionSize}</b><span>requested session</span></div>
-              <div><b>{sessionKind === 'challenger' ? (challengerScopeReady ? 'Ready' : '20+ required') : (filteredQuestions.length ? 'Ready' : 'Empty')}</b><span>session status</span></div>
+              <div><b>{effectiveSessionSize}</b><span>requested session</span></div>
+              <div><b>{sessionKind === 'challenger' ? (challengerScopeReady ? 'Ready' : '20+ required') : (practiceScopeReady ? 'Ready' : '5+ required')}</b><span>session status</span></div>
             </div>
 
-            <button type="button" className="question-bank-start" disabled={sessionKind === 'challenger' ? !challengerScopeReady : !filteredQuestions.length} onClick={startPractice}>
+            <button type="button" className="question-bank-start" disabled={!sessionReady} onClick={startPractice}>
               {sessionKind === 'challenger' ? '⚡ Challenger शुरू करें' : '▶ अभ्यास शुरू करें'}
             </button>
           </section>
