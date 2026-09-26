@@ -116,8 +116,8 @@ export const getQuestionBankProgressSummary = (
   };
 };
 
-export const getQuestionPerformance = (progress: Pick<ProgressState, 'questionAttempts'>, questionId: ID) => {
-  const attempts = (progress.questionAttempts?.[questionId] ?? []).filter((attempt) => attempt.mode === 'practice');
+export const getQuestionPerformance = (progress: Pick<ProgressState, 'questionBankAttempts'>, questionId: ID) => {
+  const attempts = (progress.questionBankAttempts?.[questionId] ?? []).filter((attempt) => attempt.mode === 'practice');
   const correctAttempts = attempts.filter((attempt) => attempt.isCorrect).length;
   return {
     totalAttempts: attempts.length,
