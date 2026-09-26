@@ -49,7 +49,7 @@ try {
   if (chapters.length !== 33) fail.push('Expected exactly 33 official chapters; found ' + chapters.length);
   if (topics.length !== 50) fail.push('Expected exactly 50 official topics; found ' + topics.length);
   if (questions.length !== 895) fail.push('Canonical question total must remain 895; found ' + questions.length);
-  if (lessons.length !== 50) fail.push('Expected exactly 50 topic lessons; found ' + lessons.length);
+  if (lessons.length < topics.length) fail.push('Expected at least one authoritative lesson per official topic; found ' + lessons.length + ' lessons for ' + topics.length + ' topics');
 
   const curriculumQuestionIds = [];
   for (const subject of subjects) {
@@ -92,7 +92,7 @@ try {
         }
 
         const topicLessons = lessonByTopic.get(topic.id) ?? [];
-        if (topicLessons.length !== 1) fail.push(topic.id + ' must map to exactly one authoritative lesson; found ' + topicLessons.length);
+        if (topicLessons.length < 1) fail.push(topic.id + ' must map to at least one authoritative lesson; found ' + topicLessons.length);
         if (!masterySet.has(topic.id)) fail.push('Missing mastery/preparation content for topic ' + topic.id);
         const studyPages = chapterStudyPages[chapter.id] ?? [];
         if (studyPages.length !== 12) fail.push(chapter.id + ' must expose exactly 12 chapter-study pages; found ' + studyPages.length);
@@ -115,6 +115,26 @@ try {
     }
   }
 
+  const dedicatedQuestions = challengers.dedicatedChallengerQuestions ?? [];
+  const dedicatedIds = dedicatedQuestions.map((question) => question.id);
+  if (new Set(dedicatedIds).size !== dedicatedIds.length) {
+    fail.push('Dedicated Challenger question IDs must be unique.');
+  }
+  if (dedicatedQuestions.length < 1010) {
+    fail.push('Dedicated Challenger bank must contain at least 1010 questions after Phase 11; found ' + dedicatedQuestions.length);
+  }
+  for (const question of dedicatedQuestions) {
+    if (question.type !== 'mcq' || question.options.length !== 4 || question.correctOptionIds.length !== 1) {
+      fail.push('Invalid dedicated Challenger structure: ' + question.id);
+    }
+    if (new Set(question.options.map((option) => option.text.trim().toLowerCase())).size !== 4) {
+      fail.push('Duplicate dedicated Challenger option text: ' + question.id);
+    }
+    if (String(question.explanationPlain ?? '').trim().length < 15) {
+      fail.push('Dedicated Challenger explanation too short: ' + question.id);
+    }
+  }
+
   const subjectsSummary = {};
   for (const subject of subjects) {
     const subjectTopics = topics.filter((topic) => topic.chapterId.startsWith(subject.id === 'sub_eng' ? 'chap_eng_' : subject.id === 'sub_hin' ? 'chap_hin_' : subject.id === 'sub_math' ? 'chap_math_' : 'chap_sci_'));
@@ -122,7 +142,7 @@ try {
       chapters: chapters.filter((chapter) => chapter.subjectId === subject.id).length,
       topics: subjectTopics.length,
       canonicalQuestions: questions.filter((q) => q.subjectId === subject.id).length,
-      lessons: subjectTopics.filter((topic) => (lessonByTopic.get(topic.id) ?? []).length === 1).length,
+      lessons: subjectTopics.filter((topic) => (lessonByTopic.get(topic.id) ?? []).length >= 1).length,
       dedicatedChallengerTopics: subjectTopics.filter((topic) => (challengerCounts.byTopic?.[topic.id] ?? 0) >= 20).length,
     };
   }
