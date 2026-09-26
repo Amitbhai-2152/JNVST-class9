@@ -235,7 +235,7 @@ const QuestionBankPage = () => {
       markedForReview: Object.entries(markedForReview).filter(([, marked]) => marked).map(([id]) => id),
       checkedQuestionIds: Object.entries(checked).filter(([, isChecked]) => isChecked).map(([id]) => id),
       currentIndex,
-      filters: { subjectId, chapterId, topicId, difficulty, sessionSize: effectiveSessionSize, selectionMode },
+      filters: { subjectId, chapterId, topicId, difficulty, sessionSize, selectionMode },
       startedAt: sessionStartedAt,
       updatedAt: Date.now(),
       attemptsRecorded,
