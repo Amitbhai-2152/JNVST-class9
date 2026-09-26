@@ -100,11 +100,11 @@ const QuestionBankPage = () => {
   const restoredSessionRef = useRef(false);
   const { loading: authLoading } = useAuth();
 
-  const recordAttempts = useProgressStore((state) => state.recordAttempts);
+  const recordQuestionBankAttempts = useProgressStore((state) => state.recordQuestionBankAttempts);
   const savedQuestionBankSession = useProgressStore((state) => state.questionBankSession);
   const saveQuestionBankSession = useProgressStore((state) => state.saveQuestionBankSession);
   const clearQuestionBankSession = useProgressStore((state) => state.saveQuestionBankSession);
-  const progressQuestionAttempts = useProgressStore((state) => state.questionAttempts);
+  const progressQuestionBankAttempts = useProgressStore((state) => state.questionBankAttempts);
 
   const dedicatedChallengerTotal = useMemo(() => getDedicatedChallengerCounts().total, []);
 
@@ -143,19 +143,19 @@ const QuestionBankPage = () => {
 
   const progressSummary = useMemo(
     () => getQuestionBankProgressSummary(
-      { questionAttempts: progressQuestionAttempts ?? {} },
+      { questionBankAttempts: progressQuestionBankAttempts ?? {} },
       questionBankById,
       questionBankTaxonomy,
     ),
-    [progressQuestionAttempts],
+    [progressQuestionBankAttempts],
   );
 
   const currentQuestionPerformance = useMemo(
     () => currentQuestion ? getQuestionPerformance(
-      { questionAttempts: progressQuestionAttempts ?? {} },
+      { questionBankAttempts: progressQuestionBankAttempts ?? {} },
       currentQuestion.id,
     ) : null,
-    [currentQuestion, progressQuestionAttempts],
+    [currentQuestion, progressQuestionBankAttempts],
   );
 
   const performanceRows = performanceView === 'topic'
@@ -297,7 +297,7 @@ const QuestionBankPage = () => {
       ? getChallengerPool(String(Date.now())).slice(0, requestedSize)
       : selectQuestionBankSession(
           filteredQuestions,
-          progressQuestionAttempts ?? {},
+          progressQuestionBankAttempts ?? {},
           requestedSize,
           selectionMode,
         ).questions;
@@ -391,7 +391,7 @@ const QuestionBankPage = () => {
         })
         .filter((item): item is NonNullable<typeof item> => item !== null);
 
-      if (attemptItems.length) recordAttempts(attemptItems);
+      if (attemptItems.length) recordQuestionBankAttempts(attemptItems);
       setAttemptsRecorded(true);
     }
 
@@ -426,6 +426,15 @@ const QuestionBankPage = () => {
           <strong>{questionBankStats.total + dedicatedChallengerTotal}</strong>
           <span>कुल unique learning questions</span>
           <small>{questionBankStats.total} Practice + {dedicatedChallengerTotal} Challenger</small>
+        </div>
+      </div>
+
+      <div className="question-bank-separation-notice" role="note" aria-label="Question Bank progress notice">
+        <div className="question-bank-separation-icon" aria-hidden="true">ℹ️</div>
+        <div>
+          <strong>महत्वपूर्ण: Question Bank की progress अलग है</strong>
+          <p>इस Question Bank की practice progress, accuracy, attempts और session history केवल इसी Question Bank में दिखाई जाएगी। इसे main dashboard की progress में नहीं दिखाया जाएगा और वहाँ की learning performance को भी यह बदलती नहीं है।</p>
+          <p>Login रहने पर आपकी Question Bank progress आपके student account के साथ cloud में save रहेगी, ताकि इसी page पर वापस आने पर उसे continue किया जा सके।</p>
         </div>
       </div>
 
