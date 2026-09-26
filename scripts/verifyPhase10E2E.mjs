@@ -149,13 +149,28 @@ const checkHtml = async (baseUrl, label, routes, options = {}) => {
         break;
       }
 
+      // GitHub Pages history-routing fallback: a generated 404.html can still
+      // boot the SPA, after which BrowserRouter resolves the requested route.
+      if (candidateResponse.status === 404 && /id=["']root["']/.test(candidateBody)) {
+        response = candidateResponse;
+        body = candidateBody;
+        resolvedPath = candidate;
+        break;
+      }
+
       response = candidateResponse;
       body = candidateBody;
     }
 
-    assert(label + ' route ' + route, response?.status === 200, 'HTTP ' + (response?.status ?? 'no response') + ' after canonical-path fallback');
-    assert(label + ' HTML shell ' + route, /id=["']root["']/.test(body));
-    results.push({ route, resolvedPath, status: response.status, bytes: Buffer.byteLength(body) });
+    const routeStatus = response?.status ?? 0;
+    const hasShell = /id=["']root["']/.test(body);
+    const validRouteResponse = routeStatus === 200 || (routeStatus === 404 && hasShell);
+    assert(label + ' route ' + route, validRouteResponse, 'HTTP ' + (routeStatus || 'no response') + ' after canonical-path fallback');
+    assert(label + ' HTML shell ' + route, hasShell);
+    if (routeStatus === 404) {
+      console.log('PASS — ' + label + ' SPA 404 fallback ' + route);
+    }
+    results.push({ route, resolvedPath, status: routeStatus, bytes: Buffer.byteLength(body), spaFallback: routeStatus === 404 });
   }
 
   return results;
@@ -255,6 +270,7 @@ const startProductionServer = async () => {
 
 const runLocalProductionSmoke = async () => {
   assert('dist/index.html exists', fs.existsSync(path.join(distPath, 'index.html')));
+  assert('dist/404.html exists', fs.existsSync(path.join(distPath, '404.html')));
 
   for (const route of criticalRoutes.filter((route) => route !== '/')) {
     const entry = path.join(distPath, route.slice(1), 'index.html');
