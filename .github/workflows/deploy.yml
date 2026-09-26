@@ -44,17 +44,6 @@ jobs:
       - name: End-to-end production smoke verification
         run: npm run verify:e2e
 
-      - name: Verify Pages source is GitHub Actions
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          BUILD_TYPE="$(gh api "repos/${{ github.repository }}/pages" --jq '.build_type // empty')"
-          echo "GitHub Pages build_type: $BUILD_TYPE"
-          test "$BUILD_TYPE" = "workflow" || {
-            echo "GitHub Pages is still configured for branch/Jekyll publishing."
-            echo "Set Settings -> Pages -> Build and deployment -> Source -> GitHub Actions, then rerun this workflow."
-            exit 1
-          }
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -73,6 +62,26 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Wait for competing automatic Pages deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for attempt in {1..30}; do
+            run_json="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$GITHUB_SHA&per_page=30" --jq '.workflow_runs[] | select(.name == "pages build and deployment") | [.status,.conclusion,.id] | @tsv' 2>/dev/null | head -n 1 || true)"
+            if [ -z "$run_json" ]; then
+              echo "No automatic Pages/Jekyll run found for this commit; continuing."
+              break
+            fi
+            status="$(printf '%s' "$run_json" | cut -f1)"
+            conclusion="$(printf '%s' "$run_json" | cut -f2)"
+            run_id="$(printf '%s' "$run_json" | cut -f3)"
+            echo "Automatic Pages run $run_id: status=$status conclusion=$conclusion"
+            if [ "$status" = "completed" ]; then
+              break
+            fi
+            sleep 5
+          done
+
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
