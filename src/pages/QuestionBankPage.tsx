@@ -430,7 +430,7 @@ const QuestionBankPage = () => {
       </div>
 
       <div className="question-bank-separation-notice" role="note" aria-label="Question Bank progress notice">
-        <div className="question-bank-separation-icon" aria-hidden="true">ℹ️</div>
+        <div className="question-bank-separation-icon" aria-hidden="true">⚠️</div>
         <div>
           <strong>महत्वपूर्ण: Question Bank की progress अलग है</strong>
           <p>इस Question Bank की practice progress, accuracy, attempts और session history केवल इसी Question Bank में दिखाई जाएगी। इसे main dashboard की progress में नहीं दिखाया जाएगा और वहाँ की learning performance को भी यह बदलती नहीं है।</p>
