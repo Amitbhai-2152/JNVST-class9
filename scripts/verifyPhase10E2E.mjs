@@ -79,17 +79,22 @@ for (const [name, fragment] of requiredRouteFragments) assert(name, APP.includes
 assert('critical route catalog size', criticalRoutes.length >= 25);
 assert('question bank canonical selector', QUESTION_BANK.includes('selectQuestionBankSession('));
 assert('question bank session persistence', QUESTION_BANK.includes('saveQuestionBankSession({'));
-assert('question bank attempt recording', QUESTION_BANK.includes('recordAttempts(attemptItems)'));
+assert('question bank attempt recording', QUESTION_BANK.includes('recordQuestionBankAttempts(attemptItems)'));
 assert('question bank resume restoration', QUESTION_BANK.includes('savedQuestionBankSession.questionIds'));
 assert('question bank challenger integration', QUESTION_BANK.includes('getDedicatedTopicChallengers('));
 assert('question bank restored session state', QUESTION_BANK.includes('setSessionState(savedQuestionBankSession.status)'));
 
-assert('progress persistence version', PROGRESS.includes('version: 5'));
+assert('progress persistence version', PROGRESS.includes('version: 6'));
 assert('progress stores question bank session', PROGRESS.includes('questionBankSession: null'));
+assert('progress stores isolated Question Bank attempts', PROGRESS.includes('questionBankAttempts: {}'));
+assert('main cloud snapshot excludes Question Bank data', PROGRESS.includes('getMainCloudProgressSnapshot') && PROGRESS.includes("Omit<ProgressState, 'questionBankAttempts' | 'questionBankSession'>"));
 assert('progress exposes question bank session action', PROGRESS.includes('saveQuestionBankSession:'));
+assert('Question Bank uses isolated attempt recorder', QUESTION_BANK.includes('recordQuestionBankAttempts'));
 assert('progress stores mock results', PROGRESS.includes('mockTestResults: [result'));
 assert('progress stores lab attempts', PROGRESS.includes('recordEnglishLabAttempt'));
 assert('auth gate handles recovery', AUTH.includes('recoveryMode'));
+assert('Question Bank has dedicated cloud table', AUTH.includes("student_question_bank_progress"));
+assert('main cloud save strips Question Bank data', AUTH.includes('getMainCloudProgressSnapshot') && AUTH.includes('saveQuestionBankNow'));
 assert('auth supports Google login', AUTH.includes('signInWithGoogle'));
 assert('auth supports email confirmation', AUTH.includes('resendEmailConfirmation'));
 
