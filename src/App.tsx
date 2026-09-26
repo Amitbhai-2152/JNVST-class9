@@ -19,6 +19,7 @@ import { EnglishTranslationLabPage, EnglishVocabularyLabPage, EnglishTranslation
 import EnglishUnseenPassagePage from './pages/EnglishUnseenPassagePage';
 import HindiUnseenPassagePage from './pages/HindiUnseenPassagePage';
 import QuestionBankPage from './pages/QuestionBankPage';
+import ContactPage from './pages/ContactPage';
 import { siteNotifications, type SiteNotification } from './data/notifications';
 
 const examSections = [
@@ -68,6 +69,9 @@ const SEOController = () => {
     } else if (path === '/mock-tests') {
       title = 'JNVST कक्षा 9 Mock Tests';
       description = 'JNVST Class 9 pattern पर timed mock tests और section-wise practice।';
+    } else if (path === '/contact') {
+      title = 'समस्या बताएं — JNVST कक्षा 9 Learning Hub';
+      description = 'JNVST कक्षा 9 Learning Hub में प्रश्न, answer, explanation या website समस्या की report भेजें।';
     }
 
     document.title = title;
@@ -430,9 +434,10 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
     };
   }, [accountMenuOpen, notificationOpen]);
 
-  const isActive = (section: 'dashboard' | 'subjects' | 'mock') => {
+  const isActive = (section: 'dashboard' | 'subjects' | 'mock' | 'contact') => {
     if (section === 'dashboard') return location.pathname === '/';
     if (section === 'subjects') return location.pathname.startsWith('/subjects');
+    if (section === 'contact') return location.pathname.startsWith('/contact');
     return location.pathname.startsWith('/mock-tests');
   };
   const syncLabel = user
@@ -484,6 +489,9 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
           </Link>
           <Link to="/mock-tests" className={isActive('mock') ? 'active' : ''} aria-current={isActive('mock') ? 'page' : undefined}>
             <span className="nav-icon">✓</span><span>मॉक टेस्ट</span>
+          </Link>
+          <Link to="/contact" className={isActive('contact') ? 'active' : ''} aria-current={isActive('contact') ? 'page' : undefined}>
+            <span className="nav-icon">⚠</span><span>समस्या बताएं</span>
           </Link>
         </nav>
         <div className="account-bar">
@@ -575,6 +583,10 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
               </div>
 
               {user ? <>
+                <Link className="account-menu-action" role="menuitem" to="/contact" onClick={() => setAccountMenuOpen(false)}>
+                  <span className="account-menu-action-icon">⚠</span>
+                  <span><strong>समस्या बताएं</strong><small>Question या website issue report करें</small></span>
+                </Link>
                 <div className="account-menu-status">
                   <span className={'account-menu-status-dot ' + syncStatus}></span>
                   <div>
@@ -611,6 +623,10 @@ const Shell = ({ children }: { children: React.ReactNode }) => {
                   <span aria-hidden="true">↪</span> लॉग आउट
                 </button>
               </> : <>
+                <Link className="account-menu-action" role="menuitem" to="/contact" onClick={() => setAccountMenuOpen(false)}>
+                  <span className="account-menu-action-icon">⚠</span>
+                  <span><strong>समस्या बताएं</strong><small>Website में गलती मिली?</small></span>
+                </Link>
                 <div className="account-menu-note">
                   <span aria-hidden="true">📚</span>
                   <span>अभी lessons और practice browse करें। Login करने पर आपकी progress cloud में sync होगी।</span>
@@ -2663,6 +2679,6 @@ export default function App() {
   return <BrowserRouter basename={appBasename}>
     <SEOController />
     <RouteUXController />
-    <Routes><Route path="/" element={<Dashboard />} /><Route path="/login" element={<AuthPage />} /><Route path="/subjects" element={<SubjectsPage />} /><Route path="/subjects/:subjectId" element={<SubjectPage />} /><Route path="/chapters/:chapterId" element={<ChapterPage />} /><Route path="/chapters/:chapterId/study" element={<ChapterStudyPage />} /><Route path="/chapters/:chapterId/challenger" element={<ChapterChallengerPage />} /><Route path="/topics/:topicId/challenger" element={<TopicChallengerPage />} /><Route path="/lessons/:lessonId" element={<LessonPage />} /><Route path="/math-formulas" element={<Shell><MathFormulaSheet /></Shell>} /><Route path="/english-revision" element={<EnglishRevisionPage />} /><Route path="/hindi-revision" element={<HindiRevisionPage />} /><Route path="/hindi-smart-practice" element={<HindiSmartPracticePage />} /><Route path="/hindi-mock-test" element={<HindiMockTestPage />} /><Route path="/hindi-unseen-passage" element={<HindiUnseenPassagePage />} /><Route path="/english-smart-practice" element={<EnglishSmartPracticePage />} /><Route path="/english-mock-test" element={<EnglishMockTestPage />} /><Route path="/english-translation-lab" element={<EnglishTranslationLabPage />} /><Route path="/english-translation-practice" element={<EnglishTranslationPracticePage />} /><Route path="/english-vocabulary-lab" element={<EnglishVocabularyLabPage />} /><Route path="/english-vocabulary-practice" element={<EnglishVocabularyPracticePage />} /><Route path="/english-unseen-passage" element={<EnglishUnseenPassagePage />} /><Route path="/question-bank" element={<Shell><QuestionBankPage /></Shell>} /><Route path="/science-revision" element={<ScienceRevisionPage />} /><Route path="/science-smart-practice" element={<ScienceSmartPracticePage />} /><Route path="/science-mock-test" element={<ScienceMockTestPage />} /><Route path="/practice/:topicId" element={<PracticePage />} /><Route path="/smart-practice" element={<SmartPracticePage />} /><Route path="/math-smart-practice" element={<MathSmartPracticePage />} /><Route path="/bookmarks" element={<BookmarksPage />} /><Route path="/mock-tests" element={<MockTestsPage />} /><Route path="/math-mock-test" element={<MathMockTestPage />} /><Route path="*" element={<Dashboard />} /></Routes>
+    <Routes><Route path="/" element={<Dashboard />} /><Route path="/login" element={<AuthPage />} /><Route path="/subjects" element={<SubjectsPage />} /><Route path="/subjects/:subjectId" element={<SubjectPage />} /><Route path="/chapters/:chapterId" element={<ChapterPage />} /><Route path="/chapters/:chapterId/study" element={<ChapterStudyPage />} /><Route path="/chapters/:chapterId/challenger" element={<ChapterChallengerPage />} /><Route path="/topics/:topicId/challenger" element={<TopicChallengerPage />} /><Route path="/lessons/:lessonId" element={<LessonPage />} /><Route path="/math-formulas" element={<Shell><MathFormulaSheet /></Shell>} /><Route path="/english-revision" element={<EnglishRevisionPage />} /><Route path="/hindi-revision" element={<HindiRevisionPage />} /><Route path="/hindi-smart-practice" element={<HindiSmartPracticePage />} /><Route path="/hindi-mock-test" element={<HindiMockTestPage />} /><Route path="/hindi-unseen-passage" element={<HindiUnseenPassagePage />} /><Route path="/english-smart-practice" element={<EnglishSmartPracticePage />} /><Route path="/english-mock-test" element={<EnglishMockTestPage />} /><Route path="/english-translation-lab" element={<EnglishTranslationLabPage />} /><Route path="/english-translation-practice" element={<EnglishTranslationPracticePage />} /><Route path="/english-vocabulary-lab" element={<EnglishVocabularyLabPage />} /><Route path="/english-vocabulary-practice" element={<EnglishVocabularyPracticePage />} /><Route path="/english-unseen-passage" element={<EnglishUnseenPassagePage />} /><Route path="/question-bank" element={<Shell><QuestionBankPage /></Shell>} /><Route path="/contact" element={<Shell><ContactPage /></Shell>} /><Route path="/science-revision" element={<ScienceRevisionPage />} /><Route path="/science-smart-practice" element={<ScienceSmartPracticePage />} /><Route path="/science-mock-test" element={<ScienceMockTestPage />} /><Route path="/practice/:topicId" element={<PracticePage />} /><Route path="/smart-practice" element={<SmartPracticePage />} /><Route path="/math-smart-practice" element={<MathSmartPracticePage />} /><Route path="/bookmarks" element={<BookmarksPage />} /><Route path="/mock-tests" element={<MockTestsPage />} /><Route path="/math-mock-test" element={<MathMockTestPage />} /><Route path="*" element={<Dashboard />} /></Routes>
   </BrowserRouter>;
 }

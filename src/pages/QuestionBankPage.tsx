@@ -724,6 +724,13 @@ const QuestionBankPage = () => {
               ))}
             </div>
 
+            <Link
+              className="question-bank-report-button"
+              to={`/contact?from=question-bank&questionId=${encodeURIComponent(currentQuestion.id)}&subjectId=${encodeURIComponent(currentQuestion.subjectId)}&chapterId=${encodeURIComponent(currentQuestion.chapterId)}&topicId=${encodeURIComponent(currentQuestion.topicId)}`}
+            >
+              ⚠️ इस प्रश्न में समस्या बताएं
+            </Link>
+
             <div className="question-bank-options">
               {currentQuestion.options.map((option, index) => {
                 const selected = answerFor.includes(option.id);
