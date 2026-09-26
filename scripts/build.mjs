@@ -23,6 +23,7 @@ const buildSeoFiles = async () => {
   );
   const staticPaths = [
     '/',
+    '/login',
     '/subjects',
     '/english-revision',
     '/hindi-revision',
@@ -30,13 +31,33 @@ const buildSeoFiles = async () => {
     '/science-revision',
     '/english-translation-lab',
     '/english-vocabulary-lab',
+    '/english-translation-practice',
+    '/english-vocabulary-practice',
     '/english-unseen-passage',
     '/hindi-unseen-passage',
+    '/question-bank',
+    '/smart-practice',
+    '/math-smart-practice',
+    '/science-smart-practice',
+    '/english-smart-practice',
+    '/hindi-smart-practice',
     '/mock-tests',
+    '/math-mock-test',
+    '/science-mock-test',
+    '/english-mock-test',
+    '/hindi-mock-test',
+    '/bookmarks',
   ];
   const subjectPaths = subjectIds.map((id) => '/subjects/' + id);
-  const chapterPaths = chapterIds.flatMap((id) => ['/chapters/' + id, '/chapters/' + id + '/study']);
-  const topicPaths = topicIds.map((id) => '/practice/' + id);
+  const chapterPaths = chapterIds.flatMap((id) => [
+    '/chapters/' + id,
+    '/chapters/' + id + '/study',
+    '/chapters/' + id + '/challenger',
+  ]);
+  const topicPaths = topicIds.flatMap((id) => [
+    '/practice/' + id,
+    '/topics/' + id + '/challenger',
+  ]);
   const lessonPaths = lessonIds.map((id) => '/lessons/' + id);
   const paths = unique([...staticPaths, ...subjectPaths, ...chapterPaths, ...topicPaths, ...lessonPaths]);
 
