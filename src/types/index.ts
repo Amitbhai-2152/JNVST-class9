@@ -132,6 +132,8 @@ export interface QuestionBankSessionState {
   startedAt: number;
   updatedAt: number;
   attemptsRecorded: boolean;
+  /** True while reopening a completed session as read-only review. Optional for backward compatibility with older saved sessions. */
+  reviewOnly?: boolean;
 }
 
 export interface ProgressState {
