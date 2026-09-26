@@ -171,7 +171,7 @@ export const useProgressStore = create<Store>()(
     }),
     {
       name: 'jnvst-class9-progress-v2',
-      version: 5,
+      version: 6,
       migrate: (persistedState) => {
         const previous = (persistedState ?? {}) as Partial<ProgressState>;
         return {
