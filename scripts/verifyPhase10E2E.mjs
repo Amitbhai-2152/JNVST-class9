@@ -173,7 +173,7 @@ const startProductionServer = async () => {
   const server = createServer(async (request, response) => {
     try {
       const rawPath = decodeURIComponent(new URL(request.url ?? '/', 'http://127.0.0.1').pathname);
-      const relativePath = rawPath.replace(/^\\/+/, '');
+      const relativePath = rawPath.replace(/^\/+/, '');
       const directPath = path.resolve(distPath, relativePath);
       const safeRoot = path.resolve(distPath);
       if (directPath !== safeRoot && !directPath.startsWith(safeRoot + path.sep)) {
