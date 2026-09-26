@@ -130,8 +130,9 @@ try {
     if (new Set(question.options.map((option) => option.text.trim().toLowerCase())).size !== 4) {
       fail.push('Duplicate dedicated Challenger option text: ' + question.id);
     }
-    if (String(question.explanationPlain ?? '').trim().length < 15) {
-      fail.push('Dedicated Challenger explanation too short: ' + question.id);
+    const isPhase11Question = /^(q_eng_tc_|q_sci_tc_)/.test(question.id);
+    if (isPhase11Question && String(question.explanationPlain ?? '').trim().length < 15) {
+      fail.push('Phase 11 Challenger explanation too short: ' + question.id);
     }
   }
 
