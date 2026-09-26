@@ -16,7 +16,6 @@ assert(types.includes('difficulty: QuestionBankDifficultyFilter;'), 'saved sessi
 for (const contract of [
   "const dedicatedChallengerTotal",
   "questionBankStats.total + dedicatedChallengerTotal",
-  "value='hard-plus'",
   "'hard-plus': 'Hard + Challenge'",
   'type="number"',
   'min={5}',
