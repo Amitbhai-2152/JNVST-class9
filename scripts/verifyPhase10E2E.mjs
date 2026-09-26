@@ -98,9 +98,31 @@ assert('verify script exists', Boolean(PACKAGE.scripts?.verify));
 assert('e2e script exists', PACKAGE.scripts?.['verify:e2e'] === 'node scripts/verifyPhase10E2E.mjs');
 assert('production build script exists', PACKAGE.scripts?.build === 'node scripts/build.mjs');
 
-const checkHtml = async (baseUrl, label, routes) => {
+const fetchWithRetry = async (url, init = {}, attempts = 1, delayMs = 0) => {
+  let lastResponse = null;
+  let lastError = null;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      lastResponse = await fetch(url, init);
+      if (lastResponse.status === 200 || attempt === attempts - 1 || delayMs === 0) {
+        return lastResponse;
+      }
+    } catch (error) {
+      lastError = error;
+      if (attempt === attempts - 1 || delayMs === 0) throw error;
+    }
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+  if (lastResponse) return lastResponse;
+  throw lastError ?? new Error('Request failed');
+};
+
+const checkHtml = async (baseUrl, label, routes, options = {}) => {
   const origin = baseUrl.replace(/\/$/, '');
+  const attempts = options.attempts ?? 1;
+  const delayMs = options.delayMs ?? 0;
   const results = [];
+
   for (const route of routes) {
     const candidatePaths = route === '/' ? ['/'] : [route, route + '/'];
     let response = null;
@@ -109,17 +131,24 @@ const checkHtml = async (baseUrl, label, routes) => {
 
     for (const candidate of candidatePaths) {
       const url = origin + candidate + (candidate.includes('?') ? '&' : '?') + '_phase10=1';
-      const candidateResponse = await fetch(url, {
-        redirect: 'follow',
-        headers: { 'cache-control': 'no-cache', accept: 'text/html,*/*' },
-      });
+      const candidateResponse = await fetchWithRetry(
+        url,
+        {
+          redirect: 'follow',
+          headers: { 'cache-control': 'no-cache', accept: 'text/html,*/*' },
+        },
+        attempts,
+        delayMs,
+      );
       const candidateBody = await candidateResponse.text();
+
       if (candidateResponse.status === 200) {
         response = candidateResponse;
         body = candidateBody;
         resolvedPath = candidate;
         break;
       }
+
       response = candidateResponse;
       body = candidateBody;
     }
@@ -128,6 +157,7 @@ const checkHtml = async (baseUrl, label, routes) => {
     assert(label + ' HTML shell ' + route, /id=["']root["']/.test(body));
     results.push({ route, resolvedPath, status: response.status, bytes: Buffer.byteLength(body) });
   }
+
   return results;
 };
 
@@ -246,9 +276,18 @@ const runLocalProductionSmoke = async () => {
 
 const runRemoteSmoke = async (baseUrl) => {
   assert('remote URL supplied', /^https?:\/\//.test(baseUrl));
-  await checkHtml(baseUrl, 'remote-production', criticalRoutes);
+
+  // GitHub Pages can take a short time to expose a freshly deployed directory index.
+  // Retry each critical route for a bounded window, then fail on a persistent 404/5xx.
+  await checkHtml(baseUrl, 'remote-production', criticalRoutes, { attempts: 12, delayMs: 5000 });
+
   const notificationUrl = baseUrl.replace(/\/$/, '') + '/notifications.json?_phase10=1';
-  const response = await fetch(notificationUrl, { cache: 'no-store' });
+  const response = await fetchWithRetry(
+    notificationUrl,
+    { cache: 'no-store' },
+    12,
+    5000,
+  );
   assert('remote notifications feed', response.status === 200, 'HTTP ' + response.status);
   const payload = await response.json();
   assert('remote notifications feed shape', Array.isArray(payload));
