@@ -5,8 +5,13 @@ import { mathChapterChallengers } from '../data/questions/mathChapterChallengers
 import { mathTopicChallengersV2 } from '../data/questions/mathTopicChallengersV2';
 import { englishChapterChallengers } from '../data/questions/englishChallengers';
 import { englishChapterChallengersExtra } from '../data/questions/englishChapterChallengersExtra';
+import { englishTopicChallengers } from '../data/questions/englishTopicChallengers';
 import { hindiChapterChallengers } from '../data/questions/hindiChapterChallengers';
 import { hindiTopicChallengers } from '../data/questions/hindiTopicChallengers';
+import { scienceChapterChallengers } from '../data/questions/scienceChapterChallengers';
+import { scienceTopicChallengersPart1 } from '../data/questions/scienceTopicChallengersPart1';
+import { scienceTopicChallengersPart2 } from '../data/questions/scienceTopicChallengersPart2';
+import { scienceTopicChallengersPart3 } from '../data/questions/scienceTopicChallengersPart3';
 
 export interface TopicPerformance {
   topicId: ID;
@@ -685,35 +690,34 @@ export const getTopicChallengerQuestions = (
     question.options.every((option) => challengerOptionIsMeaningful(option.text)) &&
     new Set(question.options.map((option) => option.text.trim().toLowerCase())).size === 4;
 
-  if (topicId.startsWith('top_hin_')) {
-    const dedicated = [...hindiTopicChallengers, ...hindiChapterChallengers].filter(eligible);
-    const uniqueDedicated = [...new Map(dedicated.map((question) => [question.id, question])).values()];
-    const source = uniqueDedicated.length >= target ? uniqueDedicated : [...uniqueDedicated, ...allQuestions.filter(eligible)];
-    return rankChallengerCandidates(source, seed + ':' + topicId)
-      .slice(0, target)
-      .map((question, index) => arrangeChallengerOptions(question, index, seed + ':' + topicId));
-  }
-
   const isMathTopic = topicId.startsWith('top_math_');
+  const isHindiTopic = topicId.startsWith('top_hin_');
   const isEnglishTopic = topicId.startsWith('top_eng_');
+  const isScienceTopic = topicId.startsWith('top_sci_');
 
-  if (isMathTopic) {
-    const dedicated = mathTopicChallengersV2.filter(eligible);
-    const source = dedicated.length >= target ? dedicated : [...dedicated, ...allQuestions.filter(eligible)];
-    return rankChallengerCandidates(source, seed + ':' + topicId)
-      .slice(0, target)
-      .map((question, index) => arrangeChallengerOptions(question, index, seed + ':' + topicId));
+  let dedicated: Question[] = [];
+
+  if (isHindiTopic) {
+    dedicated = [...hindiTopicChallengers, ...hindiChapterChallengers];
+  } else if (isMathTopic) {
+    dedicated = mathTopicChallengersV2;
+  } else if (isEnglishTopic) {
+    dedicated = [...englishTopicChallengers, ...englishChapterChallengers, ...englishChapterChallengersExtra];
+  } else if (isScienceTopic) {
+    dedicated = [
+      ...scienceTopicChallengersPart1,
+      ...scienceTopicChallengersPart2,
+      ...scienceTopicChallengersPart3,
+      ...scienceChapterChallengers,
+    ];
   }
 
-  if (isEnglishTopic) {
-    const dedicated = [...englishChapterChallengers, ...englishChapterChallengersExtra].filter(eligible);
-    const source = dedicated.length >= target ? dedicated : [...dedicated, ...allQuestions.filter(eligible)];
-    return rankChallengerCandidates(source, seed + ':' + topicId)
-      .slice(0, target)
-      .map((question, index) => arrangeChallengerOptions(question, index, seed + ':' + topicId));
-  }
+  const uniqueDedicated = [...new Map(dedicated.filter(eligible).map((question) => [question.id, question])).values()];
+  if (uniqueDedicated.length < target) return [];
 
-  return [];
+  return rankChallengerCandidates(uniqueDedicated, seed + ':' + topicId)
+    .slice(0, target)
+    .map((question, index) => arrangeChallengerOptions(question, index, seed + ':' + topicId));
 };
 
 export const buildMathMockPaper = (seed = 'jnvst-math-2027'): Question[] => {
