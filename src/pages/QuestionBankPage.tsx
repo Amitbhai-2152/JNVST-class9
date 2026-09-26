@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MathAwareText } from '../components/MathText';
 import { questionBank, questionBankById, questionBankStats, questionBankTaxonomy } from '../data/questionBank';
+import { useAuth } from '../auth/Auth';
 import { useProgressStore } from '../store/progress';
 import { getQuestionBankProgressSummary, getQuestionPerformance } from '../utils/questionBankProgress';
 import { getSelectionRationale, selectQuestionBankSession, type QuestionBankSelectionMode } from '../utils/questionBankSmartSelection';
@@ -95,7 +96,9 @@ const QuestionBankPage = () => {
   const [sessionStartedAt, setSessionStartedAt] = useState(0);
   const [performanceView, setPerformanceView] = useState<PerformanceView>('topic');
   const [restoredFromSavedSession, setRestoredFromSavedSession] = useState(false);
+  const [reviewOnly, setReviewOnly] = useState(false);
   const restoredSessionRef = useRef(false);
+  const { loading: authLoading } = useAuth();
 
   const recordAttempts = useProgressStore((state) => state.recordAttempts);
   const savedQuestionBankSession = useProgressStore((state) => state.questionBankSession);
@@ -192,10 +195,12 @@ const QuestionBankPage = () => {
   ).filter((question) => (answers[question.id] ?? []).length > 0).length;
 
   useEffect(() => {
-    if (restoredSessionRef.current) return;
-    restoredSessionRef.current = true;
+    if (restoredSessionRef.current || authLoading) return;
 
-    if (!savedQuestionBankSession) return;
+    if (!savedQuestionBankSession) {
+      restoredSessionRef.current = true;
+      return;
+    }
 
     const restoredQuestions = savedQuestionBankSession.questionIds
       .map((id) => questionBankSessionById.get(id))
@@ -203,6 +208,7 @@ const QuestionBankPage = () => {
 
     if (!restoredQuestions.length) {
       clearQuestionBankSession(null);
+      restoredSessionRef.current = true;
       return;
     }
 
@@ -221,8 +227,10 @@ const QuestionBankPage = () => {
     setSelectionMode(savedQuestionBankSession.filters?.selectionMode ?? 'smart');
     setSessionKind(savedQuestionBankSession.sessionKind ?? 'practice');
     setRestoredFromSavedSession(true);
+    setReviewOnly(Boolean(savedQuestionBankSession.reviewOnly));
     setSessionState(savedQuestionBankSession.status);
-  }, [savedQuestionBankSession, clearQuestionBankSession]);
+    restoredSessionRef.current = true;
+  }, [authLoading, savedQuestionBankSession, clearQuestionBankSession]);
 
   useEffect(() => {
     if (!session.length || sessionState === 'setup' || !sessionStartedAt) return;
@@ -239,6 +247,7 @@ const QuestionBankPage = () => {
       startedAt: sessionStartedAt,
       updatedAt: Date.now(),
       attemptsRecorded,
+      reviewOnly,
     });
   }, [
     session,
@@ -256,6 +265,7 @@ const QuestionBankPage = () => {
     sessionSize,
     selectionMode,
     sessionKind,
+    reviewOnly,
     saveQuestionBankSession,
   ]);
 
@@ -301,6 +311,7 @@ const QuestionBankPage = () => {
     setAttemptsRecorded(false);
     setSessionStartedAt(Date.now());
     setRestoredFromSavedSession(false);
+    setReviewOnly(false);
     setSessionState('practice');
   };
 
@@ -314,6 +325,7 @@ const QuestionBankPage = () => {
     setAttemptsRecorded(false);
     setSessionStartedAt(0);
     setRestoredFromSavedSession(false);
+    setReviewOnly(false);
     setSelectionMode('smart');
     setSessionKind('practice');
     setSessionState('setup');
@@ -321,7 +333,7 @@ const QuestionBankPage = () => {
   };
 
   const selectAnswer = (optionId: ID) => {
-    if (!currentQuestion || checked[currentQuestion.id]) return;
+    if (!currentQuestion || reviewOnly || checked[currentQuestion.id]) return;
     const next = currentQuestion.type === 'multiple-select'
       ? (answerFor.includes(optionId)
           ? answerFor.filter((id) => id !== optionId)
@@ -331,18 +343,18 @@ const QuestionBankPage = () => {
   };
 
   const clearResponse = () => {
-    if (!currentQuestion) return;
+    if (!currentQuestion || reviewOnly) return;
     setAnswers((current) => ({ ...current, [currentQuestion.id]: [] }));
     setChecked((current) => ({ ...current, [currentQuestion.id]: false }));
   };
 
   const checkAnswer = () => {
-    if (!currentQuestion || !answerFor.length) return;
+    if (!currentQuestion || reviewOnly || !answerFor.length) return;
     setChecked((current) => ({ ...current, [currentQuestion.id]: true }));
   };
 
   const editCheckedAnswer = () => {
-    if (!currentQuestion) return;
+    if (!currentQuestion || reviewOnly) return;
     setChecked((current) => ({ ...current, [currentQuestion.id]: false }));
   };
 
@@ -725,7 +737,7 @@ const QuestionBankPage = () => {
                   <button
                     type="button"
                     key={option.id}
-                    disabled={checked[currentQuestion.id]}
+                    disabled={reviewOnly || checked[currentQuestion.id]}
                     className={'question-bank-option ' + (selected ? 'selected ' : '') + feedbackClass}
                     onClick={() => selectAnswer(option.id)}
                     aria-pressed={selected}
@@ -740,14 +752,14 @@ const QuestionBankPage = () => {
             </div>
 
             <div className="question-bank-answer-tools">
-              <button type="button" className="question-bank-tool" disabled={!answerFor.length || checked[currentQuestion.id]} onClick={checkAnswer}>
+              <button type="button" className="question-bank-tool" disabled={reviewOnly || !answerFor.length || checked[currentQuestion.id]} onClick={checkAnswer}>
                 ✓ उत्तर जाँचें
               </button>
-              <button type="button" className="question-bank-tool" disabled={!answerFor.length} onClick={clearResponse}>
+              <button type="button" className="question-bank-tool" disabled={reviewOnly || !answerFor.length} onClick={clearResponse}>
                 ↺ उत्तर साफ करें
               </button>
               {checked[currentQuestion.id] && (
-                <button type="button" className="question-bank-tool" onClick={editCheckedAnswer}>
+                <button type="button" className="question-bank-tool" disabled={reviewOnly} onClick={editCheckedAnswer}>
                   ✎ उत्तर बदलें
                 </button>
               )}
@@ -801,10 +813,10 @@ const QuestionBankPage = () => {
           </div>
 
           <div className="question-bank-finished-actions">
-            <button type="button" className="question-bank-start" onClick={() => { setCurrentIndex(0); setRestoredFromSavedSession(false); setSessionState('practice'); }}>
+            <button type="button" className="question-bank-start" onClick={() => { setCurrentIndex(0); setRestoredFromSavedSession(false); setChecked(Object.fromEntries(session.map((question) => [question.id, true]))); setReviewOnly(true); setSessionState('practice'); }}>
               प्रश्न समीक्षा खोलें
             </button>
-            <button type="button" className="question-bank-secondary" onClick={() => { setAnswers({}); setMarkedForReview({}); setChecked({}); setCurrentIndex(0); setAttemptsRecorded(false); setSessionStartedAt(Date.now()); setRestoredFromSavedSession(false); setSessionState('practice'); }}>
+            <button type="button" className="question-bank-secondary" onClick={() => { setReviewOnly(false); setAnswers({}); setMarkedForReview({}); setChecked({}); setCurrentIndex(0); setAttemptsRecorded(false); setSessionStartedAt(Date.now()); setRestoredFromSavedSession(false); setSessionState('practice'); }}>
               यही set फिर से करें
             </button>
             <button type="button" className="question-bank-secondary" onClick={resetSetup}>
