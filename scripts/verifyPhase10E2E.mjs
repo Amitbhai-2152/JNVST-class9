@@ -103,15 +103,31 @@ const checkHtml = async (baseUrl, label, routes) => {
   const origin = baseUrl.replace(/\/$/, '');
   const results = [];
   for (const route of routes) {
-    const url = origin + route + (route.includes('?') ? '&' : '?') + '_phase10=1';
-    const response = await fetch(url, {
-      redirect: 'follow',
-      headers: { 'cache-control': 'no-cache', accept: 'text/html,*/*' },
-    });
-    const body = await response.text();
-    assert(label + ' route ' + route, response.status === 200, 'HTTP ' + response.status);
+    const candidatePaths = route === '/' ? ['/'] : [route, route + '/'];
+    let response = null;
+    let body = '';
+    let resolvedPath = route;
+
+    for (const candidate of candidatePaths) {
+      const url = origin + candidate + (candidate.includes('?') ? '&' : '?') + '_phase10=1';
+      const candidateResponse = await fetch(url, {
+        redirect: 'follow',
+        headers: { 'cache-control': 'no-cache', accept: 'text/html,*/*' },
+      });
+      const candidateBody = await candidateResponse.text();
+      if (candidateResponse.status === 200) {
+        response = candidateResponse;
+        body = candidateBody;
+        resolvedPath = candidate;
+        break;
+      }
+      response = candidateResponse;
+      body = candidateBody;
+    }
+
+    assert(label + ' route ' + route, response?.status === 200, 'HTTP ' + (response?.status ?? 'no response') + ' after canonical-path fallback');
     assert(label + ' HTML shell ' + route, /id=["']root["']/.test(body));
-    results.push({ route, status: response.status, bytes: Buffer.byteLength(body) });
+    results.push({ route, resolvedPath, status: response.status, bytes: Buffer.byteLength(body) });
   }
   return results;
 };
@@ -155,6 +171,12 @@ const waitForServer = async (url, child, timeoutMs = 20000) => {
 
 const runLocalProductionSmoke = async () => {
   assert('dist/index.html exists', fs.existsSync(path.join(distPath, 'index.html')));
+
+  for (const route of criticalRoutes.filter((route) => route !== '/')) {
+    const entry = path.join(distPath, route.slice(1), 'index.html');
+    assert('generated route entry ' + route, fs.existsSync(entry));
+  }
+
   const child = spawn(
     process.platform === 'win32' ? 'npx.cmd' : 'npx',
     ['vite', 'preview', '--host', '127.0.0.1', '--port', '4173', '--strictPort'],
