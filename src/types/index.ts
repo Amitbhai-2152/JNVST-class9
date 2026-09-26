@@ -139,6 +139,8 @@ export interface QuestionBankSessionState {
 export interface ProgressState {
   lessonActivity: Record<ID, { status: 'completed' | 'in-progress'; lastAccessed: number }>;
   questionAttempts: Record<ID, QuestionAttempt[]>;
+  /** Question Bank-only attempts. These never feed the main website's dashboard intelligence. */
+  questionBankAttempts: Record<ID, QuestionAttempt[]>;
   bookmarks: { questionIds: ID[]; lessonIds: ID[] };
   revisionHistory: Array<{ entityType: 'topic' | 'lesson' | 'question' | 'mock-test'; entityId: ID; timestamp: number }>;
   recentlyStudied: Array<{ id: ID; title: string; type: 'lesson' | 'topic'; timestamp: number }>;
