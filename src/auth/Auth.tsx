@@ -27,6 +27,7 @@ const toProgress = (value: unknown): ProgressState | null => {
     ...emptyProgressState,
     lessonActivity: raw.lessonActivity && typeof raw.lessonActivity === 'object' ? raw.lessonActivity : {},
     questionAttempts: raw.questionAttempts && typeof raw.questionAttempts === 'object' ? raw.questionAttempts : {},
+    questionBankAttempts: raw.questionBankAttempts && typeof raw.questionBankAttempts === 'object' ? raw.questionBankAttempts : {},
     bookmarks: {
       questionIds: Array.isArray(raw.bookmarks?.questionIds) ? raw.bookmarks.questionIds : [],
       lessonIds: Array.isArray(raw.bookmarks?.lessonIds) ? raw.bookmarks.lessonIds : [],
