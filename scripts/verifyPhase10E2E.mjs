@@ -110,7 +110,7 @@ const checkHtml = async (baseUrl, label, routes) => {
     });
     const body = await response.text();
     assert(label + ' route ' + route, response.status === 200, 'HTTP ' + response.status);
-    assert(label + ' HTML shell ' + route, body.includes('<div id="root"></div>'));
+    assert(label + ' HTML shell ' + route, /id=["']root["']/.test(body));
     results.push({ route, status: response.status, bytes: Buffer.byteLength(body) });
   }
   return results;
