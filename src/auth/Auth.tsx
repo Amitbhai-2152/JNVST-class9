@@ -121,6 +121,7 @@ const mergeProgress = (local: ProgressState, remote: ProgressState | null): Prog
   return {
     lessonActivity,
     questionAttempts,
+    questionBankAttempts,
     bookmarks,
     revisionHistory,
     recentlyStudied,
