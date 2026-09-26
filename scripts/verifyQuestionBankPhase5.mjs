@@ -23,7 +23,7 @@ for (const contract of [
   'selectionMode',
   "'smart'",
   "'random'",
-  'progressQuestionAttempts',
+  'progressQuestionBankAttempts',
   'पहली बार अभ्यास',
   'कम accuracy',
   'question-bank-selection-mode',
