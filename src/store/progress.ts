@@ -61,6 +61,7 @@ export const useProgressStore = create<Store>()(
       replaceProgress: (nextProgress) => set(() => ({
         lessonActivity: nextProgress.lessonActivity ?? {},
         questionAttempts: nextProgress.questionAttempts ?? {},
+        questionBankAttempts: nextProgress.questionBankAttempts ?? {},
         bookmarks: {
           questionIds: nextProgress.bookmarks?.questionIds ?? [],
           lessonIds: nextProgress.bookmarks?.lessonIds ?? [],
