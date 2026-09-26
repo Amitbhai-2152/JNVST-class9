@@ -111,6 +111,7 @@ export interface HindiUnseenLabAttempt {
 }
 
 export type QuestionBankSessionKind = 'practice' | 'challenger';
+export type QuestionBankDifficultyFilter = 'all' | Difficulty | 'hard-plus';
 
 export interface QuestionBankSessionState {
   status: 'practice' | 'finished';
@@ -124,7 +125,7 @@ export interface QuestionBankSessionState {
     subjectId: ID | 'all';
     chapterId: ID | 'all';
     topicId: ID | 'all';
-    difficulty: 'all' | Difficulty;
+    difficulty: QuestionBankDifficultyFilter;
     sessionSize: number;
     selectionMode: 'smart' | 'random';
   };
