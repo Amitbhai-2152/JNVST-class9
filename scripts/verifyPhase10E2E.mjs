@@ -304,74 +304,83 @@ const checkRemoteQuestionBankBundle = async (baseUrl) => {
   const routeUrl = origin + '/question-bank/';
   let lastIssue = '';
 
-  for (let attempt = 0; attempt < 12; attempt += 1) {
-    const response = await fetchWithRetry(
-      routeUrl,
-      {
-        redirect: 'follow',
-        headers: {
-          'cache-control': 'no-cache, no-store, max-age=0',
-          pragma: 'no-cache',
-          accept: 'text/html,*/*',
+  for (let attempt = 0; attempt < 120; attempt += 1) {
+    try {
+      const response = await fetchWithRetry(
+        routeUrl + (routeUrl.includes('?') ? '&' : '?') + '_bundlecheck=' + (attempt + 1),
+        {
+          redirect: 'follow',
+          headers: {
+            'cache-control': 'no-cache, no-store, max-age=0',
+            pragma: 'no-cache',
+            accept: 'text/html,*/*',
+          },
         },
-      },
-      1,
-      0,
-    );
-    const html = await response.text();
-    const hasShell = /id=["']root["']/.test(html);
-    assert('remote Question Bank canonical route', response.status === 200, 'HTTP ' + response.status);
-    assert('remote Question Bank canonical HTML shell', hasShell);
-
-    const scriptMatches = [...html.matchAll(/<script[^>]+src=["']([^"']+\.js)["']/g)].map((match) => match[1]);
-    const stylesheetMatches = [...html.matchAll(/<link[^>]+href=["']([^"']+\.css)["']/g)].map((match) => match[1]);
-    const scriptUrl = scriptMatches.find((value) => value.includes('/assets/'));
-    const stylesheetUrl = stylesheetMatches.find((value) => value.includes('/assets/'));
-
-    if (!scriptUrl || !stylesheetUrl) {
-      lastIssue = 'current Question Bank HTML does not reference Vite assets';
-    } else {
-      const scriptResponse = await fetchWithRetry(
-        origin + scriptUrl,
-        { headers: { 'cache-control': 'no-cache, no-store, max-age=0' } },
         1,
         0,
       );
-      const cssResponse = await fetchWithRetry(
-        origin + stylesheetUrl,
-        { headers: { 'cache-control': 'no-cache, no-store, max-age=0' } },
-        1,
-        0,
-      );
-      const script = await scriptResponse.text();
-      const css = await cssResponse.text();
-      assert('remote Question Bank JS asset', scriptResponse.status === 200, 'HTTP ' + scriptResponse.status);
-      assert('remote Question Bank CSS asset', cssResponse.status === 200, 'HTTP ' + cssResponse.status);
+      const html = await response.text();
+      if (response.status !== 200 || !/id=["']root["']/.test(html)) {
+        lastIssue = 'Question Bank route not ready: HTTP ' + response.status;
+      } else {
+        const scriptMatches = [...html.matchAll(/<script[^>]+src=["']([^"']+\.js)["']/g)].map((match) => match[1]);
+        const stylesheetMatches = [...html.matchAll(/<link[^>]+href=["']([^"']+\.css)["']/g)].map((match) => match[1]);
+        const scriptUrl = scriptMatches.find((value) => value.includes('/assets/'));
+        const stylesheetUrl = stylesheetMatches.find((value) => value.includes('/assets/'));
 
-      const missingMarkers = QUESTION_BANK_REMOTE_MARKERS
-        .filter(([label, marker]) => !script.includes(marker) && !css.includes(marker))
-        .map(([label]) => label);
+        if (!scriptUrl || !stylesheetUrl) {
+          lastIssue = 'current Question Bank HTML does not reference Vite assets';
+        } else {
+          const scriptResponse = await fetchWithRetry(
+            origin + scriptUrl + (scriptUrl.includes('?') ? '&' : '?') + '_bundlecheck=' + (attempt + 1),
+            { headers: { 'cache-control': 'no-cache, no-store, max-age=0' } },
+            1,
+            0,
+          );
+          const cssResponse = await fetchWithRetry(
+            origin + stylesheetUrl + (stylesheetUrl.includes('?') ? '&' : '?') + '_bundlecheck=' + (attempt + 1),
+            { headers: { 'cache-control': 'no-cache, no-store, max-age=0' } },
+            1,
+            0,
+          );
+          const script = await scriptResponse.text();
+          const css = await cssResponse.text();
 
-      if (missingMarkers.length === 0) {
-        for (const [label] of QUESTION_BANK_REMOTE_MARKERS) {
-          assert('remote Question Bank ' + label, true);
+          if (scriptResponse.status !== 200 || cssResponse.status !== 200) {
+            lastIssue = 'bundle assets not ready: JS HTTP ' + scriptResponse.status + ', CSS HTTP ' + cssResponse.status;
+          } else {
+            const missingMarkers = QUESTION_BANK_REMOTE_MARKERS
+              .filter(([, marker]) => !script.includes(marker) && !css.includes(marker))
+              .map(([label]) => label);
+
+            if (missingMarkers.length === 0) {
+              assert('remote Question Bank canonical route', true);
+              assert('remote Question Bank canonical HTML shell', true);
+              assert('remote Question Bank JS asset', true);
+              assert('remote Question Bank CSS asset', true);
+              for (const [label] of QUESTION_BANK_REMOTE_MARKERS) {
+                assert('remote Question Bank ' + label, true);
+              }
+              console.log('PASS — remote Question Bank bundle matches the expanded-practice release');
+              return;
+            }
+
+            lastIssue = 'stale bundle missing: ' + missingMarkers.join(', ');
+          }
         }
-        console.log('PASS — remote Question Bank bundle matches the expanded-practice release');
-        return;
       }
-
-      lastIssue = 'stale bundle missing: ' + missingMarkers.join(', ');
+    } catch (error) {
+      lastIssue = error instanceof Error ? error.message : String(error);
     }
 
-    if (attempt < 11) {
-      console.log('WAIT — remote Question Bank bundle propagation: ' + lastIssue);
+    if (attempt < 119) {
+      if ((attempt + 1) % 6 === 0) console.log('WAIT — remote Question Bank bundle propagation: ' + lastIssue);
       await new Promise((resolve) => setTimeout(resolve, 5000));
     }
   }
 
-  fail('FAIL — remote Question Bank bundle freshness: ' + lastIssue);
+  fail('FAIL — remote Question Bank bundle freshness after extended propagation window: ' + lastIssue);
 };
-
 const runRemoteSmoke = async (baseUrl) => {
   assert('remote URL supplied', /^https?:\/\//.test(baseUrl));
 
