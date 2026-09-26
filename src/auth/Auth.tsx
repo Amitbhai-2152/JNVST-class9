@@ -74,6 +74,14 @@ const mergeProgress = (local: ProgressState, remote: ProgressState | null): Prog
     );
   });
 
+  const questionBankAttempts: ProgressState['questionBankAttempts'] = { ...remote.questionBankAttempts };
+  Object.entries(local.questionBankAttempts).forEach(([id, attempts]) => {
+    questionBankAttempts[id] = uniqueBy(
+      [...(questionBankAttempts[id] ?? []), ...attempts].sort((a, b) => a.timestamp - b.timestamp),
+      (attempt) => [attempt.timestamp, attempt.mode, attempt.isCorrect ? '1' : '0', attempt.selectedOptionIds.join(',')].join('|'),
+    );
+  });
+
   const revisionHistory = uniqueBy(
     [...remote.revisionHistory, ...local.revisionHistory].sort((a, b) => a.timestamp - b.timestamp),
     (item) => [item.entityType, item.entityId, item.timestamp].join('|'),
