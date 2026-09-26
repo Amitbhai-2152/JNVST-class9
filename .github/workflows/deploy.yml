@@ -67,9 +67,8 @@ jobs:
 
           BUILD_TYPE="$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.build_type // "legacy"')"
           echo "GitHub Pages build_type: $BUILD_TYPE"
-          if [ "$BUILD_TYPE" = "legacy" ]; then
-            echo "Requesting an explicit GitHub Pages rebuild from the synchronized branch..."
-            gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds" >/dev/null
+          echo "Requesting a guarded Pages rebuild from the synchronized repository root..."
+          if gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds" >/dev/null 2>&1; then
             for attempt in {1..60}; do
               STATUS="$(gh api "repos/$GITHUB_REPOSITORY/pages/builds/latest" --jq '.status // empty' 2>/dev/null || true)"
               echo "Pages build status: ${STATUS:-unknown}"
@@ -83,7 +82,7 @@ jobs:
               sleep 5
             done
           else
-            echo "Pages is configured for workflow publishing; root sync remains enabled for legacy-source compatibility."
+            echo "Direct legacy Pages rebuild is unavailable under the current Pages source; continuing with the verified workflow deployment."
           fi
 
       - name: Setup Pages
