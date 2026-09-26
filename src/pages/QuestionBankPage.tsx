@@ -6,8 +6,8 @@ import { questionBank, questionBankById, questionBankStats, questionBankTaxonomy
 import { useProgressStore } from '../store/progress';
 import { getQuestionBankProgressSummary, getQuestionPerformance } from '../utils/questionBankProgress';
 import { getSelectionRationale, selectQuestionBankSession, type QuestionBankSelectionMode } from '../utils/questionBankSmartSelection';
-import { getDedicatedChapterChallengers, getDedicatedGlobalChallengers, getDedicatedSubjectChallengers, getDedicatedTopicChallengers } from '../utils/questionBankChallengers';
-import type { Difficulty, ID, Question, QuestionBankSessionKind } from '../types';
+import { getDedicatedChapterChallengers, getDedicatedGlobalChallengers, getDedicatedSubjectChallengers, getDedicatedTopicChallengers, getDedicatedChallengerCounts } from '../utils/questionBankChallengers';
+import type { Difficulty, ID, Question, QuestionBankDifficultyFilter, QuestionBankSessionKind } from '../types';
 
 type FilterValue = ID | 'all';
 type SessionState = 'setup' | 'practice' | 'finished';
@@ -18,6 +18,15 @@ const difficultyLabels: Record<Difficulty, string> = {
   medium: 'मध्यम',
   hard: 'कठिन',
   challenge: 'चैलेंज',
+};
+
+const difficultyFilterLabels: Record<QuestionBankDifficultyFilter, string> = {
+  all: 'सभी स्तर',
+  easy: 'आसान',
+  medium: 'मध्यम',
+  hard: 'कठिन',
+  challenge: 'चैलेंज',
+  'hard-plus': 'Hard + Challenge',
 };
 
 const typeLabels: Record<Question['type'], string> = {
@@ -62,7 +71,7 @@ const QuestionBankPage = () => {
   const [subjectId, setSubjectId] = useState<FilterValue>('all');
   const [chapterId, setChapterId] = useState<FilterValue>('all');
   const [topicId, setTopicId] = useState<FilterValue>('all');
-  const [difficulty, setDifficulty] = useState<'all' | Difficulty>('all');
+  const [difficulty, setDifficulty] = useState<QuestionBankDifficultyFilter>('all');
   const [sessionSize, setSessionSize] = useState(10);
   const [selectionMode, setSelectionMode] = useState<QuestionBankSelectionMode>('smart');
   const [sessionKind, setSessionKind] = useState<QuestionBankSessionKind>('practice');
@@ -85,6 +94,8 @@ const QuestionBankPage = () => {
   const saveQuestionBankSession = useProgressStore((state) => state.saveQuestionBankSession);
   const clearQuestionBankSession = useProgressStore((state) => state.saveQuestionBankSession);
   const progressQuestionAttempts = useProgressStore((state) => state.questionAttempts);
+
+  const dedicatedChallengerTotal = useMemo(() => getDedicatedChallengerCounts().total, []);
 
   const subjects = questionBankTaxonomy.subjects;
   const chapters = questionBankTaxonomy.chapters;
@@ -111,7 +122,8 @@ const QuestionBankPage = () => {
     if (subjectId !== 'all' && question.subjectId !== subjectId) return false;
     if (chapterId !== 'all' && question.chapterId !== chapterId) return false;
     if (topicId !== 'all' && question.topicId !== topicId) return false;
-    if (difficulty !== 'all' && question.difficulty !== difficulty) return false;
+    if (difficulty !== 'all' && difficulty !== 'hard-plus' && question.difficulty !== difficulty) return false;
+    if (difficulty === 'hard-plus' && question.difficulty !== 'hard' && question.difficulty !== 'challenge') return false;
     return true;
   }), [subjectId, chapterId, topicId, difficulty]);
 
@@ -241,21 +253,24 @@ const QuestionBankPage = () => {
 
   const challengerQuestions = useMemo(() => {
     const seed = 'question-bank-challenger:' + subjectId + ':' + chapterId + ':' + topicId;
-    if (topicId !== 'all') return getDedicatedTopicChallengers(topicId, Math.max(20, sessionSize), seed);
-    if (chapterId !== 'all') return getDedicatedChapterChallengers(chapterId, Math.max(20, sessionSize), seed);
-    if (subjectId !== 'all') return getDedicatedSubjectChallengers(subjectId, Math.max(20, sessionSize), seed);
-    return getDedicatedGlobalChallengers(Math.max(20, sessionSize), seed);
-  }, [subjectId, chapterId, topicId, sessionSize]);
+    const poolLimit = 1000;
+    if (topicId !== 'all') return getDedicatedTopicChallengers(topicId, poolLimit, seed);
+    if (chapterId !== 'all') return getDedicatedChapterChallengers(chapterId, poolLimit, seed);
+    if (subjectId !== 'all') return getDedicatedSubjectChallengers(subjectId, poolLimit, seed);
+    return getDedicatedGlobalChallengers(poolLimit, seed);
+  }, [subjectId, chapterId, topicId]);
 
   const availableCount = sessionKind === 'challenger'
     ? challengerQuestions.length
     : filteredQuestions.length;
 
   const challengerScopeReady = challengerQuestions.length >= 20;
+  const maximumSessionSize = Math.max(5, Math.min(100, availableCount || 5));
+  const clampSessionSize = (value: number) => Math.max(5, Math.min(maximumSessionSize, Math.round(value) || 5));
 
   const startPractice = () => {
     const nextSession = sessionKind === 'challenger'
-      ? challengerQuestions.slice(0, sessionSize)
+      ? challengerQuestions.slice(0, clampSessionSize(sessionSize))
       : selectQuestionBankSession(
           filteredQuestions,
           progressQuestionAttempts ?? {},
@@ -377,13 +392,14 @@ const QuestionBankPage = () => {
       <div className="question-bank-head">
         <div>
           <Link className="question-bank-back" to="/">← डैशबोर्ड</Link>
-          <span className="question-bank-eyebrow">QUESTION BANK • PHASE 6</span>
+          <span className="question-bank-eyebrow">QUESTION BANK • EXPANDED PRACTICE</span>
           <h1>Question Bank</h1>
           <p>विषय, अध्याय, विषयांश और कठिनाई के अनुसार प्रश्न चुनें। Smart practice आपकी पिछली performance के आधार पर अगला set चुन सकता है।</p>
         </div>
         <div className="question-bank-stat">
-          <strong>{questionBankStats.total}</strong>
-          <span>कुल प्रश्न</span>
+          <strong>{questionBankStats.total + dedicatedChallengerTotal}</strong>
+          <span>कुल unique learning questions</span>
+          <small>{questionBankStats.total} Practice + {dedicatedChallengerTotal} Challenger</small>
         </div>
       </div>
 
@@ -495,17 +511,24 @@ const QuestionBankPage = () => {
 
               <label>
                 <span>{sessionKind === 'challenger' ? 'कठिनाई (Challenger में pool-locked)' : 'कठिनाई'}</span>
-                <select disabled={sessionKind === 'challenger'} value={difficulty} onChange={(event) => setDifficulty(event.target.value as 'all' | Difficulty)}>
-                  <option value="all">सभी स्तर</option>
-                  {Object.entries(difficultyLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                <select disabled={sessionKind === 'challenger'} value={difficulty} onChange={(event) => setDifficulty(event.target.value as QuestionBankDifficultyFilter)}>
+                  {(Object.entries(difficultyFilterLabels) as Array<[QuestionBankDifficultyFilter, string]>).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                 </select>
               </label>
 
-              <label>
+              <label className="question-bank-size-field">
                 <span>प्रश्नों की संख्या</span>
-                <select value={sessionSize} onChange={(event) => setSessionSize(Number(event.target.value))}>
-                  {(sessionKind === 'challenger' ? [20, 30] : [5, 10, 20, 30]).map((size) => <option key={size} value={size}>{size} प्रश्न</option>)}
-                </select>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={5}
+                  max={maximumSessionSize}
+                  step={1}
+                  value={Math.min(sessionSize, maximumSessionSize)}
+                  onChange={(event) => setSessionSize(clampSessionSize(Number(event.target.value)))}
+                  aria-label="कितने प्रश्न चाहिए"
+                />
+                <small>5–{maximumSessionSize} प्रश्न</small>
               </label>
             </div>
 
@@ -520,8 +543,8 @@ const QuestionBankPage = () => {
                 </p>
               </div>
               <div className="question-bank-selection-toggle" role="group" aria-label="Practice type">
-                <button type="button" className={sessionKind === 'practice' ? 'active' : ''} onClick={() => { setSessionKind('practice'); setSessionSize((value) => value < 5 ? 10 : value > 30 ? 30 : value); }}>📘 Practice</button>
-                <button type="button" className={sessionKind === 'challenger' ? 'active' : ''} onClick={() => { setSessionKind('challenger'); setSessionSize((value) => Math.max(20, Math.min(30, value))); }}>⚡ Challenger</button>
+                <button type="button" className={sessionKind === 'practice' ? 'active' : ''} onClick={() => { setSessionKind('practice'); setSessionSize((value) => Math.min(100, Math.max(5, value))); }}>📘 Practice</button>
+                <button type="button" className={sessionKind === 'challenger' ? 'active' : ''} onClick={() => { setSessionKind('challenger'); setSessionSize((value) => Math.min(100, Math.max(5, value))); }}>⚡ Challenger</button>
               </div>
             </div>
 
@@ -540,6 +563,14 @@ const QuestionBankPage = () => {
                 <button type="button" className={selectionMode === 'random' ? 'active' : ''} onClick={() => setSelectionMode('random')}>⌘ Random</button>
               </div>
             </div>}
+
+            <div className="question-bank-size-presets" role="group" aria-label="Quick question count">
+              {[10, 20, 30, 50, 75, 100].filter((size) => size <= maximumSessionSize).map((size) => (
+                <button type="button" key={size} className={sessionSize === size ? 'active' : ''} onClick={() => setSessionSize(size)}>
+                  {size}
+                </button>
+              ))}
+            </div>
 
             <div className="question-bank-filter-summary">
               <div><b>{availableCount}</b><span>{sessionKind === 'challenger' ? 'dedicated Challenger questions' : 'matching questions'}</span></div>
