@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawn } from 'node:child_process';
 
 const ROOT = process.cwd();
 const distPath = path.join(ROOT, 'dist');
@@ -152,21 +151,74 @@ const checkStaticAssets = async (baseUrl) => {
   }
 };
 
-const waitForServer = async (url, child, timeoutMs = 20000) => {
-  const started = Date.now();
-  let lastError = '';
-  while (Date.now() - started < timeoutMs) {
-    if (child.exitCode !== null) fail('Vite preview exited with code ' + child.exitCode);
+const MIME_TYPES = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.txt': 'text/plain; charset=utf-8',
+  '.xml': 'application/xml; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
+};
+
+const startProductionServer = async () => {
+  const { createServer } = await import('node:http');
+  const server = createServer(async (request, response) => {
     try {
-      const response = await fetch(url, { redirect: 'follow' });
-      if (response.status === 200) return;
-      lastError = 'HTTP ' + response.status;
-    } catch (error) {
-      lastError = error instanceof Error ? error.message : String(error);
+      const rawPath = decodeURIComponent(new URL(request.url ?? '/', 'http://127.0.0.1').pathname);
+      const relativePath = rawPath.replace(/^\\/+/, '');
+      const directPath = path.resolve(distPath, relativePath);
+      const safeRoot = path.resolve(distPath);
+      if (directPath !== safeRoot && !directPath.startsWith(safeRoot + path.sep)) {
+        response.writeHead(400);
+        response.end('Bad request');
+        return;
+      }
+
+      let candidate = directPath;
+      try {
+        const info = await import('node:fs/promises').then(({ stat }) => stat(candidate));
+        if (info.isDirectory()) candidate = path.join(candidate, 'index.html');
+      } catch {
+        if (!path.extname(candidate)) candidate = path.join(candidate, 'index.html');
+      }
+
+      try {
+        const info = await import('node:fs/promises').then(({ stat }) => stat(candidate));
+        if (!info.isFile()) throw new Error('not a file');
+        const body = await import('node:fs/promises').then(({ readFile }) => readFile(candidate));
+        response.writeHead(200, {
+          'content-type': MIME_TYPES[path.extname(candidate).toLowerCase()] ?? 'application/octet-stream',
+          'cache-control': 'no-store',
+        });
+        response.end(body);
+      } catch {
+        const fallback = await import('node:fs/promises').then(({ readFile }) => readFile(path.join(distPath, '404.html')));
+        response.writeHead(404, {
+          'content-type': 'text/html; charset=utf-8',
+          'cache-control': 'no-store',
+        });
+        response.end(fallback);
+      }
+    } catch {
+      response.writeHead(500);
+      response.end('Internal test server error');
     }
-    await new Promise((resolve) => setTimeout(resolve, 300));
-  }
-  fail('Vite preview did not become ready: ' + lastError);
+  });
+
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(4173, '127.0.0.1', resolve);
+  });
+
+  return server;
 };
 
 const runLocalProductionSmoke = async () => {
@@ -177,15 +229,8 @@ const runLocalProductionSmoke = async () => {
     assert('generated route entry ' + route, fs.existsSync(entry));
   }
 
-  const child = spawn(
-    process.platform === 'win32' ? 'npx.cmd' : 'npx',
-    ['vite', 'preview', '--host', '127.0.0.1', '--port', '4173', '--strictPort'],
-    { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] },
-  );
-  let stderr = '';
-  child.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
+  const server = await startProductionServer();
   try {
-    await waitForServer('http://127.0.0.1:4173/', child);
     await checkHtml('http://127.0.0.1:4173', 'production-preview', criticalRoutes);
     await checkStaticAssets('http://127.0.0.1:4173');
     const notificationResponse = await fetch('http://127.0.0.1:4173/notifications.json?_phase10=1', { cache: 'no-store' });
@@ -193,14 +238,7 @@ const runLocalProductionSmoke = async () => {
     const notifications = await notificationResponse.json();
     assert('production notifications feed shape', Array.isArray(notifications));
   } finally {
-    child.kill('SIGTERM');
-    if (child.exitCode === null) {
-      await new Promise((resolve) => {
-        const timer = setTimeout(resolve, 2000);
-        child.once('exit', () => { clearTimeout(timer); resolve(); });
-      });
-    }
-    if (stderr.trim()) console.log('Preview stderr:', stderr.trim().slice(0, 1200));
+    await new Promise((resolve) => server.close(resolve));
   }
 };
 
