@@ -179,6 +179,7 @@ export const useProgressStore = create<Store>()(
           ...previous,
           lessonActivity: { ...emptyProgressState.lessonActivity, ...(previous.lessonActivity ?? {}) },
           questionAttempts: { ...emptyProgressState.questionAttempts, ...(previous.questionAttempts ?? {}) },
+          questionBankAttempts: { ...emptyProgressState.questionBankAttempts, ...(previous.questionBankAttempts ?? {}) },
           bookmarks: {
             questionIds: previous.bookmarks?.questionIds ?? [],
             lessonIds: previous.bookmarks?.lessonIds ?? [],
