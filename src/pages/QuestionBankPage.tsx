@@ -359,7 +359,7 @@ const QuestionBankPage = () => {
   };
 
   const toggleMarked = () => {
-    if (!currentQuestion) return;
+    if (!currentQuestion || reviewOnly) return;
     setMarkedForReview((current) => ({
       ...current,
       [currentQuestion.id]: !current[currentQuestion.id],
