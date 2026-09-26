@@ -123,6 +123,19 @@ export const useProgressStore = create<Store>()(
           mode: items[0]?.attempt.mode ?? 'mixed',
         });
       },
+      recordQuestionBankAttempts: (items) => {
+        set((state) => {
+          const questionBankAttempts = { ...(state.questionBankAttempts ?? {}) };
+          items.forEach(({ id, attempt }) => {
+            questionBankAttempts[id] = [...(questionBankAttempts[id] ?? []), attempt];
+          });
+          return { questionBankAttempts };
+        });
+        void trackEvent('questions_batch_attempted', {
+          count: items.length,
+          mode: items[0]?.attempt.mode ?? 'mixed',
+        });
+      },
       recordStudy: (id, title, type) => {
         set((state) => ({
           recentlyStudied: recent(state.recentlyStudied ?? [], { id, title, type, timestamp: Date.now() }),
