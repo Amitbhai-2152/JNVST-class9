@@ -2334,15 +2334,16 @@ const TopicChallengerPage = () => {
   const isMath = Boolean(topic?.id.startsWith('top_math_'));
   const isHindi = Boolean(topic?.id.startsWith('top_hin_'));
   const isEnglish = Boolean(topic?.id.startsWith('top_eng_'));
-  const questions = (isMath || isHindi || isEnglish) && topic
+  const isScience = Boolean(topic?.id.startsWith('top_sci_'));
+  const questions = (isMath || isHindi || isEnglish || isScience) && topic
     ? getTopicChallengerQuestions(topic.id, 20, 'jnvst-topic-challenger-' + topic.id)
     : [];
 
-  if (!topic || !chapter || (!isMath && !isHindi && !isEnglish)) {
+  if (!topic || !chapter || (!isMath && !isHindi && !isEnglish && !isScience)) {
     return <Shell><Card className="empty"><h1>विषयांश Challenger नहीं मिला</h1><p>इस official subtopic के लिए अभी पर्याप्त Challenger questions उपलब्ध नहीं हैं।</p><Link className="btn" to={chapter ? `/subjects/${chapter.subjectId}` : '/subjects'}>विषय तैयारी केंद्र</Link></Card></Shell>;
   }
 
-  const subjectLabel = isHindi ? 'HINDI' : isEnglish ? 'ENGLISH' : 'MATH';
+  const subjectLabel = isHindi ? 'HINDI' : isEnglish ? 'ENGLISH' : isScience ? 'SCIENCE' : 'MATH';
 
   return <AssessmentRunner
     questions={questions}
