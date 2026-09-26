@@ -11,6 +11,7 @@ type Store = ProgressState & {
   toggleBookmarkLesson: (id: ID) => void;
   recordAttempt: (id: ID, attempt: QuestionAttempt) => void;
   recordAttempts: (attempts: Array<{ id: ID; attempt: QuestionAttempt }>) => void;
+  recordQuestionBankAttempts: (attempts: Array<{ id: ID; attempt: QuestionAttempt }>) => void;
   recordStudy: (id: ID, title: string, type: 'lesson' | 'topic') => void;
   saveMockResult: (result: MockTestResult) => void;
   recordEnglishLabAttempt: (id: ID, attempt: EnglishLabAttempt) => void;
