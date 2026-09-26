@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -44,6 +44,41 @@ jobs:
       - name: End-to-end production smoke verification
         run: npm run verify:e2e
 
+
+      - name: Synchronize legacy Pages source with verified build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BUILD_TYPE="$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.build_type // "legacy"')"
+          echo "GitHub Pages build_type: $BUILD_TYPE"
+          if [ "$BUILD_TYPE" = "legacy" ]; then
+            cp -a dist/. .
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            if git diff --cached --quiet; then
+              echo "Branch publishing files are already synchronized."
+            else
+              git commit -m "chore: sync production Pages output"
+              git push origin HEAD:main
+            fi
+            echo "Requesting an explicit GitHub Pages rebuild from the synchronized branch..."
+            gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds" >/dev/null
+            for attempt in {1..60}; do
+              STATUS="$(gh api "repos/$GITHUB_REPOSITORY/pages/builds/latest" --jq '.status // empty' 2>/dev/null || true)"
+              echo "Pages build status: ${STATUS:-unknown}"
+              if [ "$STATUS" = "built" ]; then
+                break
+              fi
+              if [ "$STATUS" = "errored" ]; then
+                echo "GitHub Pages build reported an error."
+                exit 1
+              fi
+              sleep 5
+            done
+          else
+            echo "Pages is configured for workflow publishing; no legacy branch sync is required."
+          fi
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
