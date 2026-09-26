@@ -1,0 +1,31 @@
+name: Phase 11 Content Completion Audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/data/**'
+      - 'src/utils/**'
+      - 'src/types/**'
+      - 'scripts/verifyPhase11ContentCompletion.mjs'
+      - 'package.json'
+      - '.github/workflows/phase11-content-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Phase 11 content completion audit
+        run: npm run verify:phase11
