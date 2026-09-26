@@ -8,7 +8,8 @@
     "build": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit",
     "verify": "node scripts/verifyPhase9UX.mjs && node scripts/verifyQuestionBankPhase7.mjs && node scripts/verifyQuestionBankPhase6.mjs && node scripts/verifyQuestionBankPhase5.mjs && node scripts/verifyQuestionBankPhase4.mjs && node scripts/verifyQuestionBankPhase3.mjs && node scripts/verifyQuestionBankPhase2.mjs && node scripts/verifyQuestionBankFoundation.mjs && node scripts/verifyQuestionBanks.mjs && node scripts/verifyEnglishMastery.mjs && node scripts/verifyHindiMastery.mjs && node scripts/verifyHindiRelease.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "verify:e2e": "node scripts/verifyPhase10E2E.mjs"
   },
   "dependencies": {
     "katex": "^0.16.22",
