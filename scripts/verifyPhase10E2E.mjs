@@ -105,7 +105,7 @@ const checkHtml = async (baseUrl, label, routes) => {
   for (const route of routes) {
     const url = origin + route + (route.includes('?') ? '&' : '?') + '_phase10=1';
     const response = await fetch(url, {
-      redirect: 'manual',
+      redirect: 'follow',
       headers: { 'cache-control': 'no-cache', accept: 'text/html,*/*' },
     });
     const body = await response.text();
@@ -142,7 +142,7 @@ const waitForServer = async (url, child, timeoutMs = 20000) => {
   while (Date.now() - started < timeoutMs) {
     if (child.exitCode !== null) fail('Vite preview exited with code ' + child.exitCode);
     try {
-      const response = await fetch(url, { redirect: 'manual' });
+      const response = await fetch(url, { redirect: 'follow' });
       if (response.status === 200) return;
       lastError = 'HTTP ' + response.status;
     } catch (error) {
