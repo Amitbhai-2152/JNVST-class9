@@ -44,6 +44,18 @@ jobs:
       - name: End-to-end production smoke verification
         run: npm run verify:e2e
 
+      - name: Verify Pages source is GitHub Actions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BUILD_TYPE="$(gh api "repos/${{ github.repository }}/pages" --jq '.build_type // empty')"
+          echo "GitHub Pages build_type: $BUILD_TYPE"
+          test "$BUILD_TYPE" = "workflow" || {
+            echo "GitHub Pages is still configured for branch/Jekyll publishing."
+            echo "Set Settings -> Pages -> Build and deployment -> Source -> GitHub Actions, then rerun this workflow."
+            exit 1
+          }
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
