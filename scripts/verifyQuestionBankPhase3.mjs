@@ -23,7 +23,7 @@ const pageContracts = [
   'clearResponse',
   'toggleMarked',
   'finishSession',
-  'recordAttempts',
+  'recordQuestionBankAttempts',
   'question-bank-palette',
   'question-bank-feedback',
   'question-bank-result-list',
@@ -67,5 +67,5 @@ console.log('✓ Mark-for-review and clear-response controls exist.');
 console.log('✓ Answer-check feedback and explanations exist.');
 console.log('✓ Protected session submission and confirmation dialog exist.');
 console.log('✓ Final results include score, attempted/unanswered, correct/incorrect and per-question review.');
-console.log('✓ Practice attempts are recorded through the existing progress store.');
+console.log('✓ Question Bank attempts are recorded through the isolated Question Bank progress store.');
 console.log('✓ Responsive Phase 3 styles exist.');
