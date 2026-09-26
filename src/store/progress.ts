@@ -40,6 +40,7 @@ export const getProgressSnapshot = (): ProgressState => {
   return {
     lessonActivity: state.lessonActivity ?? {},
     questionAttempts: state.questionAttempts ?? {},
+    questionBankAttempts: state.questionBankAttempts ?? {},
     bookmarks: {
       questionIds: state.bookmarks?.questionIds ?? [],
       lessonIds: state.bookmarks?.lessonIds ?? [],
