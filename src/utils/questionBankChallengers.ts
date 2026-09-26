@@ -2,20 +2,28 @@ import type { ID, Question } from '../types';
 import { chapters, topics } from '../data/curriculum';
 import { englishChapterChallengers } from '../data/questions/englishChallengers';
 import { englishChapterChallengersExtra } from '../data/questions/englishChapterChallengersExtra';
+import { englishTopicChallengers } from '../data/questions/englishTopicChallengers';
 import { hindiChapterChallengers } from '../data/questions/hindiChapterChallengers';
 import { hindiTopicChallengers } from '../data/questions/hindiTopicChallengers';
 import { mathChapterChallengers } from '../data/questions/mathChapterChallengers';
 import { mathTopicChallengersV2 } from '../data/questions/mathTopicChallengersV2';
 import { scienceChapterChallengers } from '../data/questions/scienceChapterChallengers';
+import { scienceTopicChallengersPart1 } from '../data/questions/scienceTopicChallengersPart1';
+import { scienceTopicChallengersPart2 } from '../data/questions/scienceTopicChallengersPart2';
+import { scienceTopicChallengersPart3 } from '../data/questions/scienceTopicChallengersPart3';
 
 export const dedicatedChallengerQuestions: readonly Question[] = [
   ...englishChapterChallengers,
   ...englishChapterChallengersExtra,
+  ...englishTopicChallengers,
   ...hindiChapterChallengers,
   ...hindiTopicChallengers,
   ...mathChapterChallengers,
   ...mathTopicChallengersV2,
   ...scienceChapterChallengers,
+  ...scienceTopicChallengersPart1,
+  ...scienceTopicChallengersPart2,
+  ...scienceTopicChallengersPart3,
 ];
 
 const eligible = (question: Question): boolean =>
