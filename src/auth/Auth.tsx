@@ -1,7 +1,7 @@
 import jnvstLoginHero from '../assets/jnvst-login-hero.webp';
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
-import { useProgressStore, emptyProgressState, getProgressSnapshot } from '../store/progress';
+import { useProgressStore, emptyProgressState, getMainCloudProgressSnapshot, getQuestionBankCloudProgressSnapshot } from '../store/progress';
 import type { ProgressState } from '../types';
 import { supabase, supabaseConfigured } from '../lib/supabase';
 import {
@@ -19,6 +19,47 @@ import {
 
 const LOCAL_OWNER_KEY = 'jnvst-class9-progress-owner-v1';
 const CLOUD_TABLE = 'student_progress';
+const QUESTION_BANK_CLOUD_TABLE = 'student_question_bank_progress';
+
+interface QuestionBankCloudRow {
+  attempts: ProgressState['questionBankAttempts'];
+  session: ProgressState['questionBankSession'];
+}
+
+const toQuestionBankCloudProgress = (value: unknown): QuestionBankCloudRow | null => {
+  if (!value || typeof value !== 'object') return null;
+  const raw = value as Partial<QuestionBankCloudRow>;
+  return {
+    attempts: raw.attempts && typeof raw.attempts === 'object' ? raw.attempts : {},
+    session: raw.session && typeof raw.session === 'object' ? raw.session : null,
+  };
+};
+
+const mergeQuestionBankCloudProgress = (
+  local: ProgressState,
+  remote: QuestionBankCloudRow | null,
+): QuestionBankCloudRow => {
+  const attempts: ProgressState['questionBankAttempts'] = { ...(remote?.attempts ?? {}) };
+  Object.entries(local.questionBankAttempts ?? {}).forEach(([id, localAttempts]) => {
+    const merged = [...(attempts[id] ?? []), ...localAttempts].sort((a, b) => a.timestamp - b.timestamp);
+    const seen = new Set<string>();
+    attempts[id] = merged.filter((attempt) => {
+      const key = [attempt.timestamp, attempt.mode, attempt.isCorrect ? '1' : '0', attempt.selectedOptionIds.join(',')].join('|');
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  });
+
+  const localSession = local.questionBankSession ?? null;
+  const remoteSession = remote?.session ?? null;
+  const session =
+    localSession && remoteSession
+      ? (localSession.updatedAt >= remoteSession.updatedAt ? localSession : remoteSession)
+      : (localSession ?? remoteSession);
+
+  return { attempts, session };
+};
 
 const toProgress = (value: unknown): ProgressState | null => {
   if (!value || typeof value !== 'object') return null;
@@ -194,7 +235,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const saveNow = async (userId: string) => {
     if (!supabase) return;
-    const progress = getProgressSnapshot();
+    const progress = getMainCloudProgressSnapshot();
     setSyncStatus('saving');
     const { error } = await supabase.from(CLOUD_TABLE).upsert(
       { user_id: userId, progress, updated_at: new Date().toISOString() },
@@ -204,14 +245,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSyncStatus('error');
       throw error;
     }
-    setSyncStatus('saved');
+  };
+
+  const saveQuestionBankNow = async (userId: string) => {
+    if (!supabase) return;
+    const questionBankProgress = getQuestionBankCloudProgressSnapshot();
+    const { error } = await supabase.from(QUESTION_BANK_CLOUD_TABLE).upsert(
+      {
+        user_id: userId,
+        attempts: questionBankProgress.attempts,
+        session: questionBankProgress.session,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id' },
+    );
+    if (error) {
+      setSyncStatus('error');
+      throw error;
+    }
   };
 
   const scheduleCloudSave = (userId: string) => {
     if (syncTimerRef.current !== null) window.clearTimeout(syncTimerRef.current);
     syncTimerRef.current = window.setTimeout(() => {
       syncTimerRef.current = null;
-      void saveNow(userId).catch((error) => {
+      void Promise.all([
+        saveNow(userId),
+        saveQuestionBankNow(userId),
+      ]).then(() => {
+        setSyncStatus('saved');
+      }).catch((error) => {
+        setSyncStatus('error');
         setAuthError(normalizeAuthError(error instanceof Error ? error.message : String(error)));
       });
     }, 700);
@@ -232,10 +296,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     try {
       const local = snapshotForOwner(nextSession.user.id);
-      const [{ data, error }, { data: profile, error: profileError }] = await Promise.all([
+      const [{ data, error }, { data: questionBankData, error: questionBankError }, { data: profile, error: profileError }] = await Promise.all([
         supabase
           .from(CLOUD_TABLE)
           .select('progress')
+          .eq('user_id', nextSession.user.id)
+          .maybeSingle(),
+        supabase
+          .from(QUESTION_BANK_CLOUD_TABLE)
+          .select('attempts, session')
           .eq('user_id', nextSession.user.id)
           .maybeSingle(),
         supabase
@@ -248,6 +317,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (runId !== syncRunRef.current) return;
       if (error) throw error;
       if (profileError) throw profileError;
+      if (questionBankError) throw questionBankError;
 
       const pendingConsent = getPendingAnalyticsConsent();
       const consent = profile?.analytics_consent ?? pendingConsent ?? false;
@@ -276,9 +346,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (pendingConsent !== null) clearPendingAnalyticsConsent();
 
       const remote = toProgress(data?.progress);
-      const merged = mergeProgress(local, remote);
+      const remoteMain = remote
+        ? { ...remote, questionBankAttempts: {}, questionBankSession: null }
+        : null;
+      const merged = mergeProgress(local, remoteMain);
+      const remoteQuestionBank = toQuestionBankCloudProgress(questionBankData
+        ? { attempts: questionBankData.attempts, session: questionBankData.session }
+        : remote
+          ? { attempts: remote.questionBankAttempts, session: remote.questionBankSession }
+          : null);
+      const mergedQuestionBank = mergeQuestionBankCloudProgress(local, remoteQuestionBank);
+      merged.questionBankAttempts = mergedQuestionBank.attempts;
+      merged.questionBankSession = mergedQuestionBank.session;
       useProgressStore.getState().replaceProgress(merged);
       localStorage.setItem(LOCAL_OWNER_KEY, nextSession.user.id);
+
+      // Always rewrite the main cloud row without Question Bank fields.
+      // This also cleans up legacy Question Bank data previously stored inside student_progress.
+      await Promise.all([
+        saveNow(nextSession.user.id),
+        saveQuestionBankNow(nextSession.user.id),
+      ]);
+
       if (consumePendingSignup()) void trackEvent('sign_up');
       else void trackEvent('login');
 
