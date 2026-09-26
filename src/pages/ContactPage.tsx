@@ -20,7 +20,9 @@ const REPORT_TYPES = [
 const MAX_DESCRIPTION = 4000;
 const MAX_CORRECTION = 2500;
 const SUBMIT_COOLDOWN_MS = 60_000;
+const RATING_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000;
 const LAST_SUBMIT_KEY = 'jnvst-class9-report-last-submit-v1';
+const LAST_RATING_KEY = 'jnvst-class9-website-rating-v1';
 
 const deviceType = () => {
   if (window.innerWidth <= 700) return 'mobile';
@@ -50,6 +52,11 @@ const ContactPage = () => {
   const [honeypot, setHoneypot] = useState('');
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const [rating, setRating] = useState(0);
+  const [ratingHover, setRatingHover] = useState(0);
+  const [ratingStatus, setRatingStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [ratingMessage, setRatingMessage] = useState('');
+  const [ratingLocked, setRatingLocked] = useState(false);
 
   const visibleChapters = useMemo(
     () => chapters.filter((chapter) => subjectId === 'all' || chapter.subjectId === subjectId),
@@ -67,6 +74,19 @@ const ContactPage = () => {
 
   const pageLabel = initialPage === 'question-bank' ? 'Question Bank' : 'Website';
 
+  React.useEffect(() => {
+    try {
+      const lastRatedAt = Number(localStorage.getItem(LAST_RATING_KEY) || 0);
+      if (lastRatedAt && Date.now() - lastRatedAt < RATING_COOLDOWN_MS) {
+        setRatingLocked(true);
+        setRatingStatus('success');
+        setRatingMessage('आप इस device से हाल में website को rate कर चुके हैं। धन्यवाद!');
+      }
+    } catch {
+      // Rating still works when localStorage is unavailable.
+    }
+  }, []);
+
   const updateSubject = (value: string) => {
     setSubjectId(value);
     if (chapterId !== 'all' && !chapters.some((chapter) => chapter.id === chapterId && (value === 'all' || chapter.subjectId === value))) {
@@ -81,6 +101,61 @@ const ContactPage = () => {
       setTopicId('all');
     }
   };
+
+  const submitRating = async () => {
+    if (ratingStatus === 'submitting' || ratingLocked) return;
+    if (!rating) {
+      setRatingStatus('error');
+      setRatingMessage('कृपया पहले 1 से 5 तक कोई star चुनें।');
+      return;
+    }
+
+    if (!supabaseConfigured || !supabase) {
+      setRatingStatus('error');
+      setRatingMessage('Rating system अभी configure नहीं है।');
+      return;
+    }
+
+    try {
+      const lastRatedAt = Number(localStorage.getItem(LAST_RATING_KEY) || 0);
+      if (Date.now() - lastRatedAt < RATING_COOLDOWN_MS) {
+        setRatingLocked(true);
+        setRatingStatus('success');
+        setRatingMessage('आप इस device से हाल में website को rate कर चुके हैं। धन्यवाद!');
+        return;
+      }
+    } catch {
+      // Continue when localStorage is unavailable.
+    }
+
+    setRatingStatus('submitting');
+    setRatingMessage('');
+
+    const { error } = await supabase.from('website_ratings').insert({
+      user_id: user?.id ?? null,
+      rating,
+      page_url: window.location.href.slice(0, 500),
+      device_type: deviceType(),
+    });
+
+    if (error) {
+      console.error('website rating submission failed:', error);
+      setRatingStatus('error');
+      setRatingMessage('Rating भेजते समय समस्या आई। कृपया फिर प्रयास करें।');
+      return;
+    }
+
+    try {
+      localStorage.setItem(LAST_RATING_KEY, String(Date.now()));
+    } catch {
+      // Ignore storage failures.
+    }
+
+    setRatingLocked(true);
+    setRatingStatus('success');
+    setRatingMessage('धन्यवाद! आपका 5-star rating feedback दर्ज हो गया।');
+  };
+
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -180,6 +255,58 @@ const ContactPage = () => {
           <span aria-hidden="true">🛠️</span>
           <strong>Student feedback</strong>
           <small>नाम या login जरूरी नहीं है</small>
+        </div>
+      </section>
+
+      <section className="contact-rating-card" aria-labelledby="website-rating-title">
+        <div className="contact-rating-copy">
+          <span className="contact-label">QUICK FEEDBACK</span>
+          <h2 id="website-rating-title">आपको हमारी website कैसी लगी?</h2>
+          <p>पूरी website के experience को 1 से 5 stars में rate करें। कोई नाम या email देना जरूरी नहीं है।</p>
+        </div>
+
+        <div className="contact-rating-action">
+          <div className="contact-stars" role="radiogroup" aria-label="Overall website rating">
+            {[1, 2, 3, 4, 5].map((value) => {
+              const active = value <= (ratingHover || rating);
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  className={active ? 'active' : ''}
+                  role="radio"
+                  aria-checked={rating === value}
+                  aria-label={value + ' star'}
+                  disabled={ratingLocked || ratingStatus === 'submitting'}
+                  onMouseEnter={() => setRatingHover(value)}
+                  onMouseLeave={() => setRatingHover(0)}
+                  onFocus={() => setRatingHover(value)}
+                  onBlur={() => setRatingHover(0)}
+                  onClick={() => {
+                    setRating(value);
+                    setRatingStatus('idle');
+                    setRatingMessage('');
+                  }}
+                >
+                  ★
+                </button>
+              );
+            })}
+          </div>
+          <div className="contact-rating-caption">{rating ? (rating + '/5 stars selected') : 'Star चुनें'}</div>
+          <button
+            type="button"
+            className="contact-rating-submit"
+            onClick={() => { void submitRating(); }}
+            disabled={ratingLocked || ratingStatus === 'submitting'}
+          >
+            {ratingStatus === 'submitting' ? 'Rating भेजी जा रही है…' : ratingLocked ? '✓ Rating दर्ज है' : '⭐ Website को rate करें'}
+          </button>
+          {ratingMessage && (
+            <p className={'contact-rating-message ' + (ratingStatus === 'error' ? 'error' : 'success')} role={ratingStatus === 'error' ? 'alert' : 'status'}>
+              {ratingMessage}
+            </p>
+          )}
         </div>
       </section>
 

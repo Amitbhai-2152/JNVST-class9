@@ -165,3 +165,32 @@ create index if not exists student_reports_question_id_idx on public.student_rep
 create index if not exists student_reports_type_idx on public.student_reports(report_type);
 
 comment on table public.student_reports is 'Student-submitted website/question issue reports. Public clients can insert but cannot read or enumerate reports.';
+
+
+-- Anonymous overall website ratings.
+-- Students can submit a 1–5 star rating, but the public client cannot read or enumerate ratings.
+create table if not exists public.website_ratings (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete set null,
+  rating smallint not null,
+  page_url text,
+  device_type text,
+  created_at timestamptz not null default now(),
+  constraint website_ratings_rating_allowed check (rating between 1 and 5),
+  constraint website_ratings_page_url_length check (page_url is null or char_length(page_url) <= 500),
+  constraint website_ratings_device_type_allowed check (device_type is null or device_type in ('mobile','tablet','desktop'))
+);
+
+alter table public.website_ratings enable row level security;
+revoke all on table public.website_ratings from anon, authenticated;
+grant insert on table public.website_ratings to anon, authenticated;
+
+drop policy if exists "Students can submit website ratings" on public.website_ratings;
+create policy "Students can submit website ratings" on public.website_ratings
+  for insert to anon, authenticated
+  with check (user_id is null or user_id = (select auth.uid()));
+
+create index if not exists website_ratings_created_at_idx on public.website_ratings(created_at desc);
+create index if not exists website_ratings_rating_idx on public.website_ratings(rating);
+
+comment on table public.website_ratings is 'Private student feedback: overall 1–5 star website ratings. Public clients can insert but cannot read ratings.';
