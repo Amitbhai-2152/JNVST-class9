@@ -25,6 +25,7 @@ const recent = (current: ProgressState['recentlyStudied'], item: ProgressState['
 export const emptyProgressState: ProgressState = {
   lessonActivity: {},
   questionAttempts: {},
+  questionBankAttempts: {},
   bookmarks: { questionIds: [], lessonIds: [] },
   revisionHistory: [],
   recentlyStudied: [],
