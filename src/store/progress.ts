@@ -151,10 +151,6 @@ export const useProgressStore = create<Store>()(
           });
           return { questionBankAttempts };
         });
-        void trackEvent('questions_batch_attempted', {
-          count: items.length,
-          mode: items[0]?.attempt.mode ?? 'mixed',
-        });
       },
       recordStudy: (id, title, type) => {
         set((state) => ({
