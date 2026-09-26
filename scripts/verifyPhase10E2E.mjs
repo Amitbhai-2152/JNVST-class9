@@ -1,0 +1,208 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { spawn } from 'node:child_process';
+
+const ROOT = process.cwd();
+const distPath = path.join(ROOT, 'dist');
+const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
+const fail = (message) => {
+  throw new Error(message);
+};
+const assert = (name, condition, detail = '') => {
+  if (!condition) fail('FAIL — ' + name + (detail ? ': ' + detail : ''));
+  console.log('PASS — ' + name);
+};
+
+const APP = read('src/App.tsx');
+const AUTH = read('src/auth/Auth.tsx');
+const PROGRESS = read('src/store/progress.ts');
+const QUESTION_BANK = read('src/pages/QuestionBankPage.tsx');
+const QBPAGE_CSS = read('src/question-bank.css');
+const INDEX_CSS = read('src/index.css');
+const PACKAGE = JSON.parse(read('package.json'));
+
+const criticalRoutes = [
+  '/',
+  '/login',
+  '/subjects',
+  '/subjects/sub_hin',
+  '/subjects/sub_eng',
+  '/subjects/sub_math',
+  '/subjects/sub_sci',
+  '/chapters/chap_math_01',
+  '/lessons/les_math_03_04_01',
+  '/question-bank',
+  '/smart-practice',
+  '/math-smart-practice',
+  '/science-smart-practice',
+  '/english-smart-practice',
+  '/hindi-smart-practice',
+  '/mock-tests',
+  '/math-mock-test',
+  '/science-mock-test',
+  '/english-mock-test',
+  '/hindi-mock-test',
+  '/english-translation-lab',
+  '/english-vocabulary-lab',
+  '/english-translation-practice',
+  '/english-vocabulary-practice',
+  '/english-unseen-passage',
+  '/hindi-unseen-passage',
+  '/bookmarks',
+];
+
+const requiredRouteFragments = [
+  ['dashboard route', '<Route path="/" element={<Dashboard />} />'],
+  ['login route', '<Route path="/login" element={<AuthPage />} />'],
+  ['subjects route', '<Route path="/subjects" element={<SubjectsPage />} />'],
+  ['chapter study route', '<Route path="/chapters/:chapterId/study" element={<ChapterStudyPage />} />'],
+  ['topic challenger route', '<Route path="/topics/:topicId/challenger" element={<TopicChallengerPage />} />'],
+  ['lesson route', '<Route path="/lessons/:lessonId" element={<LessonPage />} />'],
+  ['question bank route', '<Route path="/question-bank" element={<Shell><QuestionBankPage /></Shell>} />'],
+  ['mock route', '<Route path="/mock-tests" element={<MockTestsPage />} />'],
+  ['math mock route', '<Route path="/math-mock-test" element={<MathMockTestPage />} />'],
+  ['science mock route', '<Route path="/science-mock-test" element={<ScienceMockTestPage />} />'],
+  ['english translation lab route', '<Route path="/english-translation-lab" element={<EnglishTranslationLabPage />} />'],
+  ['english vocabulary lab route', '<Route path="/english-vocabulary-lab" element={<EnglishVocabularyLabPage />} />'],
+  ['hindi unseen route', '<Route path="/hindi-unseen-passage" element={<HindiUnseenPassagePage />} />'],
+];
+
+for (const [name, fragment] of requiredRouteFragments) assert(name, APP.includes(fragment));
+
+assert('critical route catalog size', criticalRoutes.length >= 25);
+assert('question bank canonical selector', QUESTION_BANK.includes('selectQuestionBankSession('));
+assert('question bank session persistence', QUESTION_BANK.includes('saveQuestionBankSession({'));
+assert('question bank attempt recording', QUESTION_BANK.includes('recordAttempts(attemptItems)'));
+assert('question bank resume restoration', QUESTION_BANK.includes('savedQuestionBankSession.questionIds'));
+assert('question bank challenger integration', QUESTION_BANK.includes('getDedicatedTopicChallengers('));
+assert('question bank restored session state', QUESTION_BANK.includes('setSessionState(savedQuestionBankSession.status)'));
+
+assert('progress persistence version', PROGRESS.includes('version: 5'));
+assert('progress stores question bank session', PROGRESS.includes('questionBankSession: null'));
+assert('progress exposes question bank session action', PROGRESS.includes('saveQuestionBankSession:'));
+assert('progress stores mock results', PROGRESS.includes('mockTestResults: [result'));
+assert('progress stores lab attempts', PROGRESS.includes('recordEnglishLabAttempt'));
+assert('auth gate handles recovery', AUTH.includes('recoveryMode'));
+assert('auth supports Google login', AUTH.includes('signInWithGoogle'));
+assert('auth supports email confirmation', AUTH.includes('resendEmailConfirmation'));
+
+assert('notifications runtime feed', APP.includes('NOTIFICATION_FEED_URL'));
+assert('notifications refresh interval', APP.includes('NOTIFICATION_REFRESH_INTERVAL_MS'));
+assert('notifications persisted read state', APP.includes('NOTIFICATION_READ_KEY'));
+assert('route scroll reset', APP.includes('window.scrollTo({ top: 0, left: 0, behavior: \'auto\' })'));
+assert('mobile nav accessibility contract', APP.includes('aria-controls="primary-navigation-panel"'));
+assert('main landmark', APP.includes('id="main-content"'));
+assert('question bank mobile stylesheet', QBPAGE_CSS.includes('PHASE 9 — question-bank mobile refinement'));
+assert('phase 9 global mobile guards', INDEX_CSS.includes('PHASE 9 — mobile + student UX final hardening'));
+
+assert('verify script exists', Boolean(PACKAGE.scripts?.verify));
+assert('e2e script exists', PACKAGE.scripts?.['verify:e2e'] === 'node scripts/verifyPhase10E2E.mjs');
+assert('production build script exists', PACKAGE.scripts?.build === 'node scripts/build.mjs');
+
+const checkHtml = async (baseUrl, label, routes) => {
+  const origin = baseUrl.replace(/\/$/, '');
+  const results = [];
+  for (const route of routes) {
+    const url = origin + route + (route.includes('?') ? '&' : '?') + '_phase10=1';
+    const response = await fetch(url, {
+      redirect: 'manual',
+      headers: { 'cache-control': 'no-cache', accept: 'text/html,*/*' },
+    });
+    const body = await response.text();
+    assert(label + ' route ' + route, response.status === 200, 'HTTP ' + response.status);
+    assert(label + ' HTML shell ' + route, body.includes('<div id="root"></div>'));
+    results.push({ route, status: response.status, bytes: Buffer.byteLength(body) });
+  }
+  return results;
+};
+
+const checkStaticAssets = async (baseUrl) => {
+  const origin = baseUrl.replace(/\/$/, '');
+  const html = fs.readFileSync(path.join(distPath, 'index.html'), 'utf8');
+  const urls = [
+    ...[...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map((m) => m[1]),
+    ...[...html.matchAll(/<link[^>]+href="([^"]+)"/g)].map((m) => m[1]),
+  ].filter((value) => value.startsWith('/'));
+
+  assert('production index asset references', urls.length > 0);
+  for (const asset of urls) {
+    const response = await fetch(origin + asset + (asset.includes('?') ? '&' : '?') + '_phase10=1', {
+      redirect: 'manual',
+      headers: { 'cache-control': 'no-cache' },
+    });
+    const body = await response.arrayBuffer();
+    assert('production asset ' + asset, response.status === 200, 'HTTP ' + response.status);
+    assert('production asset bytes ' + asset, body.byteLength > 0);
+  }
+};
+
+const waitForServer = async (url, child, timeoutMs = 20000) => {
+  const started = Date.now();
+  let lastError = '';
+  while (Date.now() - started < timeoutMs) {
+    if (child.exitCode !== null) fail('Vite preview exited with code ' + child.exitCode);
+    try {
+      const response = await fetch(url, { redirect: 'manual' });
+      if (response.status === 200) return;
+      lastError = 'HTTP ' + response.status;
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  }
+  fail('Vite preview did not become ready: ' + lastError);
+};
+
+const runLocalProductionSmoke = async () => {
+  assert('dist/index.html exists', fs.existsSync(path.join(distPath, 'index.html')));
+  const child = spawn(
+    process.platform === 'win32' ? 'npx.cmd' : 'npx',
+    ['vite', 'preview', '--host', '127.0.0.1', '--port', '4173', '--strictPort'],
+    { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] },
+  );
+  let stderr = '';
+  child.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
+  try {
+    await waitForServer('http://127.0.0.1:4173/', child);
+    await checkHtml('http://127.0.0.1:4173', 'production-preview', criticalRoutes);
+    await checkStaticAssets('http://127.0.0.1:4173');
+    const notificationResponse = await fetch('http://127.0.0.1:4173/notifications.json?_phase10=1', { cache: 'no-store' });
+    assert('production notifications feed', notificationResponse.status === 200);
+    const notifications = await notificationResponse.json();
+    assert('production notifications feed shape', Array.isArray(notifications));
+  } finally {
+    child.kill('SIGTERM');
+    if (child.exitCode === null) {
+      await new Promise((resolve) => {
+        const timer = setTimeout(resolve, 2000);
+        child.once('exit', () => { clearTimeout(timer); resolve(); });
+      });
+    }
+    if (stderr.trim()) console.log('Preview stderr:', stderr.trim().slice(0, 1200));
+  }
+};
+
+const runRemoteSmoke = async (baseUrl) => {
+  assert('remote URL supplied', /^https?:\/\//.test(baseUrl));
+  await checkHtml(baseUrl, 'remote-production', criticalRoutes);
+  const notificationUrl = baseUrl.replace(/\/$/, '') + '/notifications.json?_phase10=1';
+  const response = await fetch(notificationUrl, { cache: 'no-store' });
+  assert('remote notifications feed', response.status === 200, 'HTTP ' + response.status);
+  const payload = await response.json();
+  assert('remote notifications feed shape', Array.isArray(payload));
+};
+
+const args = process.argv.slice(2);
+const remoteIndex = args.indexOf('--remote');
+const remoteUrl = remoteIndex >= 0 ? args[remoteIndex + 1] : null;
+
+if (!remoteUrl) {
+  await runLocalProductionSmoke();
+}
+
+if (remoteUrl) {
+  await runRemoteSmoke(remoteUrl);
+}
+
+console.log('\nPhase 10 end-to-end verification passed.');
+console.log('Critical routes checked:', criticalRoutes.length);
