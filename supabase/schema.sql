@@ -194,3 +194,39 @@ create index if not exists website_ratings_created_at_idx on public.website_rati
 create index if not exists website_ratings_rating_idx on public.website_ratings(rating);
 
 comment on table public.website_ratings is 'Private student feedback: overall 1–5 star website ratings. Public clients can insert but cannot read ratings.';
+
+-- Question Bank progress is intentionally stored outside the main student_progress body.
+-- It contains only Question Bank attempts and the resumable Question Bank session.
+create table if not exists public.student_question_bank_progress (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  attempts jsonb not null default '{}'::jsonb,
+  session jsonb,
+  updated_at timestamptz not null default now(),
+  constraint student_question_bank_attempts_object check (jsonb_typeof(attempts) = 'object'),
+  constraint student_question_bank_session_object check (session is null or jsonb_typeof(session) = 'object')
+);
+
+alter table public.student_question_bank_progress enable row level security;
+
+revoke all on table public.student_question_bank_progress from anon, authenticated;
+grant select, insert, update, delete on table public.student_question_bank_progress to authenticated;
+
+drop policy if exists "Students can read their own Question Bank progress" on public.student_question_bank_progress;
+create policy "Students can read their own Question Bank progress" on public.student_question_bank_progress
+  for select to authenticated using ((select auth.uid()) = user_id);
+
+drop policy if exists "Students can create their own Question Bank progress" on public.student_question_bank_progress;
+create policy "Students can create their own Question Bank progress" on public.student_question_bank_progress
+  for insert to authenticated with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Students can update their own Question Bank progress" on public.student_question_bank_progress;
+create policy "Students can update their own Question Bank progress" on public.student_question_bank_progress
+  for update to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Students can delete their own Question Bank progress" on public.student_question_bank_progress;
+create policy "Students can delete their own Question Bank progress" on public.student_question_bank_progress
+  for delete to authenticated using ((select auth.uid()) = user_id);
+
+create index if not exists student_question_bank_progress_updated_at_idx on public.student_question_bank_progress(updated_at desc);
+
+comment on table public.student_question_bank_progress is 'Question Bank-only student attempts and resumable sessions. Intentionally separate from public.student_progress.';
