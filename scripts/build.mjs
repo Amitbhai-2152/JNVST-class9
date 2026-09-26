@@ -13,6 +13,26 @@ const unique = (items) => [...new Set(items)];
 
 const extractIds = (source, pattern) => unique([...source.matchAll(pattern)].map((match) => match[1]));
 
+const assetBasename = (value) => value.split('/').pop() || value;
+
+const getAssetReferences = (html) =>
+  [...html.matchAll(/(?:src|href)=["']([^"']+\.(?:js|css))["']/g)]
+    .map((match) => assetBasename(match[1]))
+    .filter((name) => name.endsWith('.js') || name.endsWith('.css'));
+
+const preserveLegacyEntryAssets = async (previousHtml, builtHtml) => {
+  const previousAssets = getAssetReferences(previousHtml);
+  const builtAssets = getAssetReferences(builtHtml);
+
+  for (const previousAsset of previousAssets) {
+    const extension = previousAsset.endsWith('.css') ? '.css' : '.js';
+    const currentAsset = builtAssets.find((asset) => asset.endsWith(extension));
+    if (!currentAsset || currentAsset === previousAsset) continue;
+
+    await copyFile('dist/assets/' + currentAsset, 'dist/assets/' + previousAsset);
+  }
+};
+
 const buildSeoFiles = async () => {
   const curriculumSource = await readFile(curriculumSourcePath, 'utf8');
   const subjectIds = extractIds(curriculumSource, /\{ id: ['"](sub_[^'"]+)['"], title:/g);
@@ -122,6 +142,8 @@ try {
 
   if (exitCode !== 0) process.exitCode = exitCode;
   else {
+    const builtIndex = await readFile('dist/index.html', 'utf8');
+    await preserveLegacyEntryAssets(previous, builtIndex);
     await copyFile('src/data/notifications.json', 'dist/notifications.json');
     await buildSeoFiles();
   }
