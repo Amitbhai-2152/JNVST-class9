@@ -122,7 +122,7 @@ const SEOController = () => {
       '@context': 'https://schema.org',
       '@type': 'WebSite',
       name: 'JNVST कक्षा 9 Learning Hub',
-      url: window.location.origin + '/JNVST-class9/',
+      url: window.location.origin + (window.location.hostname.endsWith('.github.io') ? '/JNVST-class9/' : '/'),
       inLanguage: ['hi', 'en'],
       description,
     });
