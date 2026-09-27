@@ -4,7 +4,7 @@ import { spawn } from 'node:child_process';
 const sourcePath = 'index.src.html';
 const targetPath = 'index.html';
 const defaultSiteUrl = 'https://amitbhai-2152.github.io/JNVST-class9';
-const siteUrl = (process.env.SITE_URL || defaultSiteUrl).replace(/\/+$/, '');
+const siteUrl = (process.env.SITE_URL || process.env.CF_PAGES_URL || defaultSiteUrl).replace(/\/+$/, '');
 const curriculumSourcePath = 'src/data/curriculum.ts';
 
 const escapeXml = (value) =>
