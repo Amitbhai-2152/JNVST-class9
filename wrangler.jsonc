@@ -1,10 +1,12 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "jnvst-class9",
+  "main": "./src/cloudflare-worker.ts",
   "compatibility_date": "2026-09-27",
+  "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     "not_found_handling": "single-page-application"
-  },
-  "compatibility_flags": ["nodejs_compat"]
+  }
 }
