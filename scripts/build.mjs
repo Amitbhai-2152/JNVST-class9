@@ -3,7 +3,8 @@ import { spawn } from 'node:child_process';
 
 const sourcePath = 'index.src.html';
 const targetPath = 'index.html';
-const siteUrl = 'https://amitbhai-2152.github.io/JNVST-class9';
+const defaultSiteUrl = 'https://amitbhai-2152.github.io/JNVST-class9';
+const siteUrl = (process.env.SITE_URL || defaultSiteUrl).replace(/\/+$/, '');
 const curriculumSourcePath = 'src/data/curriculum.ts';
 
 const escapeXml = (value) =>
@@ -153,7 +154,8 @@ const buildSeoFiles = async () => {
 const source = await readFile(sourcePath, 'utf8');
 const previous = await readFile(targetPath, 'utf8');
 
-await writeFile(targetPath, source, 'utf8');
+const sourceForBuild = source.split(defaultSiteUrl).join(siteUrl);
+await writeFile(targetPath, sourceForBuild, 'utf8');
 
 try {
   const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
