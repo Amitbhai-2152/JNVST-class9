@@ -1,5 +1,6 @@
 import jnvstLoginHero from '../assets/jnvst-login-hero.webp';
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { Session, User } from '@supabase/supabase-js';
 import { useProgressStore, emptyProgressState, getProgressSnapshot, getMainCloudProgressSnapshot, getQuestionBankCloudProgressSnapshot } from '../store/progress';
 import type { ProgressState } from '../types';
@@ -695,6 +696,7 @@ const PasswordRecoveryPage = () => {
 };
 
 export const AuthPage = () => {
+  const navigate = useNavigate();
   const { signIn, signInWithGoogle, resetPassword, resendConfirmation, signUp, authError } = useAuth();
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [displayName, setDisplayName] = useState('');
@@ -745,9 +747,11 @@ export const AuthPage = () => {
         } else {
           setMessage('Account तैयार है। आपकी progress cloud में सुरक्षित कर दी गई है।');
           setConfirmPassword('');
+          navigate('/', { replace: true });
         }
       } else {
         await signIn(email, password);
+        navigate('/', { replace: true });
       }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : String(error));
