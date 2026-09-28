@@ -390,6 +390,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     let active = true;
+
+    const initializeAuth = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (!active) return;
+      if (error) {
+        setAuthError(normalizeAuthError(error.message));
+        setLoading(false);
+        return;
+      }
+      await connectUser(data.session);
+    };
+
+    void initializeAuth();
+
     const { data } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (!active) return;
       if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true);
@@ -409,11 +423,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signIn = async (email: string, password: string) => {
     if (!supabase) throw new Error('Supabase अभी configure नहीं है।');
     setAuthError('');
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     if (error) {
       const message = normalizeAuthError(error.message);
       setAuthError(message);
       throw new Error(message);
+    }
+    if (!data.session) {
+      const current = await supabase.auth.getSession();
+      if (!current.data.session) {
+        throw new Error('Login response में active session नहीं मिला। कृपया फिर से Login करें।');
+      }
     }
   };
 
