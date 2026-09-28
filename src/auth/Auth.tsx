@@ -701,8 +701,10 @@ export const AuthPage = () => {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
 
   useEffect(() => {
-    if (user && !recoveryMode) navigate('/', { replace: true });
-  }, [user, recoveryMode, navigate]);
+    if (user && !recoveryMode && window.location.pathname !== '/') {
+      window.location.replace(window.location.origin + (window.location.hostname.endsWith('.github.io') ? '/JNVST-class9/' : '/'));
+    }
+  }, [user, recoveryMode]);
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -755,7 +757,9 @@ export const AuthPage = () => {
         }
       } else {
         await signIn(email, password);
-        navigate('/', { replace: true });
+        // Use a full browser navigation after a successful auth response.
+        // This avoids relying on a stale React Router tree during the session transition.
+        window.location.replace(window.location.origin + (window.location.hostname.endsWith('.github.io') ? '/JNVST-class9/' : '/'));
       }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : String(error));
