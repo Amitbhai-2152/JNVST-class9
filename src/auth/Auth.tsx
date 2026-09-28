@@ -697,8 +697,12 @@ const PasswordRecoveryPage = () => {
 
 export const AuthPage = () => {
   const navigate = useNavigate();
-  const { signIn, signInWithGoogle, resetPassword, resendConfirmation, signUp, authError } = useAuth();
+  const { signIn, signInWithGoogle, resetPassword, resendConfirmation, signUp, authError, user, recoveryMode } = useAuth();
   const [mode, setMode] = useState<'login' | 'signup'>('login');
+
+  useEffect(() => {
+    if (user && !recoveryMode) navigate('/', { replace: true });
+  }, [user, recoveryMode, navigate]);
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
