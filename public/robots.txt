@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://jnvst-class9.navodaya2152.workers.dev/sitemap.xml
