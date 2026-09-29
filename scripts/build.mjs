@@ -3,7 +3,8 @@ import { spawn } from 'node:child_process';
 
 const sourcePath = 'index.src.html';
 const targetPath = 'index.html';
-const defaultSiteUrl = 'https://amitbhai-2152.github.io/JNVST-class9';
+const defaultSiteUrl = 'https://jnvst-class9.navodaya2152.workers.dev';
+const legacySiteUrl = 'https://amitbhai-2152.github.io/JNVST-class9';
 const siteUrl = (process.env.SITE_URL || process.env.CF_PAGES_URL || defaultSiteUrl).replace(/\/+$/, '');
 const curriculumSourcePath = 'src/data/curriculum.ts';
 
@@ -154,7 +155,9 @@ const buildSeoFiles = async () => {
 const source = await readFile(sourcePath, 'utf8');
 const previous = await readFile(targetPath, 'utf8');
 
-const sourceForBuild = source.split(defaultSiteUrl).join(siteUrl);
+const sourceForBuild = source
+  .split(legacySiteUrl).join(siteUrl)
+  .split(defaultSiteUrl).join(siteUrl);
 await writeFile(targetPath, sourceForBuild, 'utf8');
 
 try {
