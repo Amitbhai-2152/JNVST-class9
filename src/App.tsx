@@ -101,7 +101,7 @@ const SEOController = () => {
     upsertProperty('og:title', title);
     upsertProperty('og:description', description);
     upsertProperty('og:type', 'website');
-    const seoPath = location.pathname.replace(/\\/+$/, '') || '/';
+    const seoPath = location.pathname.replace(/\/+$/, '') || '/';
     const canonicalUrl = 'https://jnvst-class9.navodaya2152.workers.dev' + seoPath;
 
     upsertProperty('og:url', canonicalUrl);
