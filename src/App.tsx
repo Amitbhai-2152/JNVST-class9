@@ -101,7 +101,10 @@ const SEOController = () => {
     upsertProperty('og:title', title);
     upsertProperty('og:description', description);
     upsertProperty('og:type', 'website');
-    upsertProperty('og:url', window.location.href.split('#')[0]);
+    const seoPath = location.pathname.replace(/\\/+$/, '') || '/';
+    const canonicalUrl = 'https://jnvst-class9.navodaya2152.workers.dev' + seoPath;
+
+    upsertProperty('og:url', canonicalUrl);
 
     let canonical = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
     if (!canonical) {
@@ -109,7 +112,7 @@ const SEOController = () => {
       canonical.rel = 'canonical';
       document.head.appendChild(canonical);
     }
-    canonical.href = window.location.href.split('#')[0];
+    canonical.href = canonicalUrl;
 
     let structuredData = document.head.querySelector('#jnvst-seo-schema') as HTMLScriptElement | null;
     if (!structuredData) {
@@ -122,7 +125,7 @@ const SEOController = () => {
       '@context': 'https://schema.org',
       '@type': 'WebSite',
       name: 'JNVST कक्षा 9 Learning Hub',
-      url: window.location.origin + (window.location.hostname.endsWith('.github.io') ? '/JNVST-class9/' : '/'),
+      url: canonicalUrl,
       inLanguage: ['hi', 'en'],
       description,
     });
